@@ -1,0 +1,6 @@
+# Allow all crawlers including WorldCoin review bot
+User-agent: *
+Allow: /
+
+# Sitemap (optional, adjust if you have one)
+# Sitemap: https://wld.skyreel.art/sitemap.xml
