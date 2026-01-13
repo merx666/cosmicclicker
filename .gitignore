@@ -61,3 +61,6 @@ id_rsa*
 # Logs
 logs/
 *.log
+
+# Database
+/supabase/
