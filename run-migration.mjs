@@ -4,13 +4,24 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { config } from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// Load environment variables
-const supabaseUrl = 'https://wrruwhauyttrbgjrkcje.supabase.co'
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnV3aGF1eXR0cmJnanJrY2plIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNTU0OTgzNSwiZXhwIjoyMDUxMTI1ODM1fQ.sb_secret_lTmkB2B0m-IsC3fdkw6d_A_o8MCLNC9'
+// Load environment variables from .env.local
+config({ path: join(__dirname, '.env.local') })
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ Missing environment variables!')
+    console.error('Please ensure .env.local contains:')
+    console.error('  - NEXT_PUBLIC_SUPABASE_URL')
+    console.error('  - SUPABASE_SERVICE_KEY')
+    process.exit(1)
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
