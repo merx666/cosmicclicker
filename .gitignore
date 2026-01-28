@@ -1,6 +1,33 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ===================
+# SENSITIVE / SECRETS
+# ===================
+# Environment files - CRITICAL: contain private keys & passwords
+.env
+.env.*
+.env.local
+.env.production
+.env.development
+.env.staging
+
+# Private keys and certificates
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa*
+*.secrets
+*credentials*
+*.secret
+
+# Scripts with hardcoded passwords
+scripts/process-payouts.sh
+
+# ===================
+# DEPENDENCIES
+# ===================
 /node_modules
 /.pnp
 .pnp.*
@@ -10,57 +37,88 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# ===================
+# BUILD OUTPUT
+# ===================
 /.next/
 /out/
-
-# production
 /build
+/dist
 
-# backup archives
+# ===================
+# BACKUP ARCHIVES
+# ===================
 *.tar.gz
+*.zip
+*.rar
+*.7z
 
-# misc
-.DS_Store
-*.pem
+# ===================
+# DATABASE / MIGRATION
+# ===================
+/supabase/
+*.sql.backup
+supabase_*.json
+check-migration.mjs
+run-migration.mjs
+run-withdrawal-migration.mjs
 
-# debug
+# ===================
+# LOGS & DEBUG
+# ===================
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ===================
+# TESTING
+# ===================
+/coverage
+.nyc_output
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# Additional security
-*.key
-*.crt
-*.p12
-*.pfx
-id_rsa*
-*.secrets
-*credentials*
-
-# IDE
+# ===================
+# IDE / EDITOR
+# ===================
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+.project
+.classpath
+.settings/
 
-# Logs
-logs/
-*.log
+# ===================
+# OS FILES
+# ===================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Database
-/supabase/
+# ===================
+# DEPLOYMENT
+# ===================
+.vercel
+ecosystem.config.js
+deploy.sh
+deploy_local.sh
+
+# ===================
+# TYPESCRIPT
+# ===================
+*.tsbuildinfo
+next-env.d.ts
+
+# ===================
+# MISC
+# ===================
+.cache
+.temp
+.tmp

@@ -28,7 +28,7 @@ export default function UpgradesTab() {
             name: 'Click Power',
             description: 'Increase particles per click',
             image: '/assets/nav/upgrades.png', // Reusing Rocket icon
-            baseCost: 100,
+            baseCost: 127,
             currentLevel: upgradeClickPower,
             maxLevel: 50,
             effect: (level) => `+${level} per click`
@@ -38,7 +38,7 @@ export default function UpgradesTab() {
             name: 'Void Drone',
             description: 'Automatic particle collection',
             image: '/assets/premium/statistics.png', // Using Stats icon as "System/Drone" placeholder
-            baseCost: 1000,
+            baseCost: 1270,
             currentLevel: upgradeAutoCollector,
             maxLevel: 30,
             effect: (level) => `+${level} per second`

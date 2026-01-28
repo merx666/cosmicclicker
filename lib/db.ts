@@ -2,7 +2,7 @@ import { Pool, QueryResult, QueryResultRow } from 'pg'
 
 // Create connection pool
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector',
     ssl: false, // Local connection, no SSL needed
     max: 10, // Maximum connections in pool
     idleTimeoutMillis: 30000,

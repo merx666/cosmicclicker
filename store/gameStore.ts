@@ -345,7 +345,7 @@ export const useGameStore = create<GameState>()(
                 const newStreak = daysSinceLastClaim <= 1 ? state.loginStreak + 1 : 1
 
                 // Grant bonus particles
-                const bonusAmount = 500
+                const bonusAmount = 760
 
                 set({
                     particles: state.particles + bonusAmount,
@@ -365,16 +365,16 @@ export const useGameStore = create<GameState>()(
                     if (response.ok) {
                         const data = await response.json()
                         set({
-                            particles: data.particles || 0,
-                            particlesPerClick: data.particles_per_click || 1,
-                            particlesPerSecond: data.particles_per_second || 0,
-                            totalClicks: data.total_clicks || 0,
-                            totalParticlesCollected: data.total_particles_collected || 0,
-                            totalPassiveParticles: data.total_passive_particles || 0, // NEW
-                            upgradeClickPower: data.upgrade_click_power || 1,
-                            upgradeAutoCollector: data.upgrade_auto_collector || 0,
-                            upgradeMultiplier: data.upgrade_multiplier || 0,
-                            upgradeOffline: data.upgrade_offline || 0,
+                            particles: Number(data.particles || 0),
+                            particlesPerClick: Number(data.particles_per_click || 1),
+                            particlesPerSecond: Number(data.particles_per_second || 0),
+                            totalClicks: Number(data.total_clicks || 0),
+                            totalParticlesCollected: Number(data.total_particles_collected || 0),
+                            totalPassiveParticles: Number(data.total_passive_particles || 0), // NEW
+                            upgradeClickPower: Number(data.upgrade_click_power || 1),
+                            upgradeAutoCollector: Number(data.upgrade_auto_collector || 0),
+                            upgradeMultiplier: Number(data.upgrade_multiplier || 0),
+                            upgradeOffline: Number(data.upgrade_offline || 0),
 
                             // Premium
                             premiumParticleSkin: data.premium_particle_skin || 'default',
@@ -392,15 +392,15 @@ export const useGameStore = create<GameState>()(
                             premiumVIP: data.premium_vip || false,
 
                             lastDailyBonusTime: data.last_daily_bonus_time ? new Date(data.last_daily_bonus_time).getTime() : null,
-                            loginStreak: data.login_streak || 0,
+                            loginStreak: Number(data.login_streak || 0),
 
                             lastClaimTime: data.last_claim_time ? new Date(data.last_claim_time).getTime() : null,
-                            totalWldClaimed: data.total_wld_claimed || 0,
+                            totalWldClaimed: Number(data.total_wld_claimed || 0),
 
                             // Daily mission counters
-                            dailyClicks: data.daily_clicks || 0,
-                            dailyPassiveParticles: data.daily_passive_particles || 0,
-                            dailyParticlesCollected: data.daily_particles_collected || 0,
+                            dailyClicks: Number(data.daily_clicks || 0),
+                            dailyPassiveParticles: Number(data.daily_passive_particles || 0),
+                            dailyParticlesCollected: Number(data.daily_particles_collected || 0),
                             lastDailyReset: data.last_daily_reset ? new Date(data.last_daily_reset).getTime() : null,
                             claimedMissions: data.claimed_missions || [],
 

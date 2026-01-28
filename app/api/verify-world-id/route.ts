@@ -1,11 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Initialize Supabase client with service key for admin access
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!
-)
+import { query, queryOne } from '@/lib/db'
 
 export async function POST(request: Request) {
     try {
@@ -26,30 +20,17 @@ export async function POST(request: Request) {
 
         console.log('Creating/updating user with wallet address:', walletAddress)
 
-        // Create or update user in Supabase
-        const { data: user, error } = await supabase
-            .from('users')
-            .upsert({
-                world_id_nullifier: walletAddress,
-                last_login: new Date().toISOString()
-            }, {
-                onConflict: 'world_id_nullifier'
-            })
-            .select()
-            .single()
+        // Create or update user in PostgreSQL
+        const result = await query(
+            `INSERT INTO users (world_id_nullifier, wallet_address, last_login) 
+             VALUES ($1, $1, NOW()) 
+             ON CONFLICT (world_id_nullifier) 
+             DO UPDATE SET wallet_address = $1, last_login = NOW(), updated_at = NOW()
+             RETURNING id`,
+            [walletAddress]
+        )
 
-        if (error) {
-            console.error('Supabase error details:', {
-                message: error.message,
-                details: error.details,
-                hint: error.hint,
-                code: error.code
-            })
-            return NextResponse.json(
-                { error: 'Database error', details: error.message },
-                { status: 500 }
-            )
-        }
+        const user = result.rows[0]
 
         console.log('User created/updated successfully:', user?.id)
 

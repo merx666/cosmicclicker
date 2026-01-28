@@ -2,6 +2,7 @@
   "name": "voidcollector",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -19,6 +20,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
+    "viem": "^2.45.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

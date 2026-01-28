@@ -12,6 +12,7 @@ import ConvertTab from './tabs/ConvertTab'
 import { motion, AnimatePresence } from 'framer-motion'
 import BackgroundEffects from './effects/BackgroundEffects'
 
+
 interface GameScreenProps {
     userHash: string
 }
@@ -74,6 +75,9 @@ export default function GameScreen({ userHash }: GameScreenProps) {
 
             {/* Main content */}
             <main className="max-w-2xl mx-auto px-4">
+                {/* Show ads on all tabs EXCEPT 'collect' */}
+                {/* Ads are now handled globally in layout.tsx */}
+
                 <AnimatePresence mode="wait">
                     {activeTab === 'collect' && (
                         <motion.div

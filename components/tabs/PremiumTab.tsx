@@ -44,7 +44,7 @@ export default function PremiumTab() {
             name: 'Rainbow Particle',
             description: 'Transform your void particle into a mesmerizing rainbow effect',
             image: '/assets/premium/rainbow.png',
-            price: 0.10,
+            price: 0.13,
             category: 'cosmetic',
             owned: unlockedSkins.includes('rainbow')
         },
@@ -53,7 +53,7 @@ export default function PremiumTab() {
             name: 'Golden Particle',
             description: 'Make your particle shine with prestigious golden glow',
             image: '/assets/premium/gold.png',
-            price: 0.15,
+            price: 0.19,
             category: 'cosmetic',
             owned: unlockedSkins.includes('gold')
         },
@@ -62,7 +62,7 @@ export default function PremiumTab() {
             name: 'Nebula Theme',
             description: 'Beautiful purple nebula background with animated stars',
             image: '/assets/premium/nebula.png',
-            price: 0.12,
+            price: 0.15,
             category: 'cosmetic',
             owned: unlockedThemes.includes('nebula')
         },
@@ -71,7 +71,7 @@ export default function PremiumTab() {
             name: 'Galaxy Theme',
             description: 'Deep space galaxy with swirling cosmic dust',
             image: '/assets/premium/galaxy.png',
-            price: 0.18,
+            price: 0.23,
             category: 'cosmetic',
             owned: unlockedThemes.includes('galaxy')
         },
@@ -82,7 +82,7 @@ export default function PremiumTab() {
             name: 'Lucky Particle',
             description: '5% chance to earn 2x particles per click',
             image: '/assets/premium/lucky.png',
-            price: 0.15,
+            price: 0.19,
             category: 'boost',
             owned: premiumLuckyParticle
         },
@@ -91,16 +91,16 @@ export default function PremiumTab() {
             name: 'Offline Earnings',
             description: 'Earn 10% of particles while away (max 4 hours)',
             image: '/assets/premium/offline.png',
-            price: 0.20,
+            price: 0.25,
             category: 'boost',
             owned: premiumOfflineEarnings
         },
         {
             id: 'daily_bonus',
             name: 'Daily Bonus',
-            description: '+500 particles every day with login streaks',
+            description: '+760 particles every day with login streaks',
             image: '/assets/premium/daily.png',
-            price: 0.18,
+            price: 0.35,
             category: 'boost',
             owned: premiumDailyBonus
         },
@@ -111,7 +111,7 @@ export default function PremiumTab() {
             name: 'VIP Status',
             description: 'Unlock ALL premium features at once!',
             image: '/assets/premium/vip.png',
-            price: 0.25,
+            price: 0.48,
             category: 'advanced',
             owned: premiumVIP
         }
@@ -218,7 +218,7 @@ export default function PremiumTab() {
     const handleClaimDaily = () => {
         const success = claimDailyBonus()
         if (success) {
-            toast.success(`🎁 Daily bonus claimed! +500 particles (Streak: ${loginStreak + 1})`)
+            toast.success(`🎁 Daily bonus claimed! +760 particles (Streak: ${loginStreak + 1})`)
         } else if (!premiumDailyBonus) {
             toast.error('Purchase Daily Bonus upgrade first')
         } else {
@@ -287,7 +287,7 @@ export default function PremiumTab() {
                                     transition-all
                                 `}
                             >
-                                Claim +500
+                                Claim +760
                             </button>
                         </div>
                     </div>

@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { MiniKitProvider } from "@/components/providers/MiniKitProvider";
 import { Toaster } from "react-hot-toast";
+import ApiTinyAd from '@/components/ApiTinyAd'
+import { Outfit } from 'next/font/google'
+
+const outfit = Outfit({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: "Void Collector - WorldApp Mini App",
@@ -27,9 +31,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className={`${outfit.className} antialiased`}>
         <MiniKitProvider>
           {children}
+          <ApiTinyAd />
           <Toaster
             position="top-center"
             toastOptions={{
@@ -41,6 +46,17 @@ export default function RootLayout({
             }}
           />
         </MiniKitProvider>
+
+        {/* Google Analytics */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WNQ3YFGEF5"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WNQ3YFGEF5');
+          `
+        }} />
       </body>
     </html>
   );
