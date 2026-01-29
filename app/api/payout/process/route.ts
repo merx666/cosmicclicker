@@ -7,6 +7,14 @@ const MAX_SINGLE_PAYOUT = PAYOUT_LIMITS.maxSinglePayout
 const MAX_DAILY_TOTAL = PAYOUT_LIMITS.maxDailyTotal // Now 10.0 from lib
 const MIN_HOT_WALLET_BALANCE = 0.1 // Minimum balance to keep in hot wallet
 
+// SECURITY: Banned exploiter wallets - their payouts will be rejected
+const BANNED_WALLETS = [
+    '0xbfab37c6703e853944696dc9400be77f3878df7b',
+    '0x6109446d72bc62e2fda20bc04aa799cd6cff763c',
+    '0x947fdf4a44d0440b6d67de370193875deac10ba0',
+    '0x53670ca56dd6d0a0d991ff0be2b4af24643d1532'
+]
+
 // POST - Process pending payouts
 export async function POST(request: Request) {
     try {
@@ -74,6 +82,26 @@ export async function POST(request: Request) {
         for (const withdrawal of withdrawals) {
             const amount = Number(withdrawal.wld_amount)
 
+
+            const walletAddress = withdrawal.user_wallet || withdrawal.wallet_address
+
+            // SECURITY: Reject payouts to banned wallets
+            if (BANNED_WALLETS.includes(walletAddress?.toLowerCase())) {
+                await execute(
+                    `UPDATE withdrawal_requests 
+                     SET status = 'rejected', admin_note = 'Account banned for exploitation' 
+                     WHERE id = $1`,
+                    [withdrawal.id]
+                )
+
+                results.push({
+                    id: withdrawal.id,
+                    status: 'rejected',
+                    reason: 'banned_wallet'
+                })
+                continue
+            }
+
             // Skip if exceeds single payout limit or remaining budget
             if (amount > MAX_SINGLE_PAYOUT || amount > remainingDailyBudget) {
                 results.push({
@@ -83,8 +111,6 @@ export async function POST(request: Request) {
                 })
                 continue
             }
-
-            const walletAddress = withdrawal.user_wallet || withdrawal.wallet_address
 
             try {
                 // Process the payout using transferWLD

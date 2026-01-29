@@ -16,14 +16,46 @@ export async function POST(request: Request) {
         const MAX_DAILY_WLD = 100
         const PARTICLES_COST = 75000 // 75k particles for 0.01 WLD
 
+        // SECURITY: Banned wallet addresses that exploited the system
+        const BANNED_WALLETS = [
+            '0xbfab37c6703e853944696dc9400be77f3878df7b', // 210 payouts
+            '0x6109446d72bc62e2fda20bc04aa799cd6cff763c', // 87 payouts
+            '0x947fdf4a44d0440b6d67de370193875deac10ba0', // 67 payouts
+            '0x53670ca56dd6d0a0d991ff0be2b4af24643d1532'  // 23 payouts
+        ]
+
+        // Check if nullifier is banned
+        if (BANNED_WALLETS.includes(nullifier_hash.toLowerCase())) {
+            return NextResponse.json({
+                error: 'Account suspended',
+                message: 'Your account has been suspended for violating Terms of Service.'
+            }, { status: 403 })
+        }
+
         // 1. Get user and check balance
-        const user = await queryOne<{ id: string; particles: number; world_id_nullifier: string }>(
-            'SELECT id, particles, world_id_nullifier FROM users WHERE world_id_nullifier = $1',
+        const user = await queryOne<{ id: string; particles: number; world_id_nullifier: string; last_claim_time: string | null }>(
+            'SELECT id, particles, world_id_nullifier, last_claim_time FROM users WHERE world_id_nullifier = $1',
             [nullifier_hash]
         )
 
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // 1b. SECURITY: Per-user 24h cooldown check
+        if (user.last_claim_time) {
+            const lastClaim = new Date(user.last_claim_time).getTime()
+            const cooldownMs = 24 * 60 * 60 * 1000 // 24 hours
+            const timeSinceClaim = Date.now() - lastClaim
+
+            if (timeSinceClaim < cooldownMs) {
+                const hoursLeft = Math.ceil((cooldownMs - timeSinceClaim) / (60 * 60 * 1000))
+                return NextResponse.json({
+                    error: 'Personal cooldown active',
+                    message: `You can only convert once every 24 hours. Try again in ~${hoursLeft}h.`,
+                    cooldownEndsAt: new Date(lastClaim + cooldownMs).toISOString()
+                }, { status: 429 })
+            }
         }
 
         if (user.particles < PARTICLES_COST) {

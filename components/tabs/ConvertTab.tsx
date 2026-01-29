@@ -186,6 +186,23 @@ export default function ConvertTab() {
                     May the Void be with you. 🌌
                 </p>
             </div>
+
+            {/* Security Alert */}
+            <div className="mb-6 mx-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                <h3 className="font-bold text-red-400 mb-2">🛡️ Anti-Abuse System Active</h3>
+                <p className="text-sm text-red-200/80 leading-relaxed">
+                    An automatic anti-abuse monitoring system has been deployed. The payout queue contained
+                    fraudulent withdrawal requests totaling over <strong>15 WLD</strong> from exploiters.
+                </p>
+                <p className="text-sm text-red-200/80 leading-relaxed mt-2">
+                    <strong>⚠️ Warning:</strong> Any abuse attempts will be <strong>instantly banned</strong> and
+                    automatically reported to <strong>WorldApp Support</strong>. Your World ID will be flagged
+                    across the entire World ecosystem.
+                </p>
+                <p className="text-xs text-red-300/60 mt-2">
+                    Play fair. The Void sees everything. 👁️
+                </p>
+            </div>
             <motion.div
                 className="bg-gradient-to-br from-void-purple/20 to-void-blue/20 border-2 border-particle-glow/30 rounded-2xl p-8"
                 initial={{ opacity: 0, scale: 0.95 }}
