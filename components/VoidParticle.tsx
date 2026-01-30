@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { MiniKit } from '@worldcoin/minikit-js'
 import toast from 'react-hot-toast'
 import ParticleEffects from './effects/ParticleEffects'
@@ -16,7 +16,86 @@ export default function VoidParticle() {
     const [clickEffect, setClickEffect] = useState(false)
     const [luckyEffect, setLuckyEffect] = useState(false)
 
+    // Anti-bot protection state
+    const clickHistoryRef = useRef<number[]>([])
+    const cooldownUntilRef = useRef<number>(0)
+    const penaltyLevelRef = useRef<number>(0)
+    const lastPenaltyTimeRef = useRef<number>(0)
+
+    const calculateVariance = (numbers: number[]): number => {
+        if (numbers.length < 2) return 1000 // High variance for insufficient data
+        const mean = numbers.reduce((a, b) => a + b, 0) / numbers.length
+        const squareDiffs = numbers.map(value => Math.pow(value - mean, 2))
+        return Math.sqrt(squareDiffs.reduce((a, b) => a + b, 0) / numbers.length)
+    }
+
+    const applyPenalty = () => {
+        const now = Date.now()
+        penaltyLevelRef.current += 1
+        const penaltyDuration = Math.pow(2, penaltyLevelRef.current) * 1000 // 2s, 4s, 8s, 16s...
+        cooldownUntilRef.current = now + penaltyDuration
+        lastPenaltyTimeRef.current = now
+
+        toast.error(`🤖 Bot detected! Cooldown: ${penaltyDuration / 1000}s`, {
+            duration: penaltyDuration
+        })
+    }
+
+    const isValidClick = (now: number): boolean => {
+        // Reset penalty level after 30s of no penalties
+        if (now - lastPenaltyTimeRef.current > 30000) {
+            penaltyLevelRef.current = 0
+        }
+
+        // Check cooldown
+        if (now < cooldownUntilRef.current) {
+            return false
+        }
+
+        // Check rate limit (10 clicks per second max)
+        const recentClicks = clickHistoryRef.current.filter(t => now - t < 1000)
+        if (recentClicks.length >= 10) {
+            applyPenalty()
+            return false
+        }
+
+        // Pattern detection - need at least 10 clicks
+        if (clickHistoryRef.current.length >= 10) {
+            const last10 = clickHistoryRef.current.slice(-10)
+            const intervals = last10.map((t, i, arr) =>
+                i > 0 ? t - arr[i - 1] : 0
+            ).filter(i => i > 0)
+
+            const variance = calculateVariance(intervals)
+
+            // If variance is too low (< 20ms), likely a bot
+            if (variance < 20) {
+                applyPenalty()
+                return false
+            }
+        }
+
+        return true
+    }
+
     const onClick = () => {
+        const now = Date.now()
+
+        // Anti-bot validation
+        if (!isValidClick(now)) {
+            return
+        }
+
+        // Add to click history (keep last 20)
+        clickHistoryRef.current.push(now)
+        if (clickHistoryRef.current.length > 20) {
+            clickHistoryRef.current.shift()
+        }
+
+        // Variable cooldown (50-200ms) to prevent constant-rate clicking
+        const randomCooldown = 50 + Math.random() * 150
+        cooldownUntilRef.current = now + randomCooldown
+
         handleClick()
         setClickEffect(true)
 

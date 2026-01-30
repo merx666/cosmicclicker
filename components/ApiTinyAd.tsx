@@ -8,6 +8,7 @@ export default function ApiTinyAd() {
             {/* Ad container for TinyAdz to target */}
             <div
                 id="apitiny-container"
+                data-tinyadz-container="true"
                 style={{
                     position: 'fixed',
                     bottom: '80px',

@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect, useState } from 'react'
-import { MiniKit } from '@worldcoin/minikit-js'
+import { MiniKit, Permission, RequestPermissionPayload } from '@worldcoin/minikit-js'
 
 interface MiniKitProviderProps {
     children: ReactNode
@@ -21,6 +21,20 @@ export function MiniKitProvider({ children }: MiniKitProviderProps) {
                 }
 
                 await MiniKit.install(appId)
+
+                // Request notification permission after MiniKit is installed
+                if (MiniKit.isInstalled()) {
+                    try {
+                        const permissionPayload: RequestPermissionPayload = {
+                            permission: Permission.Notifications,
+                        }
+                        const result = await MiniKit.commandsAsync.requestPermission(permissionPayload)
+                        console.log('Notification permission result:', result)
+                    } catch (permError) {
+                        console.log('Notification permission not granted or error:', permError)
+                    }
+                }
+
                 setIsReady(true)
             } catch (error) {
                 console.error('Failed to install MiniKit:', error)
