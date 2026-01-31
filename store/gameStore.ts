@@ -38,6 +38,7 @@ export interface GameState {
     premiumOfflineEarnings: boolean
     premiumDailyBonus: boolean
     premiumVIP: boolean
+    vipTier: number // 0=none, 1=bronze, 2=silver, 3=gold, 4=platinum
 
     // Daily bonus tracking
     lastDailyBonusTime: number | null
@@ -103,6 +104,7 @@ export const useGameStore = create<GameState>()(
             premiumOfflineEarnings: false,
             premiumDailyBonus: false,
             premiumVIP: false,
+            vipTier: 0,
 
             lastDailyBonusTime: null,
             loginStreak: 0,
@@ -135,7 +137,10 @@ export const useGameStore = create<GameState>()(
             // Handle click
             handleClick: () => {
                 const state = get()
-                const earned = state.particlesPerClick
+
+                // Calculate tier bonus: Bronze=0, Silver=+2, Gold=+5, Platinum=+10
+                const tierBonus = [0, 0, 2, 5, 10][state.vipTier] || 0
+                const earned = state.particlesPerClick + tierBonus
 
                 set({
                     particles: state.particles + earned,
@@ -390,6 +395,7 @@ export const useGameStore = create<GameState>()(
                             premiumOfflineEarnings: data.premium_offline_earnings || false,
                             premiumDailyBonus: data.premium_daily_bonus || false,
                             premiumVIP: data.premium_vip || false,
+                            vipTier: Number(data.vip_tier || 0),
 
                             lastDailyBonusTime: data.last_daily_bonus_time ? new Date(data.last_daily_bonus_time).getTime() : null,
                             loginStreak: Number(data.login_streak || 0),

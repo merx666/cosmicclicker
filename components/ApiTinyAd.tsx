@@ -5,7 +5,7 @@ import Script from 'next/script'
 export default function ApiTinyAd() {
     return (
         <>
-            {/* Ad container for TinyAdz to target */}
+            {/* Ad container for TinyAdz */}
             <div
                 id="apitiny-container"
                 data-tinyadz-container="true"

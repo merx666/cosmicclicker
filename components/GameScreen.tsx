@@ -9,6 +9,7 @@ import UpgradesTab from './tabs/UpgradesTab'
 import MissionsTab from './tabs/MissionsTab'
 import PremiumTab from './tabs/PremiumTab'
 import ConvertTab from './tabs/ConvertTab'
+import RouletteTab from './tabs/RouletteTab'
 import { motion, AnimatePresence } from 'framer-motion'
 import BackgroundEffects from './effects/BackgroundEffects'
 
@@ -143,6 +144,18 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             transition={{ duration: 0.3 }}
                         >
                             <ConvertTab />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'roulette' && (
+                        <motion.div
+                            key="roulette"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <RouletteTab />
                         </motion.div>
                     )}
                 </AnimatePresence>

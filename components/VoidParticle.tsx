@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { MiniKit } from '@worldcoin/minikit-js'
 import toast from 'react-hot-toast'
 import ParticleEffects from './effects/ParticleEffects'
@@ -16,11 +16,30 @@ export default function VoidParticle() {
     const [clickEffect, setClickEffect] = useState(false)
     const [luckyEffect, setLuckyEffect] = useState(false)
 
+    // Moving target anti-bot system
+    const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 })
+
     // Anti-bot protection state
     const clickHistoryRef = useRef<number[]>([])
     const cooldownUntilRef = useRef<number>(0)
     const penaltyLevelRef = useRef<number>(0)
     const lastPenaltyTimeRef = useRef<number>(0)
+
+    // Move target position randomly every 5-15 seconds
+    useEffect(() => {
+        const moveTarget = () => {
+            setTargetPosition({
+                x: 20 + Math.random() * 60, // 20-80%
+                y: 20 + Math.random() * 60
+            })
+        }
+
+        const interval = setInterval(() => {
+            moveTarget()
+        }, 5000 + Math.random() * 10000) // 5-15 seconds
+
+        return () => clearInterval(interval)
+    }, [])
 
     const calculateVariance = (numbers: number[]): number => {
         if (numbers.length < 2) return 1000 // High variance for insufficient data
@@ -59,17 +78,17 @@ export default function VoidParticle() {
             return false
         }
 
-        // Pattern detection - need at least 10 clicks
-        if (clickHistoryRef.current.length >= 10) {
-            const last10 = clickHistoryRef.current.slice(-10)
-            const intervals = last10.map((t, i, arr) =>
+        // Pattern detection - need at least 20 clicks for better accuracy
+        if (clickHistoryRef.current.length >= 20) {
+            const last20 = clickHistoryRef.current.slice(-20)
+            const intervals = last20.map((t, i, arr) =>
                 i > 0 ? t - arr[i - 1] : 0
             ).filter(i => i > 0)
 
             const variance = calculateVariance(intervals)
 
-            // If variance is too low (< 20ms), likely a bot
-            if (variance < 20) {
+            // If variance is too low (< 10ms), likely a bot
+            if (variance < 10) {
                 applyPenalty()
                 return false
             }
@@ -78,8 +97,23 @@ export default function VoidParticle() {
         return true
     }
 
-    const onClick = () => {
+    const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
         const now = Date.now()
+
+        // Get click position relative to container
+        const rect = event.currentTarget.getBoundingClientRect()
+        const clickX = ((event.clientX - rect.left) / rect.width) * 100
+        const clickY = ((event.clientY - rect.top) / rect.height) * 100
+
+        // Validate click is near target (±15% tolerance)
+        const dx = Math.abs(clickX - targetPosition.x)
+        const dy = Math.abs(clickY - targetPosition.y)
+        const isNearTarget = dx < 15 && dy < 15
+
+        if (!isNearTarget) {
+            toast.error('🎯 Click the glowing target!', { duration: 1000 })
+            return
+        }
 
         // Anti-bot validation
         if (!isValidClick(now)) {
@@ -99,14 +133,42 @@ export default function VoidParticle() {
         handleClick()
         setClickEffect(true)
 
-        // Lucky Particle chance (5% for 2x particles)
-        if (premiumLuckyParticle && Math.random() < 0.05) {
-            // Grant bonus particles
-            addParticles(particlesPerClick)
-            setLuckyEffect(true)
-            toast.success('🍀 Lucky! +2x particles!')
+        // Lucky Particle chance - tiered system
+        // Bronze: 5% chance 2x, Silver: 8% chance 2x, Gold: 12% chance 3x, Platinum: 15% chance 5x
+        if (premiumLuckyParticle) {
+            const state = useGameStore.getState()
+            const vipTier = state.vipTier || 1 // Default to Bronze if premium
 
-            setTimeout(() => setLuckyEffect(false), 1000)
+            const tierStats = [
+                { chance: 0, multiplier: 1 },     // No tier
+                { chance: 0.05, multiplier: 2 },  // Bronze
+                { chance: 0.08, multiplier: 2 },  // Silver
+                { chance: 0.12, multiplier: 3 },  // Gold
+                { chance: 0.15, multiplier: 5 }   // Platinum
+            ]
+
+            const { chance, multiplier } = tierStats[vipTier] || tierStats[1]
+
+            if (Math.random() < chance) {
+                // Grant bonus particles (multiplier - 1 because handleClick already added 1x)
+                addParticles(particlesPerClick * (multiplier - 1))
+                setLuckyEffect(true)
+                toast.success(`🍀 Lucky! +${multiplier}x particles!`)
+
+                setTimeout(() => setLuckyEffect(false), 1000)
+            }
+
+            // Mega Lucky for Gold/Platinum tiers
+            if (vipTier >= 3) {
+                const megaChance = vipTier === 3 ? 0.01 : 0.03 // Gold: 1%, Platinum: 3%
+                const megaMulti = vipTier === 3 ? 10 : 15
+
+                if (Math.random() < megaChance) {
+                    addParticles(particlesPerClick * (megaMulti - 1))
+                    setLuckyEffect(true)
+                    toast.success(`💎 MEGA LUCKY! +${megaMulti}x particles!`, { duration: 2000 })
+                }
+            }
         }
 
         // Haptic feedback
@@ -141,6 +203,34 @@ export default function VoidParticle() {
             >
                 {/* Outer glow */}
                 <div className="absolute inset-0 bg-gradient-radial from-particle-glow/40 to-transparent rounded-full blur-3xl" />
+
+                {/* Moving Target Indicator */}
+                <motion.div
+                    className="absolute w-8 h-8 -ml-4 -mt-4 pointer-events-none z-50"
+                    style={{
+                        left: `${targetPosition.x}%`,
+                        top: `${targetPosition.y}%`,
+                    }}
+                    animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.8, 1, 0.8],
+                    }}
+                    transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                >
+                    {/* Target glow */}
+                    <div className="absolute inset-0 bg-yellow-400/60 rounded-full blur-md" />
+                    {/* Target core */}
+                    <div className="absolute inset-2 bg-yellow-300 rounded-full" />
+                    {/* Crosshair */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-1 h-full bg-yellow-500/50" />
+                        <div className="absolute w-full h-1 bg-yellow-500/50" />
+                    </div>
+                </motion.div>
 
                 {/* Main particle body */}
                 <div className="absolute inset-0 bg-gradient-radial from-void-purple via-void-blue to-transparent rounded-full shadow-2xl" />

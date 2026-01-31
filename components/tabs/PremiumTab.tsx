@@ -25,6 +25,7 @@ export default function PremiumTab() {
         premiumOfflineEarnings,
         premiumDailyBonus,
         premiumVIP,
+        vipTier,
         purchasePremiumUpgrade,
         equipSkin,
         equipTheme,
@@ -128,15 +129,25 @@ export default function PremiumTab() {
                 return
             }
 
-            // Get upgrade name for display
-            const upgradeName = upgrades.find(u => u.id === upgradeId)?.name || 'Premium Upgrade'
+            // Handle tier purchases vs regular upgrades
+            let upgradeName = ''
+            let isTierPurchase = false
 
-            // Check if already owned
-            const upgrade = upgrades.find(u => u.id === upgradeId)
-            if (upgrade?.owned) {
-                toast.error('Already owned')
-                setPurchasing(null)
-                return
+            if (upgradeId.startsWith('vip_tier_')) {
+                isTierPurchase = true
+                const tier = parseInt(upgradeId.replace('vip_tier_', ''))
+                const tierNames = ['', 'Bronze VIP', 'Silver VIP', 'Gold VIP', 'Platinum VIP']
+                upgradeName = tierNames[tier] || 'VIP Tier'
+            } else {
+                upgradeName = upgrades.find(u => u.id === upgradeId)?.name || 'Premium Upgrade'
+
+                // Check if already owned
+                const upgrade = upgrades.find(u => u.id === upgradeId)
+                if (upgrade?.owned) {
+                    toast.error('Already owned')
+                    setPurchasing(null)
+                    return
+                }
             }
 
             // Validate minimum payment amount (World App requirement)
@@ -174,9 +185,42 @@ export default function PremiumTab() {
             const { finalPayload } = result
 
             if (finalPayload?.status === 'success') {
-                // Payment successful - unlock upgrade
-                purchasePremiumUpgrade(upgradeId)
-                toast.success(`✅ ${upgradeName} unlocked!`)
+                if (isTierPurchase) {
+                    // Tier purchase - save to backend
+                    const tier = parseInt(upgradeId.replace('vip_tier_', ''))
+                    const state = useGameStore.getState()
+
+                    if (!state.nullifierHash) {
+                        toast.error('Not authenticated')
+                        setPurchasing(null)
+                        return
+                    }
+
+                    const response = await fetch('/api/purchase-tier', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tier,
+                            transaction_ref: uuid,
+                            amount: price,
+                            nullifier_hash: state.nullifierHash
+                        })
+                    })
+
+                    if (response.ok) {
+                        // Reload game state to get new tier
+                        await state.loadGameState(state.nullifierHash)
+                        toast.success(`✅ ${upgradeName} unlocked!`)
+                    } else {
+                        const error = await response.json()
+                        console.error('[Premium] Tier purchase failed:', error)
+                        toast.error(`Failed to save tier: ${error.error || 'Unknown error'}`)
+                    }
+                } else {
+                    // Regular upgrade
+                    purchasePremiumUpgrade(upgradeId)
+                    toast.success(`✅ ${upgradeName} unlocked!`)
+                }
             } else {
                 // Payment cancelled or failed
                 const errorMsg = finalPayload?.error_code || 'Payment cancelled'
@@ -252,6 +296,69 @@ export default function PremiumTab() {
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">💎 Premium Shop</h2>
                 <p className="text-text-secondary">Exclusive upgrades powered by WLD</p>
+            </div>
+
+            {/* VIP Tier Section */}
+            <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4 text-center">👑 VIP Tiers</h3>
+
+                {/* Current Tier Badge */}
+                {vipTier > 0 && (
+                    <div className="mb-4 text-center">
+                        <div className="inline-block px-4 py-2 bg-gradient-to-r from-void-purple to-void-blue rounded-full">
+                            <span className="text-lg font-bold">
+                                {['', '🥉 Bronze VIP', '🥈 Silver VIP', '🥇 Gold VIP', '💎 Platinum VIP'][vipTier]}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Tier Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                    {[
+                        { tier: 1, name: '🥉 Bronze', price: 0.48, benefits: ['All features', 'Lucky 5%/2x'] },
+                        { tier: 2, name: '🥈 Silver', price: 1.20, benefits: ['Lucky 8%/2x', '+2 per click', 'Ad-free'] },
+                        { tier: 3, name: '🥇 Gold', price: 2.50, benefits: ['Lucky 12%/3x', 'Mega 1%/10x', 'Priority'] },
+                        { tier: 4, name: '💎 Platinum', price: 5.00, benefits: ['Lucky 15%/5x', 'Mega 3%/15x', 'Instant'] }
+                    ].map(({ tier, name, price, benefits }) => {
+                        const isCurrent = vipTier === tier
+                        const canUpgrade = vipTier < tier
+                        const tierColors = ['', 'from-amber-600/20 to-amber-800/20 border-amber-500/30',
+                            'from-gray-400/20 to-gray-600/20 border-gray-400/30',
+                            'from-yellow-500/20 to-yellow-700/20 border-yellow-400/30',
+                            'from-purple-500/20 to-pink-500/20 border-purple-400/30']
+
+                        return (
+                            <div
+                                key={tier}
+                                className={`p-3 bg-gradient-to-br ${tierColors[tier]} border rounded-xl ${isCurrent ? 'ring-2 ring-particle-glow' : ''}`}
+                            >
+                                <div className="text-center mb-2">
+                                    <div className="font-bold">{name}</div>
+                                    <div className="text-sm text-yellow-400">{price} WLD</div>
+                                </div>
+                                <div className="text-xs text-text-secondary space-y-1">
+                                    {benefits.map((b, i) => <div key={i}>• {b}</div>)}
+                                </div>
+                                {isCurrent && (
+                                    <div className="mt-2 text-xs font-bold text-center text-green-400">ACTIVE</div>
+                                )}
+                                {canUpgrade && (
+                                    <button
+                                        onClick={() => {
+                                            const upgradeCost = vipTier === 0 ? price : price - [0, 0.48, 1.20, 2.50, 5.00][vipTier]
+                                            console.log('[Premium] Tier purchase:', { tier, vipTier, price, upgradeCost })
+                                            handlePurchase(`vip_tier_${tier}`, upgradeCost)
+                                        }}
+                                        className="mt-2 w-full py-1 bg-void-purple hover:bg-void-purple/80 rounded text-xs font-bold"
+                                    >
+                                        {vipTier === 0 ? 'Purchase' : 'Upgrade'}
+                                    </button>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
 
             {/* Daily Bonus Section */}

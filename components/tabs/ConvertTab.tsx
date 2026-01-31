@@ -27,9 +27,14 @@ export default function ConvertTab() {
         conversions: 0,
         maxDaily: 100
     })
+    const [conversionRate, setConversionRate] = useState({
+        particles_per_wld: 150000,
+        wld_price_usd: 0.465,
+        last_update: new Date().toISOString()
+    })
     const isWLDDisabled = maintenance || dailyStats.limitReached
 
-    const PARTICLES_PER_WLD = 75000
+    const PARTICLES_PER_WLD = conversionRate.particles_per_wld
     const WLD_AMOUNT = 0.01
     const COOLDOWN = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -78,12 +83,30 @@ export default function ConvertTab() {
         }
     }, [nullifierHash])
 
-    // Fetch daily stats and withdrawals on mount
+    const fetchConversionRate = async () => {
+        try {
+            const res = await fetch('/api/conversion-rate')
+            const data = await res.json()
+            setConversionRate(data)
+            console.log('[ConvertTab] Conversion rate updated:', data)
+        } catch (error) {
+            console.error('Failed to fetch conversion rate:', error)
+        }
+    }
+
+    // Fetch daily stats, withdrawals, and conversion rate on mount
     useEffect(() => {
         fetchDailyStats()
         fetchWithdrawals()
-        const interval = setInterval(fetchDailyStats, 30000)
-        return () => clearInterval(interval)
+        fetchConversionRate()
+
+        const statsInterval = setInterval(fetchDailyStats, 30000)
+        const rateInterval = setInterval(fetchConversionRate, 5 * 60 * 1000) // Every 5 minutes
+
+        return () => {
+            clearInterval(statsInterval)
+            clearInterval(rateInterval)
+        }
     }, [fetchWithdrawals])
 
     const handleConvert = async () => {
@@ -217,10 +240,14 @@ export default function ConvertTab() {
                 </div>
 
                 {/* Exchange rate */}
-                <div className="mb-6 p-4 bg-void-dark/50 rounded-xl">
+                <div className="mb-6 p-4 bg-void-dark/50 rounded-xl border border-particle-glow/20">
                     <div className="text-sm text-text-secondary mb-2">Exchange rate:</div>
-                    <div className="text-xl font-bold">
+                    <div className="text-xl font-bold mb-2">
                         {PARTICLES_PER_WLD.toLocaleString()} particles = {WLD_AMOUNT} WLD
+                    </div>
+                    <div className="text-xs text-particle-glow/60 leading-relaxed">
+                        💡 Rate adjusts automatically based on current WLD price (${conversionRate.wld_price_usd.toFixed(3)}).
+                        Updates 3x daily to ensure fair conversion.
                     </div>
                 </div>
 

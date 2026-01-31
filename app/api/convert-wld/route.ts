@@ -14,7 +14,13 @@ export async function POST(request: Request) {
 
         const today = new Date().toISOString().split('T')[0]
         const MAX_DAILY_WLD = 100
-        const PARTICLES_COST = 75000 // 75k particles for 0.01 WLD
+
+        // Fetch dynamic conversion rate
+        const rateConfig = await queryOne<{ value: any }>(
+            `SELECT value FROM app_config WHERE key = 'conversion_rate'`
+        )
+        const PARTICLES_COST = rateConfig?.value?.particles_per_wld || 150000
+        console.log('[Convert] Using conversion rate:', PARTICLES_COST, 'particles per 0.01 WLD')
 
         // SECURITY: Banned wallet addresses that exploited the system
         const BANNED_WALLETS = [
@@ -32,9 +38,19 @@ export async function POST(request: Request) {
             }, { status: 403 })
         }
 
-        // 1. Get user and check balance
-        const user = await queryOne<{ id: string; particles: number; world_id_nullifier: string; last_claim_time: string | null }>(
-            'SELECT id, particles, world_id_nullifier, last_claim_time FROM users WHERE world_id_nullifier = $1',
+        // 1. Get user and check balance + daily limits
+        const user = await queryOne<{
+            id: string;
+            particles: number;
+            world_id_nullifier: string;
+            last_claim_time: string | null;
+            last_withdrawal_date: string | null;
+            daily_withdrawal_count: number;
+            daily_withdrawal_amount: number;
+        }>(
+            `SELECT id, particles, world_id_nullifier, last_claim_time, 
+                    last_withdrawal_date, daily_withdrawal_count, daily_withdrawal_amount 
+             FROM users WHERE world_id_nullifier = $1`,
             [nullifier_hash]
         )
 
@@ -42,18 +58,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // 1b. SECURITY: Per-user 24h cooldown check
-        if (user.last_claim_time) {
-            const lastClaim = new Date(user.last_claim_time).getTime()
-            const cooldownMs = 24 * 60 * 60 * 1000 // 24 hours
-            const timeSinceClaim = Date.now() - lastClaim
-
-            if (timeSinceClaim < cooldownMs) {
-                const hoursLeft = Math.ceil((cooldownMs - timeSinceClaim) / (60 * 60 * 1000))
+        // 1b. SECURITY: Daily withdrawal limits per user
+        if (user.last_withdrawal_date === today) {
+            // Check max 1 withdrawal per day
+            if (user.daily_withdrawal_count >= 1) {
                 return NextResponse.json({
-                    error: 'Personal cooldown active',
-                    message: `You can only convert once every 24 hours. Try again in ~${hoursLeft}h.`,
-                    cooldownEndsAt: new Date(lastClaim + cooldownMs).toISOString()
+                    error: 'Daily limit reached',
+                    message: 'You can only withdraw once per 24h. Try again tomorrow!'
+                }, { status: 429 })
+            }
+
+            // Check max 0.05 WLD per day
+            if (user.daily_withdrawal_amount + wld_amount > 0.05) {
+                return NextResponse.json({
+                    error: 'Daily limit exceeded',
+                    message: `Daily limit is 0.05 WLD. You've already withdrawn ${user.daily_withdrawal_amount} WLD today.`
                 }, { status: 429 })
             }
         }
@@ -101,10 +120,17 @@ export async function POST(request: Request) {
 
         // 3. Process Transaction using transaction helper
         await transaction(async (client) => {
-            // A. Deduct particles
+            // A. Deduct particles and update daily limits
             await client.query(
-                'UPDATE users SET particles = particles - $1, last_claim_time = NOW(), updated_at = NOW() WHERE id = $2',
-                [PARTICLES_COST, user.id]
+                `UPDATE users 
+                 SET particles = particles - $1, 
+                     last_claim_time = NOW(), 
+                     last_withdrawal_date = $2,
+                     daily_withdrawal_count = CASE WHEN last_withdrawal_date = $2 THEN daily_withdrawal_count + 1 ELSE 1 END,
+                     daily_withdrawal_amount = CASE WHEN last_withdrawal_date = $2 THEN daily_withdrawal_amount + $3 ELSE $3 END,
+                     updated_at = NOW() 
+                 WHERE id = $4`,
+                [PARTICLES_COST, today, wld_amount, user.id]
             )
 
             // B. Create Withdrawal Request
@@ -112,6 +138,13 @@ export async function POST(request: Request) {
                 `INSERT INTO withdrawal_requests (user_id, wallet_address, wld_amount, particles_spent, status) 
                  VALUES ($1, $2, $3, $4, 'pending')`,
                 [user.id, user.world_id_nullifier, wld_amount, PARTICLES_COST]
+            )
+
+            // B2. Log to withdrawal history
+            await client.query(
+                `INSERT INTO withdrawal_history (world_id_nullifier, particles_spent, wld_amount, conversion_rate)
+                 VALUES ($1, $2, $3, $4)`,
+                [user.world_id_nullifier, PARTICLES_COST, wld_amount, PARTICLES_COST]
             )
 
             // C. Update daily stats (upsert)
