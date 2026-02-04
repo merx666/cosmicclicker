@@ -22,7 +22,7 @@ async function updateConversionRate() {
 
         // 2. Calculate dynamic rate
         // Formula: particles_per_0.01_WLD = BASE_RATE * (WLD_PRICE_USD / TARGET_PRICE)
-        const BASE_RATE = 150000
+        const BASE_RATE = 250000
         const TARGET_PRICE = 0.50
         const particlesPerWLD = Math.floor(BASE_RATE * (wldPriceUSD / TARGET_PRICE))
 

@@ -14,7 +14,6 @@ rsync -avz --exclude 'node_modules' \
     --exclude '.next/cache' \
     --exclude '*.tar.gz' \
     --exclude '.gemini' \
-    .next \
     app \
     components \
     store \
@@ -31,7 +30,7 @@ rsync -avz --exclude 'node_modules' \
 
 # 2. Install dependencies, BUILD, & Restart on server
 echo "🔄 Updating server..."
-ssh $SERVER "cd $REMOTE_DIR && npm install --production && npm run build && pm2 delete void-collector || true && pm2 start ecosystem.config.js && pm2 save"
+ssh $SERVER "cd $REMOTE_DIR && chmod +x scripts/*.sh && npm install --production && npm run build && pm2 delete void-collector || true && pm2 start ecosystem.config.js && pm2 save"
 
 echo "✅ Deployment complete!"
 

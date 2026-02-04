@@ -34,7 +34,6 @@ export default function RootLayout({
       <body className={`${outfit.className} antialiased`}>
         <MiniKitProvider>
           {children}
-          <ApiTinyAd />
           <Toaster
             position="top-center"
             toastOptions={{
@@ -45,6 +44,7 @@ export default function RootLayout({
               },
             }}
           />
+          <ApiTinyAd />
         </MiniKitProvider>
 
         {/* Google Analytics */}
