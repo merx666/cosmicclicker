@@ -41,8 +41,8 @@ async function sendMassNotification() {
                 body: JSON.stringify({
                     app_id: APP_ID,
                     wallet_addresses: batch,
-                    title: '✅ App Fixed!',
-                    message: 'Void Collector is now fully operational. All features are working correctly. Thank you for your patience!',
+                    title: '💎 Market Dip Opportunity',
+                    message: 'While the market restricts, Void Collector expands! 🚀 Best time to upgrade to VIP and maximize your earnings. Secure your spot now!',
                     mini_app_path: `worldapp://mini-app?app_id=${APP_ID}`
                 })
             });

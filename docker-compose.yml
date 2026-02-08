@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  void-collector:
+    container_name: void-collector
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    # ports:
+    #   - "3003:3000"
+    network_mode: host
+    env_file:
+      - .env.production
+    environment:
+      - PORT=3003
+      - DATABASE_URL=postgresql://postgres:VoidCollectorDB2024!@127.0.0.1:5432/void_collector
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    # networks:
+    #   - void-net
+
+    # networks:
+    #   void-net:
+    #     driver: bridge

@@ -9,10 +9,10 @@ LOG_FILE="/var/log/void-antiabuse.log"
 DB_NAME="void_collector"
 
 # Thresholds
-MAX_PAYOUTS_PER_DAY=3              # Max payouts per user per day
-MAX_PENDING_PER_USER=5             # Max pending requests per user
-SUSPICIOUS_PARTICLES=10000000      # 10M particles = auto-ban
-MAX_PARTICLES_PER_HOUR=100000      # 100k/hour max legit gain
+MAX_PAYOUTS_PER_DAY=5              # Max payouts per user per day (Increased from 3)
+MAX_PENDING_PER_USER=7             # Max pending requests per user (Increased from 5)
+SUSPICIOUS_PARTICLES=13500000      # 13.5M particles = auto-ban (Increased from 10M)
+MAX_PARTICLES_PER_HOUR=135000      # 135k/hour max legit gain (Increased from 100k)
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"

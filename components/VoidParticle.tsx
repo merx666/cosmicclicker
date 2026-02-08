@@ -73,7 +73,7 @@ export default function VoidParticle() {
 
         // Check rate limit (10 clicks per second max)
         const recentClicks = clickHistoryRef.current.filter(t => now - t < 1000)
-        if (recentClicks.length >= 10) {
+        if (recentClicks.length >= 15) {
             applyPenalty()
             return false
         }
@@ -87,8 +87,8 @@ export default function VoidParticle() {
 
             const variance = calculateVariance(intervals)
 
-            // If variance is too low (< 10ms), likely a bot
-            if (variance < 10) {
+            // If variance is too low (< 5ms), likely a bot (Relaxed from 10)
+            if (variance < 5) {
                 applyPenalty()
                 return false
             }
@@ -105,10 +105,10 @@ export default function VoidParticle() {
         const clickX = ((event.clientX - rect.left) / rect.width) * 100
         const clickY = ((event.clientY - rect.top) / rect.height) * 100
 
-        // Validate click is near target (±15% tolerance)
+        // Validate click is near target (±20% tolerance - relaxed from 15%)
         const dx = Math.abs(clickX - targetPosition.x)
         const dy = Math.abs(clickY - targetPosition.y)
-        const isNearTarget = dx < 15 && dy < 15
+        const isNearTarget = dx < 20 && dy < 20
 
         if (!isNearTarget) {
             toast.error('🎯 Click the glowing target!', { duration: 1000 })
