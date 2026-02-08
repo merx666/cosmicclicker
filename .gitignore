@@ -22,8 +22,11 @@ id_rsa*
 *credentials*
 *.secret
 
-# Scripts with hardcoded passwords
+# Scripts with hardcoded passwords or sensitive data
 scripts/process-payouts.sh
+scripts/send-notification.cjs
+scripts/export_pending_withdrawals.cjs
+scripts/*.secret.*
 
 # ===================
 # DEPENDENCIES
