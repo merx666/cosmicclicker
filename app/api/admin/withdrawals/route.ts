@@ -5,7 +5,12 @@ import { query, execute } from '@/lib/db'
 export async function GET(request: Request) {
     try {
         const authHeader = request.headers.get('authorization')
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'VoidCollector2024!' // Fallback temporarily
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+
+        if (!ADMIN_PASSWORD) {
+            console.error('ADMIN_PASSWORD environment variable is not set')
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
 
         if (!authHeader || authHeader !== `Bearer ${ADMIN_PASSWORD}`) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -31,7 +36,12 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
     try {
         const authHeader = request.headers.get('authorization')
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'VoidCollector2024!'
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+
+        if (!ADMIN_PASSWORD) {
+            console.error('ADMIN_PASSWORD environment variable is not set')
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
 
         if (!authHeader || authHeader !== `Bearer ${ADMIN_PASSWORD}`) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

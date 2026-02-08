@@ -16,21 +16,47 @@ export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
     const [isLoading, setIsLoading] = useState(false)
+    const [sessionToken, setSessionToken] = useState<string | null>(null)
 
+    // Check for existing session (using sessionStorage instead of localStorage for security)
     useEffect(() => {
-        const saved = localStorage.getItem('admin_pwd')
-        if (saved) {
-            setPassword(saved)
+        const token = sessionStorage.getItem('admin_session')
+        if (token) {
+            setSessionToken(token)
             setIsAuthenticated(true)
-            fetchWithdrawals(saved)
+            fetchWithdrawals(token)
         }
     }, [])
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
-        localStorage.setItem('admin_pwd', password)
-        setIsAuthenticated(true)
-        fetchWithdrawals(password)
+        // Verify password with backend first
+        try {
+            const res = await fetch('/api/admin/withdrawals', {
+                headers: { 'Authorization': `Bearer ${password}` }
+            })
+            if (res.ok) {
+                // Store in sessionStorage (cleared on browser close, not persistent)
+                sessionStorage.setItem('admin_session', password)
+                setSessionToken(password)
+                setIsAuthenticated(true)
+                const data = await res.json()
+                setWithdrawals(data.withdrawals || [])
+            } else {
+                alert('Invalid password')
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Login failed')
+        }
+    }
+
+    const handleLogout = () => {
+        sessionStorage.removeItem('admin_session')
+        setSessionToken(null)
+        setIsAuthenticated(false)
+        setPassword('')
+        setWithdrawals([])
     }
 
     const fetchWithdrawals = async (pwd: string) => {
@@ -41,10 +67,10 @@ export default function AdminPage() {
             })
             if (res.ok) {
                 const data = await res.json()
-                setWithdrawals(data)
+                setWithdrawals(data.withdrawals || [])
             } else {
                 alert('Unauthorized')
-                setIsAuthenticated(false)
+                handleLogout()
             }
         } catch (e) {
             console.error(e)
@@ -55,24 +81,51 @@ export default function AdminPage() {
 
     const updateStatus = async (id: string, status: string, hash?: string) => {
         if (!confirm(`Mark as ${status}?`)) return
+        if (!sessionToken) return
 
         try {
             const res = await fetch('/api/admin/withdrawals', {
-                method: 'POST',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${password}`
+                    'Authorization': `Bearer ${sessionToken}`
                 },
                 body: JSON.stringify({ id, status, transaction_hash: hash })
             })
 
             if (res.ok) {
-                fetchWithdrawals(password)
+                fetchWithdrawals(sessionToken)
             } else {
                 alert('Error updating status')
             }
         } catch (e) {
             console.error(e)
+        }
+    }
+
+    const handleExportCSV = async () => {
+        if (!sessionToken) return
+
+        try {
+            const res = await fetch('/api/admin/withdrawals/export', {
+                headers: { 'Authorization': `Bearer ${sessionToken}` }
+            })
+            if (res.ok) {
+                const blob = await res.blob()
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `withdrawals-${new Date().toISOString().split('T')[0]}.csv`
+                document.body.appendChild(a)
+                a.click()
+                a.remove()
+                window.URL.revokeObjectURL(url)
+            } else {
+                alert('Export failed')
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Export failed')
         }
     }
 
@@ -87,8 +140,9 @@ export default function AdminPage() {
                         onChange={e => setPassword(e.target.value)}
                         placeholder="Admin Password"
                         className="bg-gray-800 p-2 rounded w-full border border-gray-700"
+                        autoComplete="current-password"
                     />
-                    <button className="bg-blue-600 px-4 py-2 rounded w-full">Login</button>
+                    <button type="submit" className="bg-blue-600 px-4 py-2 rounded w-full">Login</button>
                 </form>
             </div>
         )
@@ -100,18 +154,23 @@ export default function AdminPage() {
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold">Void Withdrawals</h1>
                     <div className="flex gap-4">
-                        <a
-                            href={`/api/admin/withdrawals/export?token=${password}`}
-                            target="_blank"
+                        <button
+                            onClick={handleExportCSV}
                             className="bg-green-600 px-4 py-2 rounded"
                         >
                             Export CSV
-                        </a>
+                        </button>
                         <button
-                            onClick={() => fetchWithdrawals(password)}
+                            onClick={() => sessionToken && fetchWithdrawals(sessionToken)}
                             className="bg-gray-700 px-4 py-2 rounded"
                         >
                             Refresh
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="bg-red-600 px-4 py-2 rounded"
+                        >
+                            Logout
                         </button>
                     </div>
                 </div>

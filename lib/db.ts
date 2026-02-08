@@ -1,8 +1,13 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg'
 
+// Ensure DATABASE_URL is configured
+if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required')
+}
+
 // Create connection pool
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector',
+    connectionString: process.env.DATABASE_URL,
     ssl: false, // Local connection, no SSL needed
     max: 10, // Maximum connections in pool
     idleTimeoutMillis: 30000,

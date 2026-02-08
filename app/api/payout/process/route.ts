@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { query, queryOne, execute } from '@/lib/db'
 import { transferWLD, getHotWalletBalance, getHotWalletAddress, PAYOUT_LIMITS } from '@/lib/payout'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'VoidCollector2024!'
 const MAX_SINGLE_PAYOUT = PAYOUT_LIMITS.maxSinglePayout
 const MAX_DAILY_TOTAL = PAYOUT_LIMITS.maxDailyTotal // Now 10.0 from lib
 const MIN_HOT_WALLET_BALANCE = 0.1 // Minimum balance to keep in hot wallet
@@ -20,6 +19,13 @@ export async function POST(request: Request) {
     try {
         // Verify admin authorization
         const authHeader = request.headers.get('authorization')
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+
+        if (!ADMIN_PASSWORD) {
+            console.error('ADMIN_PASSWORD environment variable is not set')
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
+
         if (!authHeader || authHeader !== `Bearer ${ADMIN_PASSWORD}`) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -179,6 +185,13 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
     try {
         const authHeader = request.headers.get('authorization')
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+
+        if (!ADMIN_PASSWORD) {
+            console.error('ADMIN_PASSWORD environment variable is not set')
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
+
         if (!authHeader || authHeader !== `Bearer ${ADMIN_PASSWORD}`) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

@@ -1,13 +1,26 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const { Pool } = require('pg');
 
-const API_KEY = 'api_a2V5XzE3YzBlOTE1ZDcxMDIxYzk4NWRmMTc0MjQ4ZGU5YmJiOnNrXzFhNzgxMGZhNDdhMWMzNmY3MDRiMTMyZjQyZmQ4MWZlMzg2ODBjYjQ0NzA4MzRjNg';
-const APP_ID = 'app_e3c317455f168a14ab972dbe4f34ab9a';
+// Load secrets from environment variables
+const API_KEY = process.env.WORLDCOIN_API_KEY;
+const APP_ID = process.env.WORLDCOIN_APP_ID || 'app_e3c317455f168a14ab972dbe4f34ab9a';
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!API_KEY) {
+    console.error('[Notification] ERROR: WORLDCOIN_API_KEY environment variable is required');
+    process.exit(1);
+}
+
+if (!DATABASE_URL) {
+    console.error('[Notification] ERROR: DATABASE_URL environment variable is required');
+    process.exit(1);
+}
 
 async function sendMassNotification() {
     const pool = new Pool({
-        connectionString: 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector'
+        connectionString: DATABASE_URL
     });
 
     try {
