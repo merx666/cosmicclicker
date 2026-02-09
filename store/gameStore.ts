@@ -66,7 +66,10 @@ export interface GameState {
     claimMissionReward: (missionId: string, reward: number) => boolean
     loadGameState: (userHash: string) => Promise<void>
     saveGameState: () => Promise<void>
+    debouncedSave: () => void
 }
+
+let saveTimeout: NodeJS.Timeout | null = null
 
 export const useGameStore = create<GameState>()(
     persist(
@@ -150,10 +153,8 @@ export const useGameStore = create<GameState>()(
                     dailyParticlesCollected: state.dailyParticlesCollected + earned
                 })
 
-                // Auto-save every 10 clicks
-                if (state.totalClicks % 10 === 0) {
-                    get().saveGameState()
-                }
+                // Trigger debounced save
+                get().debouncedSave()
             },
 
             // Purchase upgrade
@@ -419,6 +420,15 @@ export const useGameStore = create<GameState>()(
                 } catch (error) {
                     console.error('Failed to load game state:', error)
                 }
+            },
+
+            // Debounced save
+            debouncedSave: () => {
+                if (saveTimeout) clearTimeout(saveTimeout)
+                saveTimeout = setTimeout(() => {
+                    get().saveGameState()
+                    saveTimeout = null
+                }, 2000)
             },
 
             // Save game state to API

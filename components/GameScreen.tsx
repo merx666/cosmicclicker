@@ -7,6 +7,7 @@ import ParticleCounter from './ParticleCounter'
 import Navigation from './Navigation'
 import UpgradesTab from './tabs/UpgradesTab'
 import MissionsTab from './tabs/MissionsTab'
+import LeaderboardTab from './tabs/LeaderboardTab'
 import PremiumTab from './tabs/PremiumTab'
 import ConvertTab from './tabs/ConvertTab'
 import RouletteTab from './tabs/RouletteTab'
@@ -52,6 +53,17 @@ export default function GameScreen({ userHash }: GameScreenProps) {
         }, 30000)
 
         return () => clearInterval(interval)
+    }, [saveGameState])
+
+    // Save on visibility change (tab close/switch)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                saveGameState()
+            }
+        }
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
     }, [saveGameState])
 
     return (
@@ -120,6 +132,18 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             transition={{ duration: 0.3 }}
                         >
                             <MissionsTab />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'leaderboard' && (
+                        <motion.div
+                            key="leaderboard"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <LeaderboardTab />
                         </motion.div>
                     )}
 
