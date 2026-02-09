@@ -52,19 +52,23 @@ function getHotWalletAccount() {
 
 /**
  * Create viem clients for World Chain
+ * Uses custom RPC URL from env or fallback to avoid rate limiting
  */
 function createClients() {
     const account = getHotWalletAccount()
 
+    // Use custom RPC to avoid Alchemy public rate limits
+    const rpcUrl = process.env.WORLD_CHAIN_RPC_URL || 'https://worldchain-mainnet.g.alchemy.com/v2/demo' || 'https://worldchain-mainnet.rpc.com'
+
     const walletClient = createWalletClient({
         account,
         chain: worldchain,
-        transport: http()
+        transport: http(rpcUrl)
     })
 
     const publicClient = createPublicClient({
         chain: worldchain,
-        transport: http()
+        transport: http(rpcUrl)
     })
 
     return { walletClient, publicClient, account }
