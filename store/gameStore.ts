@@ -69,7 +69,7 @@ export interface GameState {
     debouncedSave: () => void
 }
 
-let saveTimeout: NodeJS.Timeout | null = null
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
 export const useGameStore = create<GameState>()(
     persist(

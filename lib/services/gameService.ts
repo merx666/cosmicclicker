@@ -1,9 +1,47 @@
 import { query, queryOne } from '@/lib/db'
 
+// Typed result for service operations
+export type ServiceResult<T> =
+    | { success: true; data: T }
+    | { success: false; error: string; statusCode: number }
+
+// Type for game state update payload
+export interface GameStateUpdate {
+    particles?: number
+    particles_per_click?: number
+    particles_per_second?: number
+    total_clicks?: number
+    total_particles_collected?: number
+    total_passive_particles?: number
+    upgrade_click_power?: number
+    upgrade_auto_collector?: number
+    upgrade_multiplier?: number
+    upgrade_offline?: number
+    premium_particle_skin?: string
+    premium_background_theme?: string
+    unlocked_skins?: string[]
+    unlocked_themes?: string[]
+    premium_auto_save?: boolean
+    premium_statistics?: boolean
+    premium_notifications?: boolean
+    premium_lucky_particle?: boolean
+    premium_offline_earnings?: boolean
+    premium_daily_bonus?: boolean
+    premium_vip?: boolean
+    vip_tier?: number
+    last_daily_bonus_time?: string | null
+    login_streak?: number
+    daily_clicks?: number
+    daily_passive_particles?: number
+    daily_particles_collected?: number
+    last_daily_reset?: string | null
+    claimed_missions?: string[]
+}
+
 export class GameService {
-    static async getGameState(hash: string) {
+    static async getGameState(hash: string): Promise<ServiceResult<any>> {
         if (!hash) {
-            throw new Error('Missing hash parameter')
+            return { success: false, error: 'Missing hash parameter', statusCode: 400 }
         }
 
         const user = await queryOne(
@@ -11,13 +49,16 @@ export class GameService {
             [hash]
         )
 
-        return user
+        if (!user) {
+            return { success: false, error: 'User not found', statusCode: 404 }
+        }
+
+        return { success: true, data: user }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static async saveGameState(hash: string, gameData: any) {
+    static async saveGameState(hash: string, gameData: GameStateUpdate): Promise<ServiceResult<any>> {
         if (!hash) {
-            throw new Error('Missing nullifier_hash')
+            return { success: false, error: 'Missing nullifier_hash', statusCode: 400 }
         }
 
         // 1. Fetch current user state for validation
@@ -27,7 +68,7 @@ export class GameService {
         )
 
         if (!currentUser) {
-            throw new Error('User not found')
+            return { success: false, error: 'User not found', statusCode: 404 }
         }
 
         // 2. Security: Block sensitive fields
@@ -35,7 +76,7 @@ export class GameService {
         const allowedKeys = Object.keys(gameData).filter(k => !BLOCKED_FIELDS.includes(k))
 
         if (allowedKeys.length === 0) {
-            throw new Error('No data to update')
+            return { success: false, error: 'No data to update', statusCode: 400 }
         }
 
         // 3. Security: Anti-Cheat Cap & Sanitization
@@ -49,8 +90,8 @@ export class GameService {
         // Identify JSON fields to stringify (fix for node-postgres array issue)
         const JSON_FIELDS = ['unlocked_skins', 'unlocked_themes', 'claimed_missions']
 
-        // Create a copy to modify (using gameData values directly)
-        const sanitizedData = { ...gameData }
+        // Create a copy to modify
+        const sanitizedData: Record<string, any> = { ...gameData }
 
         if (sanitizedData.particles !== undefined) {
             const newParticles = Number(sanitizedData.particles)
@@ -90,7 +131,7 @@ export class GameService {
 
         if (dbTotalCollected > 1000 && newTotalCollected < 100) {
             console.warn(`[Save Protection] Blocked wipe for ${hash}. DB: ${dbTotalCollected}, New: ${newTotalCollected}`)
-            return { success: true, saved: false, reason: 'regression_detected' }
+            return { success: true, data: { saved: false, reason: 'regression_detected' } }
         }
 
         // Protect VIP Status
@@ -100,7 +141,6 @@ export class GameService {
 
         // 4. Build dynamic UPDATE query
         const setClause = allowedKeys.map((k, i) => `${k} = $${i + 1}`).join(', ')
-        // Use allowedKeys to map values from sanitizedData
         const values = [...allowedKeys.map(k => sanitizedData[k]), hash]
 
         const result = await query(

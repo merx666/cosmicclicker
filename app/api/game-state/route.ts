@@ -11,17 +11,17 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Missing hash parameter' }, { status: 400 })
         }
 
-        const user = await GameService.getGameState(hash)
+        const result = await GameService.getGameState(hash)
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (!result.success) {
+            return NextResponse.json({ error: result.error }, { status: result.statusCode })
         }
 
-        return NextResponse.json(user)
+        return NextResponse.json(result.data)
 
     } catch (error: any) {
         console.error('GET game-state error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
 
@@ -37,11 +37,14 @@ export async function POST(request: Request) {
 
         const result = await GameService.saveGameState(nullifier_hash, gameData)
 
-        return NextResponse.json(result)
+        if (!result.success) {
+            return NextResponse.json({ error: result.error }, { status: result.statusCode })
+        }
+
+        return NextResponse.json(result.data)
 
     } catch (error: any) {
         console.error('POST game-state error:', error)
-        // If it's a known error message, maybe map to 400, but 500 is safe default
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

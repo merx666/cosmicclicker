@@ -13,24 +13,59 @@ interface LeaderboardEntry {
 export default function LeaderboardTab() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
                 const res = await fetch('/api/leaderboard')
-                if (res.ok) {
-                    const data = await res.json()
-                    // Sort again just in case, though API should do it
-                    setLeaderboard(data.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score))
+
+                if (!res.ok) {
+                    throw new Error(`Failed to load leaderboard: ${res.status} ${res.statusText}`)
                 }
-            } catch (error) {
-                console.error('Failed to load leaderboard', error)
+
+                const data = await res.json()
+                // Sort again just in case, though API should do it
+                setLeaderboard(data.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score))
+                setError(null)
+            } catch (err) {
+                console.error('Failed to load leaderboard', err)
+                const message = err instanceof Error ? err.message : 'Failed to load leaderboard'
+                setError(message)
+                setLeaderboard([])
             } finally {
                 setLoading(false)
             }
         }
         fetchLeaderboard()
     }, [])
+
+    const handleRetry = () => {
+        setLoading(true)
+        setError(null)
+        // Re-run effect by resetting state
+        const fetchLeaderboard = async () => {
+            try {
+                const res = await fetch('/api/leaderboard')
+
+                if (!res.ok) {
+                    throw new Error(`Failed to load leaderboard: ${res.status} ${res.statusText}`)
+                }
+
+                const data = await res.json()
+                setLeaderboard(data.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score))
+                setError(null)
+            } catch (err) {
+                console.error('Failed to load leaderboard', err)
+                const message = err instanceof Error ? err.message : 'Failed to load leaderboard'
+                setError(message)
+                setLeaderboard([])
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchLeaderboard()
+    }
 
     return (
         <div className="py-8 space-y-4 px-4 pb-24">
@@ -45,6 +80,17 @@ export default function LeaderboardTab() {
                 <div className="flex flex-col items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-void-purple mb-4"></div>
                     <p className="text-text-secondary">Loading rankings...</p>
+                </div>
+            ) : error ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                    <div className="text-red-500 text-4xl mb-4">⚠️</div>
+                    <p className="text-red-400 mb-4">{error}</p>
+                    <button
+                        onClick={handleRetry}
+                        className="px-4 py-2 bg-void-purple/20 border border-void-purple/50 rounded-lg hover:bg-void-purple/30 transition-colors"
+                    >
+                        Try Again
+                    </button>
                 </div>
             ) : (
                 <div className="space-y-3">
