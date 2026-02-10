@@ -175,8 +175,8 @@ export async function batchTransferWLD(
             ...result
         })
 
-        // Small delay between transactions
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Delay between transactions to avoid RPC rate limits
+        await new Promise(resolve => setTimeout(resolve, 5000))
     }
 
     return results

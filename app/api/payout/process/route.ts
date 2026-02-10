@@ -37,7 +37,7 @@ export async function POST(request: Request) {
              LEFT JOIN users u ON wr.user_id = u.id 
              WHERE wr.status = 'pending' 
              ORDER BY wr.created_at ASC 
-             LIMIT 10`
+             LIMIT 5`
         )
 
         const withdrawals = result.rows
