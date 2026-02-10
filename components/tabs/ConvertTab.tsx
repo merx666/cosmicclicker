@@ -184,46 +184,20 @@ export default function ConvertTab() {
                 <p className="text-text-secondary">Convert particles to real WLD tokens</p>
             </div>
 
-            {/* Notification Alert */}
-            <div className="mb-6 mx-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                <h3 className="font-bold text-amber-400 mb-2">📢 Message from the Developer</h3>
-                <p className="text-sm text-amber-200/80 leading-relaxed">
-                    I sincerely apologize to all users for the issues that occurred during the app launch.
-                    This app is managed by just one person, which is why fixes took so long.
-                    This is my first application - I'm only human and I make mistakes too.
+            {/* Developer Update */}
+            <div className="mb-6 mx-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <h3 className="font-bold text-emerald-400 mb-2">✅ Message from the Developer</h3>
+                <p className="text-sm text-emerald-200/80 leading-relaxed">
+                    All payouts have been permanently fixed! The withdrawal system has been fully
+                    overhauled with a new, more reliable infrastructure. There should be no more
+                    issues with pending withdrawals or delayed payments.
                 </p>
-                <p className="text-sm text-amber-200/80 leading-relaxed mt-2">
-                    Thank you to everyone who reported bugs directly via email.
-                    However, I will not thank those who shamelessly tried to exploit the app's security -
-                    stealing YOUR payouts and laughing about it. These individuals have been reported to
-                    the appropriate authorities and WorldApp support.
+                <p className="text-sm text-emerald-200/80 leading-relaxed mt-2">
+                    Thank you for your patience while we resolved these issues. If you experience
+                    any problems, please don&apos;t hesitate to report them.
                 </p>
-                <p className="text-sm text-amber-200/80 leading-relaxed mt-2">
-                    If the stolen funds are returned to the hot wallet address below,
-                    daily payouts will be increased and I will withdraw all claims against those individuals:
-                </p>
-                <p className="text-xs text-amber-300 font-mono mt-2 break-all bg-amber-900/30 p-2 rounded">
-                    0x68b4aa6fB4f00dD1A8F8d9AfD6401e4baF67C817
-                </p>
-                <p className="text-sm text-amber-200/80 mt-3 font-semibold">
-                    May the Void be with you. 🌌
-                </p>
-            </div>
-
-            {/* Security Alert */}
-            <div className="mb-6 mx-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                <h3 className="font-bold text-red-400 mb-2">🛡️ Anti-Abuse System Active</h3>
-                <p className="text-sm text-red-200/80 leading-relaxed">
-                    An automatic anti-abuse monitoring system has been deployed. The payout queue contained
-                    fraudulent withdrawal requests totaling over <strong>15 WLD</strong> from exploiters.
-                </p>
-                <p className="text-sm text-red-200/80 leading-relaxed mt-2">
-                    <strong>⚠️ Warning:</strong> Any abuse attempts will be <strong>instantly banned</strong> and
-                    automatically reported to <strong>WorldApp Support</strong>. Your World ID will be flagged
-                    across the entire World ecosystem.
-                </p>
-                <p className="text-xs text-red-300/60 mt-2">
-                    Play fair. The Void sees everything. 👁️
+                <p className="text-sm text-emerald-200/80 mt-3 font-semibold">
+                    Happy collecting! May the Void be with you. 🌌
                 </p>
             </div>
             <motion.div
