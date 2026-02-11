@@ -1,0 +1,32 @@
+{
+    "Navigation": {
+        "collect": "Collect",
+        "upgrades": "Upgrades",
+        "missions": "Missions",
+        "leaderboard": "Ranking",
+        "premium": "Premium",
+        "convert": "Convert",
+        "roulette": "Roulette",
+        "machine": "Machine",
+        "survey": "Vote",
+        "media": "Media"
+    },
+    "Game": {
+        "title": "VOID COLLECTOR",
+        "clickInstruction": "Click the particle to collect Void Particles! ✨"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "verifying": "Verifying..."
+    },
+    "Home": {
+        "subtitle": "Collect Void Particles and earn WLD",
+        "verificationTitle": "World ID Verification",
+        "verificationDesc": "Verify your identity to start playing",
+        "verifyButton": "Verify with World ID",
+        "secureVerification": "Secure verification through WorldApp",
+        "privacyProtected": "Your privacy is protected",
+        "worldAppRequired": "You need WorldApp to play"
+    }
+}

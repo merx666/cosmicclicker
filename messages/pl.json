@@ -1,0 +1,32 @@
+{
+    "Navigation": {
+        "collect": "Zbieraj",
+        "upgrades": "Ulepszenia",
+        "missions": "Misje",
+        "leaderboard": "Ranking",
+        "premium": "Premium",
+        "convert": "Wymień",
+        "roulette": "Ruletka",
+        "machine": "Maszyna",
+        "survey": "Vote",
+        "media": "Media"
+    },
+    "Game": {
+        "title": "VOID COLLECTOR",
+        "clickInstruction": "Klikaj w cząsteczkę, aby zbierać Void Particles! ✨"
+    },
+    "Common": {
+        "loading": "Ładowanie...",
+        "error": "Błąd",
+        "verifying": "Weryfikacja..."
+    },
+    "Home": {
+        "subtitle": "Zbieraj Cząsteczki Pustki i zarabiaj WLD",
+        "verificationTitle": "Weryfikacja World ID",
+        "verificationDesc": "Zweryfikuj tożsamość, aby rozpocząć grę",
+        "verifyButton": "Zweryfikuj przez World ID",
+        "secureVerification": "Bezpieczna weryfikacja przez WorldApp",
+        "privacyProtected": "Twoja prywatność jest chroniona",
+        "worldAppRequired": "Wymagana aplikacja WorldApp"
+    }
+}

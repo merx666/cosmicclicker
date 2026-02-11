@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 
 // GET - Export withdrawals as CSV
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
     try {
         const authHeader = request.headers.get('authorization')

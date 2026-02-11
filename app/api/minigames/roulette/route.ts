@@ -16,15 +16,16 @@ export async function POST(request: NextRequest) {
             [nullifier_hash]
         )
 
-        if (userResult.rowCount === 0) {
+        if ((userResult.rowCount ?? 0) === 0) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
         const user = userResult.rows[0]
 
         // Define costs and rewards based on variant
+        const isFree = variant === 'free'
         const isBig = variant === 'big'
-        const cost = isBig ? 1.5 : 0.45 // Big bet = 3x cost approx
+        const cost = isFree ? 0 : (isBig ? 1.5 : 0.45)
 
         // Check if transaction ref already used
         const existingTx = await query(
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
             [transaction_ref]
         )
 
-        if (existingTx.rowCount > 0) {
+        if ((existingTx.rowCount ?? 0) > 0) {
             return NextResponse.json({ error: 'Transaction already processed' }, { status: 400 })
         }
 
@@ -58,7 +59,36 @@ export async function POST(request: NextRequest) {
         // 5: Gold Token
         // 6: Platinum Token
 
-        if (isBig) {
+        if (isFree) {
+            // FREE SPIN rewards: 10k-35k particles in 5k steps, 0.01337% chance of 0.01 WLD
+            const freeRoll = Math.random() * 100
+            if (freeRoll < 0.01337) {
+                // ULTRA RARE: 0.01 WLD!
+                rewardType = 'wld'
+                rewardValue = 0.01
+                message = '🎉 INCREDIBLE! You won 0.01 WLD from a FREE spin!'
+                symbolResult = [5, 5, 5]
+            } else {
+                // Particles: 10k, 15k, 20k, 25k, 30k, 35k (weighted: lower = more likely)
+                const particleTiers = [10000, 15000, 20000, 25000, 30000, 35000]
+                // Weights: 35%, 25%, 18%, 12%, 7%, 3%
+                const weights = [0.35, 0.25, 0.18, 0.12, 0.07, 0.03]
+                const tierRoll = Math.random()
+                let cumulative = 0
+                let selectedTier = particleTiers[0]
+                for (let i = 0; i < weights.length; i++) {
+                    cumulative += weights[i]
+                    if (tierRoll < cumulative) {
+                        selectedTier = particleTiers[i]
+                        break
+                    }
+                }
+                rewardType = 'particles'
+                rewardValue = selectedTier
+                message = `Free spin: +${selectedTier.toLocaleString()} particles!`
+                symbolResult = selectedTier >= 25000 ? [2, 2, 2] : [1, 1, 1]
+            }
+        } else if (isBig) {
             if (roll < 0.05) { // 0.05% Platinum
                 rewardType = 'vip'
                 rewardValue = 4

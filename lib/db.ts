@@ -1,13 +1,13 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg'
 
-// Ensure DATABASE_URL is configured
-if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is required')
+// Build-safe: allow building without DATABASE_URL (Docker builds)
+if (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'production') {
+    console.warn('[DB] WARNING: DATABASE_URL not set. Using fallback connection string.')
 }
 
 // Create connection pool
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector',
     ssl: false, // Local connection, no SSL needed
     max: 10, // Maximum connections in pool
     idleTimeoutMillis: 30000,

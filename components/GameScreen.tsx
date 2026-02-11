@@ -11,8 +11,13 @@ import LeaderboardTab from './tabs/LeaderboardTab'
 import PremiumTab from './tabs/PremiumTab'
 import ConvertTab from './tabs/ConvertTab'
 import RouletteTab from './tabs/RouletteTab'
+import SurveyTab from './tabs/SurveyTab'
+import MediaTab from './tabs/MediaTab'
 import { motion, AnimatePresence } from 'framer-motion'
 import BackgroundEffects from './effects/BackgroundEffects'
+import { useTranslations } from 'next-intl'
+import LanguageSwitcher from './LanguageSwitcher'
+import ChangelogModal from './ChangelogModal'
 
 
 interface GameScreenProps {
@@ -28,6 +33,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
     const premiumBackgroundTheme = useGameStore((state) => state.premiumBackgroundTheme)
     const particles = useGameStore((state) => state.particles)
+    const t = useTranslations('Game')
 
     // Load game state on mount
     useEffect(() => {
@@ -68,6 +74,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
 
     return (
         <div className="min-h-screen bg-void-dark text-white pb-24">
+            <ChangelogModal />
             {/* Premium background effects */}
             <BackgroundEffects theme={premiumBackgroundTheme as 'default' | 'nebula' | 'galaxy'} />
             {/* Header */}
@@ -75,7 +82,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                 <div className="max-w-2xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <h1 className="text-xl font-bold bg-gradient-to-r from-void-purple to-particle-glow bg-clip-text text-transparent">
-                            VOID COLLECTOR
+                            {t('title')}
                         </h1>
                         <div className="flex items-center gap-2">
                             <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
@@ -106,7 +113,11 @@ export default function GameScreen({ userHash }: GameScreenProps) {
 
                             {/* Quick stats */}
                             <div className="mt-8 text-center text-sm text-text-secondary">
-                                <p>Click the particle to collect Void Particles! ✨</p>
+                                <p>{t('clickInstruction')}</p>
+                            </div>
+
+                            <div className="mt-8 mx-auto max-w-xs opacity-50 hover:opacity-100 transition-opacity">
+                                <LanguageSwitcher />
                             </div>
                         </motion.div>
                     )}
@@ -180,6 +191,30 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             transition={{ duration: 0.3 }}
                         >
                             <RouletteTab />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'survey' && (
+                        <motion.div
+                            key="survey"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <SurveyTab />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'media' && (
+                        <motion.div
+                            key="media"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <MediaTab />
                         </motion.div>
                     )}
                 </AnimatePresence>
