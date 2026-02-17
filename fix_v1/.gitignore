@@ -1,0 +1,127 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ===================
+# SENSITIVE / SECRETS
+# ===================
+# Environment files - CRITICAL: contain private keys & passwords
+.env
+.env.*
+.env.local
+.env.production
+.env.development
+.env.staging
+
+# Private keys and certificates
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa*
+*.secrets
+*credentials*
+*.secret
+
+# Scripts with hardcoded passwords or sensitive data
+scripts/process-payouts.sh
+scripts/send-notification.cjs
+scripts/export_pending_withdrawals.cjs
+scripts/*.secret.*
+
+# ===================
+# DEPENDENCIES
+# ===================
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ===================
+# BUILD OUTPUT
+# ===================
+/.next/
+/out/
+/build
+/dist
+
+# ===================
+# BACKUP ARCHIVES
+# ===================
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# ===================
+# DATABASE / MIGRATION
+# ===================
+/supabase/
+*.sql.backup
+supabase_*.json
+check-migration.mjs
+run-migration.mjs
+run-withdrawal-migration.mjs
+
+# ===================
+# LOGS & DEBUG
+# ===================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===================
+# TESTING
+# ===================
+/coverage
+.nyc_output
+
+# ===================
+# IDE / EDITOR
+# ===================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ===================
+# OS FILES
+# ===================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ===================
+# DEPLOYMENT
+# ===================
+.vercel
+ecosystem.config.js
+deploy.sh
+deploy_local.sh
+
+# ===================
+# TYPESCRIPT
+# ===================
+*.tsbuildinfo
+next-env.d.ts
+
+# ===================
+# MISC
+# ===================
+.cache
+.temp
+.tmp

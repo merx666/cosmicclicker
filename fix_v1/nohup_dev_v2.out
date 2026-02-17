@@ -1,0 +1,35 @@
+
+> voidcollector@0.1.0 dev
+> next dev
+
+⨯ Failed to load env from .env.local Error: EPERM: operation not permitted, stat '/Users/merx/voidcollector/fix_v1/.env.local'
+    at ignore-listed frames {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'stat',
+  path: '/Users/merx/voidcollector/fix_v1/.env.local'
+}
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/merx/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/merx/voidcollector/fix_v1/package-lock.json
+   * /Users/merx/voidcollector/package-lock.json
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3004
+- Network:       http://192.168.144.88:3004
+
+✓ Starting...
+Error: EPERM: operation not permitted, open '/Users/merx/voidcollector/fix_v1/.next/dev/logs/next-development.log'
+    at ignore-listed frames {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'open',
+  path: '/Users/merx/voidcollector/fix_v1/.next/dev/logs/next-development.log'
+}
+
+thread 'tokio-runtime-worker' (10277237) panicked at crates/napi/src/next_api/turbopack_ctx.rs:346:29:
+Failed to open /var/folders/2m/hgnbvd491qqdcc5p9vg1hqvw0000gn/T/next-panic-46fb95e40f204db419b9a8e483ff2cdf.log
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

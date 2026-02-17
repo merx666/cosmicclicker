@@ -1,0 +1,36 @@
+
+> voidcollector@0.1.0 start
+> next start
+
+▲ Next.js 16.1.1
+- Local:         http://localhost:3004
+- Network:       http://192.168.144.88:3004
+
+✓ Starting...
+⨯ Failed to load env from .env.local Error: EPERM: operation not permitted, stat '/Users/merx/voidcollector/fix_v1/.env.local'
+    at ignore-listed frames {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'stat',
+  path: '/Users/merx/voidcollector/fix_v1/.env.local'
+}
+⨯ Failed to load env from .env.production Error: EPERM: operation not permitted, stat '/Users/merx/voidcollector/fix_v1/.env.production'
+    at ignore-listed frames {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'stat',
+  path: '/Users/merx/voidcollector/fix_v1/.env.production'
+}
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/merx/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/merx/voidcollector/fix_v1/package-lock.json
+   * /Users/merx/voidcollector/package-lock.json
+
+⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+✓ Ready in 1787ms
+⨯ Error: Failed to load external module pg-e23861b7460b3d06: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'pg-e23861b7460b3d06' imported from /Users/merx/voidcollector/fix_v1/.next/server/chunks/[turbopack]_runtime.js
+    at Context.externalImport [as y] (.next/server/chunks/[turbopack]_runtime.js:518:15)
+    at async (.next/server/chunks/[root-of-the-server]__1bbc551d._.js:1:1025)

@@ -1,0 +1,42 @@
+{
+  "name": "ani-ads-sdk",
+  "version": "2.0.11",
+  "description": "Ani Ads SDK for Mini App Creators to display ads in their apps",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "ads",
+    "worldchain",
+    "world-app",
+    "mini-app"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eruda": "^3.4.3",
+    "tsup": "^8.0.0",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "@worldcoin/minikit-js": ">=1.9.6"
+  }
+}
