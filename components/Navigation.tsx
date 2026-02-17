@@ -34,9 +34,10 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
 
     const tabs = [
         { id: 'collect', label: t('collect'), icon: '/assets/nav/collect.png' },
+        { id: 'void_club', label: 'VOID CLUB', icon: '🟣', badge: 'NEW' },
         { id: 'upgrades', label: t('upgrades'), icon: '/assets/nav/upgrades.png' },
         { id: 'missions', label: t('missions'), icon: '/assets/nav/missions.png' },
-        { id: 'leaderboard', label: t('leaderboard'), icon: '/assets/nav/leaderboard.png', badge: 'NEW' },
+        { id: 'leaderboard', label: t('leaderboard'), icon: '/assets/nav/leaderboard.png' },
         { id: 'premium', label: t('premium'), icon: '/assets/nav/premium.png' },
         { id: 'convert', label: t('convert'), icon: '/assets/nav/convert.png', highlight: true },
         { id: 'roulette', label: t('machine'), icon: '/assets/nav/roulette.png', badge: freeSpinAvailable ? 'FREE' : undefined },

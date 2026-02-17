@@ -33,7 +33,9 @@ export default function PremiumTab() {
         unlockedThemes,
         claimDailyBonus,
         lastDailyBonusTime,
-        loginStreak
+        loginStreak,
+        nullifierHash,
+        loadGameState
     } = useGameStore()
 
     const [purchasing, setPurchasing] = useState<string | null>(null)
@@ -112,7 +114,7 @@ export default function PremiumTab() {
             name: 'VIP Status',
             description: 'Unlock ALL premium features at once!',
             image: '/assets/premium/vip.png',
-            price: 0.48,
+            price: 10.00,
             category: 'advanced',
             owned: premiumVIP
         }
@@ -295,7 +297,7 @@ export default function PremiumTab() {
         <div className="py-8">
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">💎 Premium Shop</h2>
-                <p className="text-text-secondary">Exclusive upgrades powered by WLD</p>
+                <p className="text-text-secondary">Exclusive upgrades powered by WLD & VOID</p>
             </div>
 
             {/* VIP Tier Section */}
@@ -316,10 +318,10 @@ export default function PremiumTab() {
                 {/* Tier Cards */}
                 <div className="grid grid-cols-2 gap-3">
                     {[
-                        { tier: 1, name: '🥉 Bronze', price: 0.48, benefits: ['All features', 'Lucky 5%/2x'] },
-                        { tier: 2, name: '🥈 Silver', price: 1.20, benefits: ['Lucky 8%/2x', '+2 per click', 'Ad-free'] },
-                        { tier: 3, name: '🥇 Gold', price: 2.50, benefits: ['Lucky 12%/3x', 'Mega 1%/10x', 'Priority'] },
-                        { tier: 4, name: '💎 Platinum', price: 5.00, benefits: ['Lucky 15%/5x', 'Mega 3%/15x', 'Instant'] }
+                        { tier: 1, name: '🥉 Bronze', price: 3.50, benefits: ['All features', 'Lucky 5%/2x'] },
+                        { tier: 2, name: '🥈 Silver', price: 5.50, benefits: ['Lucky 8%/2x', '+2 per click', 'Ad-free'] },
+                        { tier: 3, name: '🥇 Gold', price: 7.50, benefits: ['Lucky 12%/3x', 'Mega 1%/10x', 'Priority'] },
+                        { tier: 4, name: '💎 Platinum', price: 10.00, benefits: ['Lucky 15%/5x', 'Mega 3%/15x', 'Instant'] }
                     ].map(({ tier, name, price, benefits }) => {
                         const isCurrent = vipTier === tier
                         const canUpgrade = vipTier < tier
@@ -335,7 +337,7 @@ export default function PremiumTab() {
                             >
                                 <div className="text-center mb-2">
                                     <div className="font-bold">{name}</div>
-                                    <div className="text-sm text-yellow-400">{price} WLD</div>
+                                    <div className="text-sm text-yellow-400">{price.toFixed(2)} WLD</div>
                                 </div>
                                 <div className="text-xs text-text-secondary space-y-1">
                                     {benefits.map((b, i) => <div key={i}>• {b}</div>)}
@@ -346,9 +348,17 @@ export default function PremiumTab() {
                                 {canUpgrade && (
                                     <button
                                         onClick={() => {
-                                            const upgradeCost = vipTier === 0 ? price : price - [0, 0.48, 1.20, 2.50, 5.00][vipTier]
+                                            // Calculate upgrade cost: simply the full price of the new tier minus price of current tier
+                                            // Prices: [0, 3.50, 5.50, 7.50, 10.00]
+                                            const tierPrices = [0, 3.50, 5.50, 7.50, 10.00]
+                                            const upgradeCost = tierPrices[tier] - tierPrices[vipTier]
+
                                             console.log('[Premium] Tier purchase:', { tier, vipTier, price, upgradeCost })
-                                            handlePurchase(`vip_tier_${tier}`, upgradeCost)
+                                            if (upgradeCost > 0) {
+                                                handlePurchase(`vip_tier_${tier}`, upgradeCost)
+                                            } else {
+                                                toast.error("Cannot upgrade to lower/same tier")
+                                            }
                                         }}
                                         className="mt-2 w-full py-1 bg-void-purple hover:bg-void-purple/80 rounded text-xs font-bold"
                                     >
