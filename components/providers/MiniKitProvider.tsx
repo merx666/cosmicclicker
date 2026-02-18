@@ -20,7 +20,11 @@ export function MiniKitProvider({ children }: MiniKitProviderProps) {
                     return
                 }
 
-                await MiniKit.install(appId)
+                // Add timeout to prevent infinite loading if MiniKit hangs
+                await Promise.race([
+                    MiniKit.install(appId),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('MiniKit install timeout')), 3000))
+                ])
 
                 // Request notification permission after MiniKit is installed
                 if (MiniKit.isInstalled()) {
@@ -37,7 +41,7 @@ export function MiniKitProvider({ children }: MiniKitProviderProps) {
 
                 setIsReady(true)
             } catch (error) {
-                console.error('Failed to install MiniKit:', error)
+                console.error('Failed to install MiniKit (or timeout):', error)
                 setIsReady(true) // Still render app even if MiniKit fails
             }
         }
