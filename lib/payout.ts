@@ -13,8 +13,8 @@ const WLD_DECIMALS = 18
 
 // Security limits
 export const PAYOUT_LIMITS = {
-    maxSinglePayout: 0.05,    // Max 0.05 WLD per transaction
-    maxDailyTotal: 7.0,       // Max 7 WLD total per day
+    maxSinglePayout: 0.15,    // Max 0.15 WLD per transaction (raised from 0.05 to unblock 0.10 WLD payouts)
+    maxDailyTotal: 10.0,      // Max 10 WLD total per day
     minBalance: 0.1           // Min balance to keep in hot wallet
 }
 
