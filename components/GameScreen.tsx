@@ -21,7 +21,15 @@ import BackgroundEffects from './effects/BackgroundEffects'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from './LanguageSwitcher'
 import ChangelogModal from './ChangelogModal'
+import GameHeader from './GameHeader'
 
+// PERFORMANCE OPTIMIZATION (Bolt ⚡):
+// Separated the click instruction component so GameScreen does not need to
+// hold translations specifically just to print the instruction text.
+function GameScreenInstruction() {
+    const t = useTranslations('Game')
+    return <p>{t('clickInstruction')}</p>
+}
 
 interface GameScreenProps {
     userHash: string
@@ -36,8 +44,6 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
     const unlockedPremiumUpgrades = useGameStore((state) => state.unlockedPremiumUpgrades) || []
     const premiumBackgroundTheme = useGameStore((state) => state.premiumBackgroundTheme)
-    const particles = useGameStore((state) => state.particles)
-    const t = useTranslations('Game')
 
     // Load game state on mount
     useEffect(() => {
@@ -87,20 +93,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
             {/* Premium background effects */}
             <BackgroundEffects theme={premiumBackgroundTheme as 'default' | 'nebula' | 'galaxy'} />
             {/* Header */}
-            <header className="sticky top-0 z-40 bg-void-dark/80 backdrop-blur-lg border-b border-void-purple/20">
-                <div className="max-w-2xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold bg-gradient-to-r from-void-purple to-particle-glow bg-clip-text text-transparent">
-                            {t('title')}
-                        </h1>
-                        <div className="flex items-center gap-2">
-                            <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
-                                💎 {particles >= 10000 ? `${Math.floor(particles / 10000) * 0.01} WLD` : '0 WLD'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <GameHeader />
 
             {/* Main content */}
             <main className="max-w-2xl mx-auto px-4">
@@ -122,7 +115,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
 
                             {/* Quick stats */}
                             <div className="mt-8 text-center text-sm text-text-secondary">
-                                <p>{t('clickInstruction')}</p>
+                                <GameScreenInstruction />
                             </div>
 
                             <div className="mt-8 mx-auto max-w-xs opacity-50 hover:opacity-100 transition-opacity">
