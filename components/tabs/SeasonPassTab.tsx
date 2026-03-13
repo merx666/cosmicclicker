@@ -1,4 +1,4 @@
-ssh prod'use client'
+'use client'
 
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
