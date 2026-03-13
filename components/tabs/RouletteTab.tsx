@@ -205,6 +205,9 @@ export default function RouletteTab() {
                 toast.error(`Spin Error: ${data.error}`)
             }
 
+            // Increment achievement
+            useGameStore.getState().checkAchievements('spins', 1)
+
         } catch (error) {
             console.error('Spin error:', error)
             toast.error('Failed to spin')

@@ -3,6 +3,9 @@ import { query } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+const CURRENT_POLL_ID = 'poll_002'
+const CURRENT_POLL_QUESTION = 'Should the next $VOID airdrop be 10x BIGGER? 🚀'
+
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
@@ -25,25 +28,27 @@ export async function GET(request: NextRequest) {
 
         // Get current poll results
         const yesResult = await query(
-            "SELECT COUNT(*) as count FROM survey_votes WHERE poll_id = 'poll_001' AND vote = 'yes'"
+            `SELECT COUNT(*) as count FROM survey_votes WHERE poll_id = $1 AND vote = 'yes'`,
+            [CURRENT_POLL_ID]
         )
         const noResult = await query(
-            "SELECT COUNT(*) as count FROM survey_votes WHERE poll_id = 'poll_001' AND vote = 'no'"
+            `SELECT COUNT(*) as count FROM survey_votes WHERE poll_id = $1 AND vote = 'no'`,
+            [CURRENT_POLL_ID]
         )
 
         let userVotes = 0
         if (nullifierHash) {
             const userVoteResult = await query(
-                "SELECT COUNT(*) as count FROM survey_votes WHERE poll_id = 'poll_001' AND nullifier_hash = $1",
-                [nullifierHash]
+                'SELECT COUNT(*) as count FROM survey_votes WHERE poll_id = $1 AND nullifier_hash = $2',
+                [CURRENT_POLL_ID, nullifierHash]
             )
             userVotes = parseInt(userVoteResult.rows[0]?.count || '0')
         }
 
         return NextResponse.json({
             poll: {
-                id: 'poll_001',
-                question: 'Should we make the game 75% harder?',
+                id: CURRENT_POLL_ID,
+                question: CURRENT_POLL_QUESTION,
                 yesCount: parseInt(yesResult.rows[0]?.count || '0'),
                 noCount: parseInt(noResult.rows[0]?.count || '0'),
                 userVotes,
@@ -54,8 +59,8 @@ export async function GET(request: NextRequest) {
         console.error('Poll fetch error:', error)
         return NextResponse.json({
             poll: {
-                id: 'poll_001',
-                question: 'Should we make the game 75% harder?',
+                id: CURRENT_POLL_ID,
+                question: CURRENT_POLL_QUESTION,
                 yesCount: 0,
                 noCount: 0,
                 userVotes: 0,

@@ -19,6 +19,16 @@ export interface GameState {
     lastDailyReset: number | null
     claimedMissions: string[]
 
+    // Season 2: Battle Pass
+    bpLevel: number
+    bpXp: number
+    bpPremium: boolean
+    bpClaimedFree: string[]
+    bpClaimedPremium: string[]
+
+    // Season 2: Achievements
+    achievements: Record<string, { level: number, progress: number }>
+
     // Upgrade levels
     upgradeClickPower: number
     upgradeAutoCollector: number
@@ -30,6 +40,7 @@ export interface GameState {
     premiumBackgroundTheme: string // 'default', 'nebula', 'galaxy'
     unlockedSkins: string[]
     unlockedThemes: string[]
+    unlockedPremiumUpgrades: string[] // NEW: for WLD upgrades
 
     premiumAutoSave: boolean
     premiumStatistics: boolean
@@ -56,6 +67,9 @@ export interface GameState {
     setNullifierHash: (hash: string) => void
     addParticles: (amount: number) => void
     addPassiveParticles: (amount: number) => void // NEW: for passive earnings tracking
+    addBpXp: (amount: number) => void // NEW: for battle pass
+    claimBpReward: (level: number, type: 'free' | 'premium', rewardParticles: number, rewardPremiumType?: string, rewardPremiumId?: string) => boolean
+    checkAchievements: (key: string, amount: number) => void // NEW: Achievements check
     handleClick: () => void
     purchaseUpgrade: (upgradeType: string, cost: number, level: number) => boolean
     purchasePremiumUpgrade: (upgradeType: string) => boolean
@@ -89,6 +103,47 @@ export const useGameStore = create<GameState>()(
             lastDailyReset: null,
             claimedMissions: [],
 
+            // Season 2: Battle Pass
+            bpLevel: 1,
+            bpXp: 0,
+            bpPremium: false,
+            bpClaimedFree: [],
+            bpClaimedPremium: [],
+
+            // Season 2: Achievements
+            achievements: {},
+
+            checkAchievements: (key: string, amount: number) => {
+                const state = get()
+                const current = state.achievements[key] || { level: 0, progress: 0 }
+
+                // Achievement thresholds — must match MissionsTab.tsx definitions
+                const THRESHOLDS: Record<string, number[]> = {
+                    clicks:    [1000, 10000, 50000, 100000, 500000],
+                    logins:    [3, 7, 14, 30, 100],
+                    spins:     [5, 20, 50, 100, 500],
+                    bp_levels: [5, 10, 15, 20],
+                }
+
+                const thresholds = THRESHOLDS[key]
+                if (!thresholds) return
+
+                const newProgress = current.progress + amount
+                let newLevel = current.level
+
+                // Check if threshold crossed (supports multi-level jumps)
+                while (newLevel < thresholds.length && newProgress >= thresholds[newLevel]) {
+                    newLevel++
+                }
+
+                set({
+                    achievements: {
+                        ...state.achievements,
+                        [key]: { level: newLevel, progress: newProgress }
+                    }
+                })
+            },
+
             upgradeClickPower: 1,
             upgradeAutoCollector: 0,
             upgradeMultiplier: 0,
@@ -99,6 +154,7 @@ export const useGameStore = create<GameState>()(
             premiumBackgroundTheme: 'default',
             unlockedSkins: ['default'],
             unlockedThemes: ['default'],
+            unlockedPremiumUpgrades: [],
 
             premiumAutoSave: false,
             premiumStatistics: false,
@@ -143,7 +199,12 @@ export const useGameStore = create<GameState>()(
 
                 // Calculate tier bonus: Bronze=0, Silver=+2, Gold=+5, Platinum=+10
                 const tierBonus = [0, 0, 2, 5, 10][state.vipTier] || 0
-                const earned = state.particlesPerClick + tierBonus
+                let earned = state.particlesPerClick + tierBonus
+
+                // Apply Premium WLD Upgrades
+                if (Array.isArray(state.unlockedPremiumUpgrades) && state.unlockedPremiumUpgrades.includes('void_core_multiplier')) {
+                    earned *= 2
+                }
 
                 set({
                     particles: state.particles + earned,
@@ -152,6 +213,10 @@ export const useGameStore = create<GameState>()(
                     dailyClicks: state.dailyClicks + 1,
                     dailyParticlesCollected: state.dailyParticlesCollected + earned
                 })
+
+                // Add BP XP for clicking (e.g. 1 click = 1 XP)
+                get().addBpXp(1)
+                get().checkAchievements('clicks', 1)
 
                 // Trigger debounced save
                 get().debouncedSave()
@@ -208,6 +273,68 @@ export const useGameStore = create<GameState>()(
                     get().saveGameState()
                 }
             },
+
+            // Add Battle Pass XP
+            addBpXp: (amount) => {
+                const state = get()
+                const newXp = state.bpXp + amount
+                const nextLevelReq = state.bpLevel * 100 // Formula: 100 XP * Level
+
+                if (newXp >= nextLevelReq && state.bpLevel < 20) {
+                    set({
+                        bpXp: newXp - nextLevelReq,
+                        bpLevel: state.bpLevel + 1
+                    })
+                } else if (state.bpLevel >= 20) {
+                    // Max level cap reached
+                    if (state.bpXp < 2000) set({ bpXp: state.bpXp + amount }) // keep adding to a soft cap
+                } else {
+                    set({ bpXp: newXp })
+                }
+            },
+
+            // Claim Battle Pass Reward
+            claimBpReward: (level, type, rewardParticles, rewardPremiumType, rewardPremiumId) => {
+                const state = get()
+
+                // Validiations
+                if (state.bpLevel < level) return false
+                if (type === 'free' && state.bpClaimedFree.includes(level.toString())) return false
+                if (type === 'premium' && state.bpClaimedPremium.includes(level.toString())) return false
+                if (type === 'premium' && !state.bpPremium && !state.premiumVIP) return false
+
+                if (type === 'free') {
+                    set({
+                        particles: state.particles + rewardParticles,
+                        totalParticlesCollected: state.totalParticlesCollected + rewardParticles,
+                        bpClaimedFree: [...state.bpClaimedFree, level.toString()]
+                    })
+                } else {
+                    // Handle premium specific rewards
+                    if (rewardPremiumType === 'skin' && rewardPremiumId) {
+                        if (!state.unlockedSkins.includes(rewardPremiumId)) {
+                            set({ unlockedSkins: [...state.unlockedSkins, rewardPremiumId] })
+                        }
+                    } else if (rewardPremiumType === 'theme' && rewardPremiumId) {
+                        if (!state.unlockedThemes.includes(rewardPremiumId)) {
+                            set({ unlockedThemes: [...state.unlockedThemes, rewardPremiumId] })
+                        }
+                    }
+
+                    // Add particle rewards anyway
+                    set({
+                        particles: state.particles + rewardParticles,
+                        totalParticlesCollected: state.totalParticlesCollected + rewardParticles,
+                        bpClaimedPremium: [...state.bpClaimedPremium, level.toString()]
+                    })
+                }
+
+                get().checkAchievements('bp_levels', 1)
+                get().debouncedSave()
+                return true
+            },
+
+
 
             // Purchase premium upgrade
             purchasePremiumUpgrade: (upgradeType) => {
@@ -278,7 +405,8 @@ export const useGameStore = create<GameState>()(
                             premiumOfflineEarnings: true,
                             premiumDailyBonus: true,
                             unlockedSkins: Array.from(new Set([...state.unlockedSkins, ...allSkins])),
-                            unlockedThemes: Array.from(new Set([...state.unlockedThemes, ...allThemes]))
+                            unlockedThemes: Array.from(new Set([...state.unlockedThemes, ...allThemes])),
+                            bpPremium: true // VIP unlocks premium BP
                         })
                         break
                     default:
@@ -360,6 +488,11 @@ export const useGameStore = create<GameState>()(
                     loginStreak: newStreak
                 })
 
+                // Achievement tick
+                if (newStreak > state.loginStreak) {
+                    get().checkAchievements('logins', 1)
+                }
+
                 get().saveGameState()
                 return true
             },
@@ -388,6 +521,7 @@ export const useGameStore = create<GameState>()(
                             // Fallback for unlocked arrays if not present in DB yet
                             unlockedSkins: data.unlocked_skins || ['default'],
                             unlockedThemes: data.unlocked_themes || ['default'],
+                            unlockedPremiumUpgrades: Array.isArray(data.unlocked_premium_upgrades) ? data.unlocked_premium_upgrades : [],
 
                             premiumAutoSave: data.premium_auto_save || false,
                             premiumStatistics: data.premium_statistics || false,
@@ -410,6 +544,14 @@ export const useGameStore = create<GameState>()(
                             dailyParticlesCollected: Number(data.daily_particles_collected || 0),
                             lastDailyReset: data.last_daily_reset ? new Date(data.last_daily_reset).getTime() : null,
                             claimedMissions: data.claimed_missions || [],
+
+                            bpLevel: Number(data.bp_level || 1),
+                            bpXp: Number(data.bp_xp || 0),
+                            bpPremium: data.bp_premium || false,
+                            bpClaimedFree: data.bp_claimed_free || [],
+                            bpClaimedPremium: data.bp_claimed_premium || [],
+
+                            achievements: data.achievements && typeof data.achievements === 'object' ? data.achievements : {},
 
                             nullifierHash: userHash
                         })
@@ -459,6 +601,7 @@ export const useGameStore = create<GameState>()(
                             premium_background_theme: state.premiumBackgroundTheme,
                             unlocked_skins: state.unlockedSkins,
                             unlocked_themes: state.unlockedThemes,
+                            unlocked_premium_upgrades: state.unlockedPremiumUpgrades,
 
                             premium_auto_save: state.premiumAutoSave,
                             premium_statistics: state.premiumStatistics,
@@ -476,7 +619,14 @@ export const useGameStore = create<GameState>()(
                             daily_passive_particles: state.dailyPassiveParticles,
                             daily_particles_collected: state.dailyParticlesCollected,
                             last_daily_reset: state.lastDailyReset ? new Date(state.lastDailyReset).toISOString() : null,
-                            claimed_missions: state.claimedMissions
+                            claimed_missions: state.claimedMissions,
+
+                            bp_level: state.bpLevel,
+                            bp_xp: state.bpXp,
+                            bp_premium: state.bpPremium,
+                            bp_claimed_free: state.bpClaimedFree,
+                            bp_claimed_premium: state.bpClaimedPremium,
+                            achievements: state.achievements
                         })
                     })
 
@@ -507,6 +657,7 @@ export const useGameStore = create<GameState>()(
                 premiumBackgroundTheme: state.premiumBackgroundTheme,
                 unlockedSkins: state.unlockedSkins,
                 unlockedThemes: state.unlockedThemes,
+                unlockedPremiumUpgrades: state.unlockedPremiumUpgrades,
 
                 premiumAutoSave: state.premiumAutoSave,
                 premiumStatistics: state.premiumStatistics,
@@ -531,7 +682,15 @@ export const useGameStore = create<GameState>()(
                 dailyPassiveParticles: state.dailyPassiveParticles,
                 dailyParticlesCollected: state.dailyParticlesCollected,
                 lastDailyReset: state.lastDailyReset,
-                claimedMissions: state.claimedMissions
+                claimedMissions: state.claimedMissions,
+
+                bpLevel: state.bpLevel,
+                bpXp: state.bpXp,
+                bpPremium: state.bpPremium,
+                bpClaimedFree: state.bpClaimedFree,
+                bpClaimedPremium: state.bpClaimedPremium,
+
+                achievements: state.achievements
             })
         }
     )

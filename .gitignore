@@ -125,3 +125,4 @@ next-env.d.ts
 .cache
 .temp
 .tmp.npm-cache
+.npm-cache-local

@@ -34,7 +34,9 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
 
     const tabs = [
         { id: 'collect', label: t('collect'), icon: '/assets/nav/collect.png' },
-        { id: 'void_club', label: 'VOID CLUB', icon: '🟣', badge: 'NEW' },
+        { id: 'season_pass', label: 'VOID PASS', icon: '🎟️', badge: 'NEW' },
+        { id: 'void_club', label: 'VOID CLUB', icon: '🟣' },
+        { id: 'ads', label: 'ADS', icon: '📺' },
         { id: 'upgrades', label: t('upgrades'), icon: '/assets/nav/upgrades.png' },
         { id: 'missions', label: t('missions'), icon: '/assets/nav/missions.png' },
         { id: 'leaderboard', label: t('leaderboard'), icon: '/assets/nav/leaderboard.png' },
@@ -120,13 +122,19 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
                                     transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
                                 />
                             )}
-                            <div className="relative w-6 h-6 mb-1">
-                                <Image
-                                    src={tab.icon}
-                                    alt={tab.label}
-                                    fill
-                                    className={`object-contain ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-70 grayscale'}`}
-                                />
+                            <div className="relative w-6 h-6 mb-1 flex items-center justify-center">
+                                {tab.icon.startsWith('/') ? (
+                                    <Image
+                                        src={tab.icon}
+                                        alt={tab.label}
+                                        fill
+                                        className={`object-contain ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-70 grayscale'}`}
+                                    />
+                                ) : (
+                                    <span className={`text-xl leading-none ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-70 grayscale'}`}>
+                                        {tab.icon}
+                                    </span>
+                                )}
                             </div>
                             <span className="text-[10px] font-medium truncate w-full text-center">{tab.label}</span>
                         </button>

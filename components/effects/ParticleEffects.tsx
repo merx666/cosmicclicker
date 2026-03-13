@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 
 interface ParticleEffectsProps {
     skinType: 'default' | 'rainbow' | 'gold'
@@ -9,6 +10,14 @@ interface ParticleEffectsProps {
 }
 
 export default function ParticleEffects({ skinType, isClicking, isLucky }: ParticleEffectsProps) {
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    if (!isMounted) return null
+
     // Rainbow effects
     if (skinType === 'rainbow') {
         return (

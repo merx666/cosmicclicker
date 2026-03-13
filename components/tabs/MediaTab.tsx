@@ -51,6 +51,39 @@ export default function MediaTab() {
                 <p className="text-text-secondary text-sm">Stay connected with the Void Collector community</p>
             </motion.div>
 
+            {/* Contest Banner */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative rounded-2xl overflow-hidden border border-void-purple/50 shadow-[0_0_20px_rgba(107,47,181,0.2)] group"
+            >
+                <div className="absolute inset-0 bg-gradient-to-r from-void-purple/20 to-void-blue/20 backdrop-blur-md" />
+                <div className="relative p-5">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <span className="bg-gradient-to-r from-void-purple to-void-blue px-2 py-0.5 rounded text-[10px] font-bold text-white mb-2 inline-block">
+                                LIMITED TIME
+                            </span>
+                            <h3 className="text-xl font-bold text-white mb-1">100 WLD GIVEAWAY</h3>
+                            <p className="text-sm text-gray-300 mb-3">
+                                Follow & Repost to win <span className="text-void-purple font-bold">100 WLD</span>!
+                            </p>
+                        </div>
+                        <div className="text-4xl animate-pulse">🎁</div>
+                    </div>
+
+                    <a
+                        href="https://x.com/Void_WorldApp/status/2022238416042172826"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full py-2.5 rounded-xl bg-white text-void-dark font-bold text-center text-sm
+                                 hover:bg-gray-100 active:scale-[0.98] transition-all"
+                    >
+                        Join Contest on X →
+                    </a>
+                </div>
+            </motion.div>
+
             {/* Social Links */}
             <div className="space-y-3">
                 {SOCIAL_LINKS.map((link, index) => (

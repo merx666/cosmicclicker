@@ -7,6 +7,7 @@ import { Outfit } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import Script from 'next/script';
 
 const outfit = Outfit({ subsets: ['latin'] })
 
@@ -47,6 +48,50 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
+      <head>
+        <Script
+          id="error-logger"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              const originalError = console.error;
+              console.error = function(...args) {
+                originalError.apply(console, args);
+                try {
+                  const errorContent = args.map(a => 
+                    typeof a === 'object' ? (a instanceof Error ? a.stack || a.message : JSON.stringify(a)) : String(a)
+                  ).join(' ');
+                  
+                  if (errorContent.includes('Warning:') || errorContent.includes('Download the React DevTools')) return;
+
+                  fetch('/api/client-error', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      message: 'CONSOLE.ERROR CAPTURED',
+                      error: errorContent,
+                      type: 'console_error'
+                    })
+                  }).catch(() => {});
+                } catch(e) {}
+              };
+              
+              window.addEventListener('error', function(e) {
+                fetch('/api/client-error', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    message: e.message,
+                    source: e.filename,
+                    error: e.error ? e.error.stack : null,
+                    type: 'error_event'
+                  })
+                }).catch(() => {});
+              });
+            `
+          }}
+        />
+      </head>
       <body className={`${outfit.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <MiniKitProvider>
@@ -66,15 +111,18 @@ export default async function RootLayout({
         </NextIntlClientProvider>
 
         {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WNQ3YFGEF5"></script>
-        <script dangerouslySetInnerHTML={{
-          __html: `
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-WNQ3YFGEF5"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-WNQ3YFGEF5');
-          `
-        }} />
+          `}
+        </Script>
       </body>
     </html>
   );

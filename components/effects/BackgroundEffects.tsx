@@ -1,12 +1,21 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 
 interface BackgroundEffectsProps {
     theme: 'default' | 'nebula' | 'galaxy'
 }
 
 export default function BackgroundEffects({ theme }: BackgroundEffectsProps) {
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    if (!isMounted) return null
+
     // Nebula theme effects
     if (theme === 'nebula') {
         return (

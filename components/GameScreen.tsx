@@ -8,10 +8,13 @@ import Navigation from './Navigation'
 import UpgradesTab from './tabs/UpgradesTab'
 import MissionsTab from './tabs/MissionsTab'
 import LeaderboardTab from './tabs/LeaderboardTab'
+import SeasonPassTab from './tabs/SeasonPassTab'
 import PremiumTab from './tabs/PremiumTab'
+import VoidClubTab from './tabs/VoidClubTab'
 import ConvertTab from './tabs/ConvertTab'
 import RouletteTab from './tabs/RouletteTab'
 import SurveyTab from './tabs/SurveyTab'
+import AdsTab from './tabs/AdsTab'
 import MediaTab from './tabs/MediaTab'
 import { motion, AnimatePresence } from 'framer-motion'
 import BackgroundEffects from './effects/BackgroundEffects'
@@ -31,6 +34,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     const saveGameState = useGameStore((state) => state.saveGameState)
     const addPassiveParticles = useGameStore((state) => state.addPassiveParticles) // Changed from addParticles
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
+    const unlockedPremiumUpgrades = useGameStore((state) => state.unlockedPremiumUpgrades) || []
     const premiumBackgroundTheme = useGameStore((state) => state.premiumBackgroundTheme)
     const particles = useGameStore((state) => state.particles)
     const t = useTranslations('Game')
@@ -45,12 +49,17 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     useEffect(() => {
         if (particlesPerSecond <= 0) return
 
+        let pps = particlesPerSecond
+        if (Array.isArray(unlockedPremiumUpgrades) && unlockedPremiumUpgrades.includes('overclocked_drone')) {
+            pps *= 2
+        }
+
         const interval = setInterval(() => {
-            addPassiveParticles(particlesPerSecond) // Changed from addParticles
+            addPassiveParticles(pps) // Changed from addParticles
         }, 1000)
 
         return () => clearInterval(interval)
-    }, [particlesPerSecond, addPassiveParticles])
+    }, [particlesPerSecond, addPassiveParticles, unlockedPremiumUpgrades])
 
     // Auto-save every 30 seconds
     useEffect(() => {
@@ -122,6 +131,18 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                         </motion.div>
                     )}
 
+                    {activeTab === 'season_pass' && (
+                        <motion.div
+                            key="season_pass"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <SeasonPassTab />
+                        </motion.div>
+                    )}
+
                     {activeTab === 'upgrades' && (
                         <motion.div
                             key="upgrades"
@@ -131,6 +152,18 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             transition={{ duration: 0.3 }}
                         >
                             <UpgradesTab />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'void_club' && (
+                        <motion.div
+                            key="void_club"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <VoidClubTab />
                         </motion.div>
                     )}
 
@@ -215,6 +248,18 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             transition={{ duration: 0.3 }}
                         >
                             <MediaTab />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'ads' && (
+                        <motion.div
+                            key="ads"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <AdsTab />
                         </motion.div>
                     )}
                 </AnimatePresence>

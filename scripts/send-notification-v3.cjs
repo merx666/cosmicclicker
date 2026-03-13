@@ -55,17 +55,13 @@ Options:
 // ─── Config ─────────────────────────────────────────────
 const API_KEY = process.env.WORLDCOIN_API_KEY;
 const APP_ID = process.env.WORLDCOIN_APP_ID || process.env.NEXT_PUBLIC_MINIKIT_APP_ID || 'app_e3c317455f168a14ab972dbe4f34ab9a';
-const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector';
 
 const DEFAULT_TITLE = '🕳️ Void Collector Update';
 const DEFAULT_MESSAGE = 'Something exciting is happening! Open the app to find out! 🚀';
 
 if (!API_KEY) {
     console.error('[Notification] ERROR: WORLDCOIN_API_KEY environment variable is required');
-    process.exit(1);
-}
-if (!DATABASE_URL) {
-    console.error('[Notification] ERROR: DATABASE_URL environment variable is required');
     process.exit(1);
 }
 

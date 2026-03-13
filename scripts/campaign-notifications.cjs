@@ -13,11 +13,14 @@
  */
 
 require('dotenv').config({ path: '.env.local' });
+if (!process.env.WORLDCOIN_API_KEY || !process.env.DATABASE_URL) {
+    require('dotenv').config({ path: '.env.production' });
+}
 const { Pool } = require('pg');
 
 const API_KEY = process.env.WORLDCOIN_API_KEY;
 const APP_ID = process.env.WORLDCOIN_APP_ID || 'app_e3c317455f168a14ab972dbe4f34ab9a';
-const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector';
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // ============ CAMPAIGN WAVES ============
@@ -41,6 +44,18 @@ const WAVES = {
     5: {
         title: '🌌 New Features Unlocked!',
         message: 'Major update just dropped! New missions, upgraded Slot Machine, and better VIP rewards. Open the app to explore! 🎯'
+    },
+    6: {
+        title: '🚨 $500 VOID Giveaway!',
+        message: 'We\'re dropping $500 in $VOID with PUF Wallet! Download PUF WALLET app, follow @Void_WorldApp & @PufLaunch, Like & RT our pinned post. Winners in 48h! Open app now! 🏆🔥'
+    },
+    7: {
+        title: '🚀 Big Void Update!',
+        message: 'New features are live! Deploy Ad Banners with WLD, unlock powerful Premium Upgrades, and conquer harder Daily Missions to earn massive rewards! Open the app now! ⚡'
+    },
+    8: {
+        title: '⚡ Void Collector is EVOLVING!',
+        message: 'Huge changes are coming! Collect particles NOW before the big reset — early collectors get exclusive bonuses! Don\'t miss your chance! 🌌🔥'
     }
 };
 

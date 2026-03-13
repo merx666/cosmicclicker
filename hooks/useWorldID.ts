@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { MiniKit, type MiniAppWalletAuthSuccessPayload } from '@worldcoin/minikit-js'
+import { MiniKit, VerificationLevel, type MiniAppVerifyActionSuccessPayload } from '@worldcoin/minikit-js'
 
 interface WorldIDState {
     isVerified: boolean
-    userAddress: string | null
+    userHash: string | null
     isLoading: boolean
     error: string | null
 }
@@ -13,12 +13,10 @@ interface WorldIDState {
 export function useWorldID() {
     const [state, setState] = useState<WorldIDState>({
         isVerified: false,
-        userAddress: null,
+        userHash: null,
         isLoading: false,
         error: null
     })
-
-    // No localStorage caching - force verification every time for security
 
     const verify = async () => {
         setState(prev => ({ ...prev, isLoading: true, error: null }))
@@ -31,19 +29,27 @@ export function useWorldID() {
                 throw new Error('MiniKit SDK is not installed. Please open in WorldApp.')
             }
 
-            console.log('[useWorldID] MiniKit is installed, calling walletAuth...')
+            console.log('[useWorldID] MiniKit is installed, preparing signed request...')
 
-            // Use walletAuth (Sign in with World ID) instead of verify
-            // This doesn't require Incognito Actions configuration
-            const result = await MiniKit.commandsAsync.walletAuth({
-                nonce: Date.now().toString(), // Simple nonce based on timestamp
-                requestId: '0', // Optional request ID
-                expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-                notBefore: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
-                statement: 'Sign in to Void Collector to start playing and earning WLD!'
+            const action = 'verify'
+
+            // 1. Fetch nonce/signature from backend (required for World ID 4.0 signed requests)
+            const prepareResponse = await fetch(`/api/world-id/prepare?action=${action}`)
+            if (!prepareResponse.ok) {
+                throw new Error('Failed to prepare verification (server signature error)')
+            }
+
+            const rpContext = await prepareResponse.json()
+            console.log('[useWorldID] Received RP Context:', rpContext)
+
+            // 2. Call MiniKit Verify — pass action and verification_level
+            // Signal omitted (undefined) — empty string '' can cause hash mismatch
+            const result = await MiniKit.commandsAsync.verify({
+                action,
+                verification_level: VerificationLevel.Orb,
             })
 
-            console.log('[useWorldID] MiniKit.walletAuth result:', result)
+            console.log('[useWorldID] MiniKit.verify result:', result)
 
             const { finalPayload } = result
 
@@ -54,21 +60,24 @@ export function useWorldID() {
 
             console.log('[useWorldID] finalPayload:', finalPayload)
 
-            // Extract address from the walletAuth payload
-            const userAddress = (finalPayload as MiniAppWalletAuthSuccessPayload).address
+            // Extract nullifier_hash from the verify payload
+            const userHash = (finalPayload as MiniAppVerifyActionSuccessPayload).nullifier_hash
 
-            if (!userAddress) {
-                throw new Error('No wallet address received from authentication')
+            if (!userHash) {
+                throw new Error('No nullifier_hash received from verification')
             }
 
-            // Send to backend for server-side verification
+            // 3. Send to backend for server-side verification
+            // Pass the nonce from prepare so backend can use it with the new V4 API
             console.log('[useWorldID] Sending to /api/verify-world-id...')
             const response = await fetch('/api/verify-world-id', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...finalPayload,
-                    wallet_address: userAddress
+                    payload: finalPayload,
+                    action,
+                    signal: undefined,
+                    nonce: rpContext.nonce,
                 })
             })
 
@@ -83,11 +92,9 @@ export function useWorldID() {
             const data = await response.json()
             console.log('[useWorldID] API success:', data)
 
-            // NO localStorage - force verification every time for security
-
             setState({
                 isVerified: true,
-                userAddress: userAddress,
+                userHash: userHash,
                 isLoading: false,
                 error: null
             })
@@ -102,10 +109,9 @@ export function useWorldID() {
     }
 
     const logout = () => {
-        // No localStorage to clear anymore
         setState({
             isVerified: false,
-            userAddress: null,
+            userHash: null,
             isLoading: false,
             error: null
         })
@@ -113,7 +119,7 @@ export function useWorldID() {
 
     return {
         isVerified: state.isVerified,
-        userAddress: state.userAddress,
+        userAddress: state.userHash, // Kept as userAddress alias to not break existing references
         isLoading: state.isLoading,
         error: state.error,
         verify,

@@ -16,37 +16,11 @@ export default function VoidParticle() {
     const [clickEffect, setClickEffect] = useState(false)
     const [luckyEffect, setLuckyEffect] = useState(false)
 
-    // Moving target anti-bot system
-    const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 })
-
-    // Anti-bot protection state
+    // Anti-bot protection state (Rate limiting only)
     const clickHistoryRef = useRef<number[]>([])
     const cooldownUntilRef = useRef<number>(0)
     const penaltyLevelRef = useRef<number>(0)
     const lastPenaltyTimeRef = useRef<number>(0)
-
-    // Move target position randomly every 5-15 seconds
-    useEffect(() => {
-        const moveTarget = () => {
-            setTargetPosition({
-                x: 20 + Math.random() * 60, // 20-80%
-                y: 20 + Math.random() * 60
-            })
-        }
-
-        const interval = setInterval(() => {
-            moveTarget()
-        }, 5000 + Math.random() * 10000) // 5-15 seconds
-
-        return () => clearInterval(interval)
-    }, [])
-
-    const calculateVariance = (numbers: number[]): number => {
-        if (numbers.length < 2) return 1000 // High variance for insufficient data
-        const mean = numbers.reduce((a, b) => a + b, 0) / numbers.length
-        const squareDiffs = numbers.map(value => Math.pow(value - mean, 2))
-        return Math.sqrt(squareDiffs.reduce((a, b) => a + b, 0) / numbers.length)
-    }
 
     const applyPenalty = () => {
         const now = Date.now()
@@ -55,7 +29,7 @@ export default function VoidParticle() {
         cooldownUntilRef.current = now + penaltyDuration
         lastPenaltyTimeRef.current = now
 
-        toast.error(`🤖 Bot detected! Cooldown: ${penaltyDuration / 1000}s`, {
+        toast.error(`🤖 Przekroczono limit kliknięć! Czas: ${penaltyDuration / 1000}s`, {
             duration: penaltyDuration
         })
     }
@@ -71,27 +45,11 @@ export default function VoidParticle() {
             return false
         }
 
-        // Check rate limit (10 clicks per second max)
+        // Check rate limit (15 clicks per second max)
         const recentClicks = clickHistoryRef.current.filter(t => now - t < 1000)
         if (recentClicks.length >= 15) {
             applyPenalty()
             return false
-        }
-
-        // Pattern detection - need at least 20 clicks for better accuracy
-        if (clickHistoryRef.current.length >= 20) {
-            const last20 = clickHistoryRef.current.slice(-20)
-            const intervals = last20.map((t, i, arr) =>
-                i > 0 ? t - arr[i - 1] : 0
-            ).filter(i => i > 0)
-
-            const variance = calculateVariance(intervals)
-
-            // If variance is too low (< 5ms), likely a bot (Relaxed from 10)
-            if (variance < 5) {
-                applyPenalty()
-                return false
-            }
         }
 
         return true
@@ -100,20 +58,9 @@ export default function VoidParticle() {
     const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
         const now = Date.now()
 
-        // Get click position relative to container
-        const rect = event.currentTarget.getBoundingClientRect()
-        const clickX = ((event.clientX - rect.left) / rect.width) * 100
-        const clickY = ((event.clientY - rect.top) / rect.height) * 100
+        // Give a clear click area, no variance or moving target checks
+        // as they randomly fail on mobile touchscreen synthetic events (clientX=0)
 
-        // Validate click is near target (±20% tolerance - relaxed from 15%)
-        const dx = Math.abs(clickX - targetPosition.x)
-        const dy = Math.abs(clickY - targetPosition.y)
-        const isNearTarget = dx < 20 && dy < 20
-
-        if (!isNearTarget) {
-            toast.error('🎯 Click the glowing target!', { duration: 1000 })
-            return
-        }
 
         // Anti-bot validation
         if (!isValidClick(now)) {
@@ -203,34 +150,6 @@ export default function VoidParticle() {
             >
                 {/* Outer glow */}
                 <div className="absolute inset-0 bg-gradient-radial from-particle-glow/40 to-transparent rounded-full blur-3xl" />
-
-                {/* Moving Target Indicator */}
-                <motion.div
-                    className="absolute w-8 h-8 -ml-4 -mt-4 pointer-events-none z-50"
-                    style={{
-                        left: `${targetPosition.x}%`,
-                        top: `${targetPosition.y}%`,
-                    }}
-                    animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [0.8, 1, 0.8],
-                    }}
-                    transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                >
-                    {/* Target glow */}
-                    <div className="absolute inset-0 bg-yellow-400/60 rounded-full blur-md" />
-                    {/* Target core */}
-                    <div className="absolute inset-2 bg-yellow-300 rounded-full" />
-                    {/* Crosshair */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-1 h-full bg-yellow-500/50" />
-                        <div className="absolute w-full h-1 bg-yellow-500/50" />
-                    </div>
-                </motion.div>
 
                 {/* Main particle body */}
                 <div className="absolute inset-0 bg-gradient-radial from-void-purple via-void-blue to-transparent rounded-full shadow-2xl" />

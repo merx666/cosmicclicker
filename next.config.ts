@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // serverExternalPackages: [],
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

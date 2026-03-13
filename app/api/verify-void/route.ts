@@ -25,23 +25,40 @@ export async function POST(request: Request) {
 
         // 2. Check Balance
         const balance = await getVoidBalance(user.wallet_address)
-        const newTier = getVipLevelFromBalance(balance)
+        const voidTier = getVipLevelFromBalance(balance)
 
-        // 3. Update DB
-        // We sync strict: if balance drops, tier drops.
+        // 3. Check Purchased Tier
+        const purchasedResult = await queryOne(
+            'SELECT MAX(tier) as max_tier FROM tier_purchases WHERE world_id_nullifier = $1',
+            [nullifier_hash]
+        )
+        const purchasedTier = purchasedResult?.max_tier ? Number(purchasedResult.max_tier) : 0
+
+        // 4. Update DB
+        // User gets highest of what they hold in tokens vs what they purchased
+        const newTier = Math.max(voidTier, purchasedTier)
         const isVip = newTier > 0
 
-        // Only update if changed
-        if (newTier !== user.vip_tier) {
-            await query(
-                `UPDATE users 
-                 SET vip_tier = $1, 
-                     premium_vip = $2, 
-                     updated_at = NOW() 
-                 WHERE world_id_nullifier = $3`,
-                [newTier, isVip, nullifier_hash]
-            )
-        }
+        // Update features and parity checking
+        await query(
+            `UPDATE users 
+             SET vip_tier = $1, 
+                 premium_vip = $2,
+                 premium_lucky_particle = $2,
+                 premium_offline_earnings = $2,
+                 premium_daily_bonus = $2,
+                 unlocked_skins = $3::jsonb,
+                 unlocked_themes = $4::jsonb,
+                 updated_at = NOW() 
+             WHERE world_id_nullifier = $5`,
+            [
+                newTier,
+                isVip,
+                JSON.stringify(isVip ? ['default', 'rainbow', 'gold'] : ['default']),
+                JSON.stringify(isVip ? ['default', 'nebula', 'galaxy'] : ['default']),
+                nullifier_hash
+            ]
+        )
 
         return NextResponse.json({
             success: true,

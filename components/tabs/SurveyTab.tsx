@@ -25,11 +25,14 @@ interface Poll {
     userVotes: number
 }
 
+const CURRENT_POLL_ID = 'poll_002'
+const CURRENT_POLL_QUESTION = 'Should the next $VOID airdrop be 10x BIGGER? 🚀'
+
 export default function SurveyTab() {
     const { nullifierHash } = useGameStore()
     const [poll, setPoll] = useState<Poll>({
-        id: 'poll_001',
-        question: 'Should we make the game 75% harder?',
+        id: CURRENT_POLL_ID,
+        question: CURRENT_POLL_QUESTION,
         yesCount: 0,
         noCount: 0,
         userVotes: 0,
@@ -89,7 +92,7 @@ export default function SurveyTab() {
                     }
                 ],
                 network: Network.WorldChain,
-                description: `Survey Vote: ${selectedVote.toUpperCase()} (${nextVoteCost} WLD)`
+                description: `Vote: ${selectedVote.toUpperCase()} for "$VOID 10x Airdrop" (${nextVoteCost} WLD)`
             }
 
             const result = await MiniKit.commandsAsync.pay(payload) as any
@@ -139,23 +142,43 @@ export default function SurveyTab() {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-8"
+                className="text-center mb-4"
             >
                 <motion.span
                     className="text-4xl inline-block mb-2"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                    animate={{ scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
                 >
-                    🤖
+                    💰
                 </motion.span>
-                <h2 className="text-2xl font-bold uppercase tracking-[0.2em] bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
-                    The Void AI Decides
+                <h2 className="text-2xl font-bold uppercase tracking-[0.2em] bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
+                    Community Voice
                 </h2>
                 <p className="text-xs text-gray-500 mt-2 max-w-xs">
-                    Cast your votes. The Void AI will implement the community&apos;s decision.
-                    Each vote costs WLD. More votes = louder voice.
+                    Your vote shapes the future of $VOID. Pay with WLD to make your voice heard.
+                    More votes = louder voice. Community decides!
                 </p>
             </motion.div>
+
+            {/* Contest Banner Mini */}
+            <motion.a
+                href="https://x.com/void_worldapp/status/2024438564482593180"
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 }}
+                className="w-full max-w-sm mb-5 p-3 rounded-xl bg-gradient-to-r from-yellow-600/15 to-orange-600/15 border border-yellow-500/25 hover:border-yellow-400/50 transition-all active:scale-[0.98]"
+            >
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl">🏆</span>
+                    <div className="flex-1">
+                        <p className="text-xs font-bold text-yellow-400">$500 $VOID GIVEAWAY IS LIVE!</p>
+                        <p className="text-[10px] text-gray-400">Tap to join on 𝕏 → Follow, RT & Win! ⏳ 48h</p>
+                    </div>
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                </div>
+            </motion.a>
 
             {/* Poll Card */}
             <motion.div
@@ -166,37 +189,45 @@ export default function SurveyTab() {
             >
                 {/* Question */}
                 <div className="text-center mb-6">
-                    <div className="inline-block bg-purple-500/10 border border-purple-500/20 rounded-full px-3 py-1 text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-3">
-                        Active Poll
+                    <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full px-3 py-1 text-[10px] text-yellow-400 font-bold uppercase tracking-wider mb-3">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                        New Poll • Vote Now
                     </div>
                     <h3 className="text-lg font-bold text-white leading-tight">
                         {poll.question}
                     </h3>
+                    <p className="text-[10px] text-gray-500 mt-2">
+                        The community decides. If YES wins — we deliver. 💎
+                    </p>
                 </div>
 
                 {/* Results Bar */}
                 <div className="mb-6">
                     <div className="flex justify-between text-xs font-bold mb-2">
-                        <span className="text-green-400">YES {yesPercent}%</span>
-                        <span className="text-red-400">{noPercent}% NO</span>
+                        <span className="text-green-400">🔥 YES {yesPercent}%</span>
+                        <span className="text-red-400">{noPercent}% NO 🧊</span>
                     </div>
-                    <div className="h-4 bg-black/40 rounded-full overflow-hidden border border-white/5 flex">
+                    <div className="h-5 bg-black/40 rounded-full overflow-hidden border border-white/5 flex">
                         <motion.div
-                            className="bg-gradient-to-r from-green-500 to-green-600 h-full"
+                            className="bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 h-full relative"
                             initial={{ width: '50%' }}
                             animate={{ width: `${yesPercent}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut' }}
-                        />
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10" />
+                        </motion.div>
                         <motion.div
-                            className="bg-gradient-to-r from-red-600 to-red-500 h-full"
+                            className="bg-gradient-to-r from-red-600 via-rose-600 to-red-500 h-full relative"
                             initial={{ width: '50%' }}
                             animate={{ width: `${noPercent}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut' }}
-                        />
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-white/10" />
+                        </motion.div>
                     </div>
                     <div className="flex justify-between text-[10px] text-gray-500 mt-1">
                         <span>{poll.yesCount} votes</span>
-                        <span>{totalVotes} total</span>
+                        <span className="text-gray-400 font-bold">{totalVotes} total</span>
                         <span>{poll.noCount} votes</span>
                     </div>
                 </div>
@@ -210,14 +241,14 @@ export default function SurveyTab() {
                                 disabled={isVoting}
                                 className="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-b from-green-500 to-green-700 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-green-500/20 disabled:opacity-50"
                             >
-                                👍 YES
+                                🔥 YES
                             </button>
                             <button
                                 onClick={() => handleVoteSelect('no')}
                                 disabled={isVoting}
                                 className="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-b from-red-500 to-red-700 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-red-500/20 disabled:opacity-50"
                             >
-                                👎 NO
+                                🧊 NO
                             </button>
                         </div>
                         <div className="text-center">
@@ -279,10 +310,13 @@ export default function SurveyTab() {
                             className="bg-[#1a1040] border border-purple-500/30 rounded-2xl p-6 max-w-xs w-full text-center"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <p className="text-3xl mb-3">{selectedVote === 'yes' ? '👍' : '👎'}</p>
+                            <p className="text-3xl mb-3">{selectedVote === 'yes' ? '🔥' : '🧊'}</p>
                             <h3 className="text-lg font-bold text-white mb-2">
                                 Confirm Vote: {selectedVote.toUpperCase()}
                             </h3>
+                            <p className="text-sm text-gray-400 mb-1">
+                                &quot;Should the next $VOID airdrop be 10x BIGGER?&quot;
+                            </p>
                             <p className="text-sm text-gray-400 mb-4">
                                 This will cost <span className="text-yellow-400 font-bold">{nextVoteCost.toFixed(2)} WLD</span>
                             </p>

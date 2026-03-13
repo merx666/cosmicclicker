@@ -111,10 +111,10 @@ export default function PremiumTab() {
         // VIP
         {
             id: 'vip',
-            name: 'VIP Status',
+            name: 'VIP Status (PROMO -50%!)',
             description: 'Unlock ALL premium features at once!',
             image: '/assets/premium/vip.png',
-            price: 10.00,
+            price: 5.00,
             category: 'advanced',
             owned: premiumVIP
         }
@@ -318,10 +318,10 @@ export default function PremiumTab() {
                 {/* Tier Cards */}
                 <div className="grid grid-cols-2 gap-3">
                     {[
-                        { tier: 1, name: '🥉 Bronze', price: 3.50, benefits: ['All features', 'Lucky 5%/2x'] },
-                        { tier: 2, name: '🥈 Silver', price: 5.50, benefits: ['Lucky 8%/2x', '+2 per click', 'Ad-free'] },
-                        { tier: 3, name: '🥇 Gold', price: 7.50, benefits: ['Lucky 12%/3x', 'Mega 1%/10x', 'Priority'] },
-                        { tier: 4, name: '💎 Platinum', price: 10.00, benefits: ['Lucky 15%/5x', 'Mega 3%/15x', 'Instant'] }
+                        { tier: 1, name: '🥉 Bronze (PROMO!)', price: 1.75, benefits: ['All features', 'Lucky 5%/2x'] },
+                        { tier: 2, name: '🥈 Silver (PROMO!)', price: 2.75, benefits: ['Lucky 8%/2x', '+2 per click', 'Ad-free'] },
+                        { tier: 3, name: '🥇 Gold (PROMO!)', price: 3.75, benefits: ['Lucky 12%/3x', 'Mega 1%/10x', 'Priority'] },
+                        { tier: 4, name: '💎 Platinum (PROMO!)', price: 5.00, benefits: ['Lucky 15%/5x', 'Mega 3%/15x', 'Instant'] }
                     ].map(({ tier, name, price, benefits }) => {
                         const isCurrent = vipTier === tier
                         const canUpgrade = vipTier < tier
@@ -349,8 +349,8 @@ export default function PremiumTab() {
                                     <button
                                         onClick={() => {
                                             // Calculate upgrade cost: simply the full price of the new tier minus price of current tier
-                                            // Prices: [0, 3.50, 5.50, 7.50, 10.00]
-                                            const tierPrices = [0, 3.50, 5.50, 7.50, 10.00]
+                                            // Prices: [0, 1.75, 2.75, 3.75, 5.00]
+                                            const tierPrices = [0, 1.75, 2.75, 3.75, 5.00]
                                             const upgradeCost = tierPrices[tier] - tierPrices[vipTier]
 
                                             console.log('[Premium] Tier purchase:', { tier, vipTier, price, upgradeCost })
