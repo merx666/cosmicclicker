@@ -18,7 +18,7 @@ async function testConnection() {
         const res = await client.query('SELECT count(*) FROM withdrawal_requests WHERE status = \'pending\'');
         console.log('Pending withdrawals:', res.rows[0].count);
         await client.end();
-    } catch (e) {
+    } catch (e: any) {
         console.error('❌ Connection failed:', e.message);
         if (e.code) console.error('Error code:', e.code);
         process.exit(1);

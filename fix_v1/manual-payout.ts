@@ -14,7 +14,7 @@ dotenv.config({ path: path.join(__dirname, '.env.local') });
 
 // Helper to wait for dynamic imports
 async function loadModules() {
-    const payout = await import('./lib/payout.ts');
+    const payout = await import('./lib/payout');
     return {
         transferWLD: payout.transferWLD,
         getHotWalletBalance: payout.getHotWalletBalance,
