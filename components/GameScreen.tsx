@@ -21,6 +21,7 @@ import BackgroundEffects from './effects/BackgroundEffects'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from './LanguageSwitcher'
 import ChangelogModal from './ChangelogModal'
+import WldBalance from './WldBalance' // ⚡ Bolt: Imported isolated component
 
 
 interface GameScreenProps {
@@ -36,7 +37,8 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
     const unlockedPremiumUpgrades = useGameStore((state) => state.unlockedPremiumUpgrades) || []
     const premiumBackgroundTheme = useGameStore((state) => state.premiumBackgroundTheme)
-    const particles = useGameStore((state) => state.particles)
+    // ⚡ Bolt: Removed `particles` subscription from GameScreen to prevent massive re-renders
+    // const particles = useGameStore((state) => state.particles)
     const t = useTranslations('Game')
 
     // Load game state on mount
@@ -94,9 +96,8 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             {t('title')}
                         </h1>
                         <div className="flex items-center gap-2">
-                            <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
-                                💎 {particles >= 10000 ? `${Math.floor(particles / 10000) * 0.01} WLD` : '0 WLD'}
-                            </div>
+                            {/* ⚡ Bolt: Render isolated component */}
+                            <WldBalance />
                         </div>
                     </div>
                 </div>

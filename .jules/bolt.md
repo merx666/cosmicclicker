@@ -1,0 +1,3 @@
+## 2024-05-19 - Isolate Frequent Zustand State Updates
+**Learning:** In large React components, subscribing to frequently updating Zustand state (like `particles` that update every second) causes massive unnecessary re-renders of the entire component tree.
+**Action:** Always isolate subscriptions to fast-changing state into small, dedicated components (e.g., creating a separate `WldBalance.tsx` component just for the header balance instead of subscribing in `GameScreen.tsx`).
