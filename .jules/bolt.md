@@ -1,0 +1,3 @@
+## 2024-05-18 - Zustand Global State Re-renders
+**Learning:** In a highly interactive Next.js app, using `useGameStore((state) => state.particles)` high up in the component tree (`GameScreen`) causes the entire layout and all tabs to re-render on *every* particle change (which happens on every click and every second from auto-collection).
+**Action:** Always isolate high-frequency state subscriptions (like currency counters, timers, or particle counts) into the smallest possible leaf components (e.g., `<WldBalanceDisplay />`) so only the number updates, not the whole screen.
