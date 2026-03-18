@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import VoidParticle from './VoidParticle'
 import ParticleCounter from './ParticleCounter'
+import ParticleBalance from './ParticleBalance'
 import Navigation from './Navigation'
 import UpgradesTab from './tabs/UpgradesTab'
 import MissionsTab from './tabs/MissionsTab'
@@ -36,7 +37,6 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
     const unlockedPremiumUpgrades = useGameStore((state) => state.unlockedPremiumUpgrades) || []
     const premiumBackgroundTheme = useGameStore((state) => state.premiumBackgroundTheme)
-    const particles = useGameStore((state) => state.particles)
     const t = useTranslations('Game')
 
     // Load game state on mount
@@ -94,9 +94,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             {t('title')}
                         </h1>
                         <div className="flex items-center gap-2">
-                            <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
-                                💎 {particles >= 10000 ? `${Math.floor(particles / 10000) * 0.01} WLD` : '0 WLD'}
-                            </div>
+                            <ParticleBalance />
                         </div>
                     </div>
                 </div>
