@@ -1,0 +1,3 @@
+## 2025-05-24 - Zustand Unselective Subscription Anti-Pattern
+**Learning:** Using `useGameStore()` without specific selectors in components subscribes the component to the ENTIRE global state. Because the `particles` property updates every second (passive generation), any component lacking selectors (like `PremiumTab`, `AdsTab`, `SurveyTab`) will needlessly re-render every second, tanking performance.
+**Action:** Always use specific selectors `useGameStore(state => state.property)` or `useGameStore(useShallow(state => ({ prop1: state.prop1, prop2: state.prop2 })))` when consuming global state to prevent massive re-renders from background game loop ticks.
