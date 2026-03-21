@@ -1,0 +1,3 @@
+## 2024-05-24 - Massive re-renders due to global state destructuring
+**Learning:** Using `const { propertyA, propertyB } = useGameStore()` subscribes the component to the ENTIRE global store. In this codebase, the store's `particles` count updates every single second and every time the user clicks. This anti-pattern causes ALL components (like UI tabs) to re-render completely every second, which severely degrades performance.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties, and `useShallow` from `zustand/react/shallow` (`useGameStore(useShallow(state => ({ ... })))`) when multiple properties must be selected to prevent unnecessary re-renders.
