@@ -1,0 +1,3 @@
+## 2024-05-24 - Avoid Whole-Store Subscriptions with Zustand
+**Learning:** Destructuring the entire `useGameStore` in components (e.g., `const { property } = useGameStore()`) is a critical performance anti-pattern in this codebase. Because the store contains rapidly changing state (like passive particles updating every second), whole-store subscriptions cause massive, continuous re-renders across the app, even in components that don't depend on the changing state.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single values, or `useShallow` from `zustand/react/shallow` (`useGameStore(useShallow(state => ({ prop: state.prop })))`) for multiple values to isolate component re-renders to only their specific dependencies.
