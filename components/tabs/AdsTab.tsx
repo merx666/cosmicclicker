@@ -24,7 +24,7 @@ const PRICING_TIERS: PricingTier[] = [
 ]
 
 export default function AdsTab() {
-    const { nullifierHash } = useGameStore()
+    const nullifierHash = useGameStore(state => state.nullifierHash) // ⚡ Bolt: Prevent massive re-renders by selecting only required state
     const [selectedTier, setSelectedTier] = useState<number>(1)
     const [isPurchasing, setIsPurchasing] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -127,7 +127,7 @@ export default function AdsTab() {
                 <div className="bg-gradient-to-br from-[#1a1b26] to-[#0f111a] border border-[#00ffcc]/30 rounded-3xl p-5 shadow-[0_0_30px_rgba(0,255,204,0.1)]">
                     <h3 className="text-xl font-bold text-white mb-2">Book a Banner Slot</h3>
                     <p className="text-text-secondary text-xs mb-5">
-                        Choose duration, pay automatically in WLD, and email us your banner. It's that easy.
+                        Choose duration, pay automatically in WLD, and email us your banner. It&apos;s that easy.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3 mb-5">
@@ -192,7 +192,7 @@ export default function AdsTab() {
 
                             <h3 className="text-2xl font-black text-white mb-2">Payment Confirmed!</h3>
                             <p className="text-text-secondary text-sm mb-6">
-                                Your banner slot is now reserved. There's just one last step to get it live.
+                                Your banner slot is now reserved. There&apos;s just one last step to get it live.
                             </p>
 
                             <div className="bg-black/30 border border-white/5 rounded-xl p-4 mb-6 text-left">
