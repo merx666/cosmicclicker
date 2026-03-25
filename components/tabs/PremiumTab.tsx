@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
@@ -18,6 +19,8 @@ interface PremiumUpgrade {
 }
 
 export default function PremiumTab() {
+    // Optimization: Use specific selectors with useShallow to prevent unnecessary re-renders
+    // from passive particle accumulation and other unrelated state changes
     const {
         premiumParticleSkin,
         premiumBackgroundTheme,
@@ -36,7 +39,25 @@ export default function PremiumTab() {
         loginStreak,
         nullifierHash,
         loadGameState
-    } = useGameStore()
+    } = useGameStore(useShallow(state => ({
+        premiumParticleSkin: state.premiumParticleSkin,
+        premiumBackgroundTheme: state.premiumBackgroundTheme,
+        premiumLuckyParticle: state.premiumLuckyParticle,
+        premiumOfflineEarnings: state.premiumOfflineEarnings,
+        premiumDailyBonus: state.premiumDailyBonus,
+        premiumVIP: state.premiumVIP,
+        vipTier: state.vipTier,
+        purchasePremiumUpgrade: state.purchasePremiumUpgrade,
+        equipSkin: state.equipSkin,
+        equipTheme: state.equipTheme,
+        unlockedSkins: state.unlockedSkins,
+        unlockedThemes: state.unlockedThemes,
+        claimDailyBonus: state.claimDailyBonus,
+        lastDailyBonusTime: state.lastDailyBonusTime,
+        loginStreak: state.loginStreak,
+        nullifierHash: state.nullifierHash,
+        loadGameState: state.loadGameState
+    })))
 
     const [purchasing, setPurchasing] = useState<string | null>(null)
 
