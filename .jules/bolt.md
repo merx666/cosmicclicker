@@ -1,0 +1,3 @@
+## 2024-05-22 - Zustand useGameStore() Anti-pattern
+**Learning:** Destructuring the entire `useGameStore()` without selectors (e.g., `const { particles } = useGameStore()`) subscribes the component to the *entire* global state. In this app, frequent updates like passive particle generation (every second) cause massive re-renders across all tabs that use this anti-pattern, drastically hurting performance.
+**Action:** Always use specific state selectors (e.g., `useGameStore(state => state.property)`) for single properties, and `useShallow` from `zustand/react/shallow` for selecting multiple properties to prevent unnecessary re-renders.
