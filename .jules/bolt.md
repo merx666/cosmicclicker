@@ -1,0 +1,3 @@
+## 2024-05-18 - Zustand Massive Re-render Prevention
+**Learning:** Using `useGameStore()` without specific selectors in heavy components subscribes them to the entire global store. Because the `particles` count updates every second (via auto collector), this causes massive unnecessary re-renders in components that don't even use the `particles` state, killing performance.
+**Action:** Always use specific state selectors with `useGameStore`. When destructuring multiple properties, wrap the selector in `useShallow` from `zustand/react/shallow` to prevent unnecessary re-renders.
