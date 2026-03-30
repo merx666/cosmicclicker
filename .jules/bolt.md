@@ -1,0 +1,3 @@
+## 2024-05-18 - Destructuring Global State with Zustand
+**Learning:** In a codebase using Zustand for global state management with frequent updates (e.g., a rapidly changing `particles` counter), destructuring the entire store in a component using `useGameStore()` subscribes the component to ALL state changes, causing massive and unnecessary re-renders.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties, and `useShallow` from `zustand/react/shallow` (`useGameStore(useShallow(state => ({ prop1: state.prop1, prop2: state.prop2 })))`) when multiple properties must be selected to prevent performance bottlenecks.
