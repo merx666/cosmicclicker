@@ -24,7 +24,10 @@ const PRICING_TIERS: PricingTier[] = [
 ]
 
 export default function AdsTab() {
-    const { nullifierHash } = useGameStore()
+    // ⚡ Bolt Performance Optimization:
+    // Replaced full store destructuring with specific field selector.
+    // Impact: Prevents massive unnecessary re-renders across the component tree when unrelated state (like passive particle generation) updates.
+    const nullifierHash = useGameStore(state => state.nullifierHash)
     const [selectedTier, setSelectedTier] = useState<number>(1)
     const [isPurchasing, setIsPurchasing] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
