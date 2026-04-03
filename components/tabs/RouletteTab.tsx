@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
@@ -25,7 +26,14 @@ const FAKE_WINNERS = [
 const FREE_SPIN_COOLDOWN = 24 * 60 * 60 * 1000
 
 export default function RouletteTab() {
-    const { nullifierHash, particles, addParticles } = useGameStore()
+    // ⚡ Bolt Performance Optimization:
+    // Replaced full store destructuring with useShallow selector.
+    // Impact: Prevents massive unnecessary re-renders across the component tree when unrelated state (like passive particle generation) updates.
+    const { nullifierHash, particles, addParticles } = useGameStore(useShallow(state => ({
+        nullifierHash: state.nullifierHash,
+        particles: state.particles,
+        addParticles: state.addParticles
+    })))
     const [isSpinning, setIsSpinning] = useState(false)
     const [variant, setVariant] = useState<'small' | 'big'>('small')
     const [reels, setReels] = useState([0, 0, 0])
