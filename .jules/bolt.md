@@ -1,0 +1,2 @@
+
+## 2024-05-24 - Zustand Destructuring Re-render Trap | **Learning:** In this codebase, passive particle generation updates the `useGameStore` frequently. Using full destructuring like `const { a, b } = useGameStore()` causes components to re-render on *every* passive update, severely degrading performance, even if the extracted props haven't changed. | **Action:** Always use specific selectors (e.g. `useGameStore(state => state.a)`) or `useShallow` when multiple properties are needed. Never destructure the full store directly.
