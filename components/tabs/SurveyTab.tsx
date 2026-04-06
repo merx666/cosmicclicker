@@ -29,7 +29,10 @@ const CURRENT_POLL_ID = 'poll_002'
 const CURRENT_POLL_QUESTION = 'Should the next $VOID airdrop be 10x BIGGER? 🚀'
 
 export default function SurveyTab() {
-    const { nullifierHash } = useGameStore()
+    // ⚡ Bolt Performance Optimization:
+    // Using direct selector instead of destructuring the whole store object to prevent unnecessary component re-renders
+    // Expected impact: Eliminates wasteful renders caused by passive particle generation (1/sec update)
+    const nullifierHash = useGameStore(state => state.nullifierHash)
     const [poll, setPoll] = useState<Poll>({
         id: CURRENT_POLL_ID,
         question: CURRENT_POLL_QUESTION,
