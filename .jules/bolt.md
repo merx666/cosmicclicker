@@ -1,0 +1,3 @@
+## 2024-04-08 - Prevent Global State Re-renders with Zustand Selectors
+**Learning:** Codebase-specific performance anti-pattern discovered: using `useGameStore()` without selectors (e.g., destructuring the entire store in component tabs) subscribes components to the entire global state. This causes massive re-renders across the app on frequent updates, such as passive particle generation.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties or `useShallow` from `zustand/react/shallow` for multiple properties to prevent strict linting/build errors and unnecessary re-renders in Next.js.
