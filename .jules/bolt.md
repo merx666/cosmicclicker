@@ -1,0 +1,3 @@
+## 2024-05-24 - Zustand Destructuring Re-renders
+**Learning:** Destructuring the entire `useGameStore()` in components causes them to re-render whenever *any* state in the store changes. Because `particles` are generated passively every second, this causes all of these components to re-render every single second, even when they don't depend on the `particles` state or only depend on a few static properties like `nullifierHash`.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties, and `useShallow` from `zustand/react/shallow` when multiple properties must be selected to prevent unnecessary re-renders.
