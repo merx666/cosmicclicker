@@ -1,0 +1,3 @@
+## 2024-05-18 - Zustand Selector Re-render Anti-Pattern
+**Learning:** Using full object destructuring with `useGameStore()` in Zustand (e.g. `const { nullifierHash } = useGameStore()`) subscribes the component to the *entire* state object. In games with frequent passive tick updates (like particles incrementing), this causes massive, unnecessary component re-renders everywhere the store is used without selectors.
+**Action:** Always use direct state selectors (e.g. `const nullifierHash = useGameStore(state => state.nullifierHash)`) or `useShallow` when multiple properties are needed, to isolate state subscriptions and prevent widespread UI re-renders on every game tick.
