@@ -1,0 +1,3 @@
+## 2024-06-19 - Avoid destructured useGameStore without selectors
+**Learning:** Destructuring `useGameStore()` without state selectors (e.g., `const { property } = useGameStore()`) Subscribes the component to the ENTIRE global state. Because `particles` updates every second for passive earnings, this causes massive, continuous re-renders across all active tabs, killing performance.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties, or `useShallow` from `zustand/react/shallow` when selecting multiple properties to restrict re-renders to only when the specific data changes.
