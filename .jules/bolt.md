@@ -1,0 +1,3 @@
+## 2025-04-25 - Zustand useGameStore() without selectors causes massive re-renders
+**Learning:** Using `useGameStore()` in components (especially Tabs) subscribes the component to the *entire* global state. In this app, `addPassiveParticles` triggers a global state update every second, which forces all Tab components to re-render constantly even if the specific data they care about hasn't changed.
+**Action:** Always use specific state selectors (`useGameStore(state => state.prop)`) for single properties, or `useShallow` from `zustand/react/shallow` when multiple properties must be selected, to prevent unnecessary re-renders.
