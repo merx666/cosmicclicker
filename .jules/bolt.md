@@ -1,0 +1,1 @@
+## 2025-05-15 - Zustand Selectors | **Learning:** Destructuring global Zustand stores without selectors or useShallow causes massive unnecessary re-renders across the component tree. | **Action:** Always use specific state selectors or useShallow for Zustand to avoid performance bottlenecks.
