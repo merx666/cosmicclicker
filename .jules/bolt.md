@@ -1,0 +1,3 @@
+## 2024-05-02 - Destructuring Zustand Store causes unnecessary re-renders
+**Learning:** Destructuring the entire `useGameStore()` without selectors (e.g., `const { nullifierHash, particles } = useGameStore()`) subscribes the component to the entire global state. In this app, `particles` updates every second, causing massive re-renders even if the variable isn't used in the component render logic.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) or `useShallow` when multiple properties must be selected to prevent components from re-rendering on unrelated state updates.
