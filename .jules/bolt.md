@@ -1,0 +1,3 @@
+## 2025-02-12 - Zustand Component Re-renders Anti-Pattern
+**Learning:** Found a major performance bottleneck where UI components (especially tabs like RouletteTab, UpgradesTab, etc.) were subscribing to the entire global state by calling `useGameStore()` and destructuring properties. This forced large components to re-render constantly (e.g., every second as passive particles accrue).
+**Action:** Always use specific selectors `useGameStore(state => state.prop)` or `useShallow((state) => ({ prop: state.prop }))` to ensure React components only subscribe to the subset of global state they actually use.
