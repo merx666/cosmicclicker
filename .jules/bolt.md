@@ -1,0 +1,3 @@
+## 2024-05-18 - Zustand Unnecessary Rerenders via Destructuring
+**Learning:** Destructuring the entire `useGameStore()` without state selectors (e.g. `const { nullifierHash } = useGameStore()`) subscribes the component to EVERY state update in the store. In an incremental game where `particles` or `particlesPerSecond` update very frequently (every second or click), this causes massive, continuous re-renders across all tabs and UI components, severely degrading performance.
+**Action:** When extracting properties from a Zustand store, always use direct state selectors (e.g., `useGameStore(state => state.property)`) for single properties, or `useShallow` from `zustand/react/shallow` when selecting multiple properties. Fix existing destructive patterns in UI tab components.
