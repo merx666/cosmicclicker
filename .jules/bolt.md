@@ -1,0 +1,3 @@
+## 2024-05-15 - Zustand Selectors Anti-pattern
+**Learning:** Using `useGameStore()` without selectors (e.g., destructuring the entire store in components like Tabs) subscribes the component to the entire global state, causing massive re-renders on frequent updates like passive particle generation.
+**Action:** Always use specific state selectors, and use `useShallow` from `zustand/react/shallow` when selecting multiple properties.
