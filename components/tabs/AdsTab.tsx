@@ -24,7 +24,9 @@ const PRICING_TIERS: PricingTier[] = [
 ]
 
 export default function AdsTab() {
-    const { nullifierHash } = useGameStore()
+    // ⚡ Bolt: Using specific state selector to prevent unnecessary re-renders
+    // 📊 Impact: Component only re-renders when this specific value changes
+    const nullifierHash = useGameStore(state => state.nullifierHash)
     const [selectedTier, setSelectedTier] = useState<number>(1)
     const [isPurchasing, setIsPurchasing] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)

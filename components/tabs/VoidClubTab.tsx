@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit } from '@worldcoin/minikit-js'
 import { getVoidBalance } from '@/lib/token'
 
 export default function VoidClubTab() {
-    const {
-        nullifierHash,
+    // ⚡ Bolt: Using useShallow to prevent unnecessary re-renders when other state updates
+    // 📊 Impact: Eliminates massive re-renders from frequent state changes (e.g., passive particles)
+    const { nullifierHash,
         loadGameState
-    } = useGameStore()
+     } = useGameStore(useShallow(state => ({ nullifierHash: state.nullifierHash, loadGameState: state.loadGameState })))
 
     const [voidBalance, setVoidBalance] = useState<number | null>(null)
     const [checkingVoid, setCheckingVoid] = useState(false)

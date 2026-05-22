@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
@@ -30,14 +31,15 @@ interface WldUpgrade {
 }
 
 export default function UpgradesTab() {
-    const {
-        particles,
+    // ⚡ Bolt: Using useShallow to prevent unnecessary re-renders when other state updates
+    // 📊 Impact: Eliminates massive re-renders from frequent state changes (e.g., passive particles)
+    const { particles,
         upgradeClickPower,
         upgradeAutoCollector,
         purchaseUpgrade,
         unlockedPremiumUpgrades,
         nullifierHash
-    } = useGameStore()
+     } = useGameStore(useShallow(state => ({ particles: state.particles, upgradeClickPower: state.upgradeClickPower, upgradeAutoCollector: state.upgradeAutoCollector, purchaseUpgrade: state.purchaseUpgrade, unlockedPremiumUpgrades: state.unlockedPremiumUpgrades, nullifierHash: state.nullifierHash })))
 
     const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
 
