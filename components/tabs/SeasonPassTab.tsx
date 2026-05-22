@@ -1,6 +1,7 @@
 'use client'
 
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
@@ -49,15 +50,16 @@ const generateRewards = (): PassLevel[] => {
 const rewards = generateRewards()
 
 export default function SeasonPassTab() {
-    const {
-        bpLevel,
+    // ⚡ Bolt: Using useShallow to prevent unnecessary re-renders when other state updates
+    // 📊 Impact: Eliminates massive re-renders from frequent state changes (e.g., passive particles)
+    const { bpLevel,
         bpXp,
         bpPremium,
         premiumVIP,
         bpClaimedFree,
         bpClaimedPremium,
         claimBpReward
-    } = useGameStore()
+     } = useGameStore(useShallow(state => ({ bpLevel: state.bpLevel, bpXp: state.bpXp, bpPremium: state.bpPremium, premiumVIP: state.premiumVIP, bpClaimedFree: state.bpClaimedFree, bpClaimedPremium: state.bpClaimedPremium, claimBpReward: state.claimBpReward })))
 
     // VIP automatically unlocks standard Battle Pass Premium
     const hasPremium = bpPremium || premiumVIP
