@@ -25,7 +25,10 @@ const FAKE_WINNERS = [
 const FREE_SPIN_COOLDOWN = 24 * 60 * 60 * 1000
 
 export default function RouletteTab() {
-    const { nullifierHash, particles, addParticles } = useGameStore()
+    // Optimization: specific state selectors prevent unnecessary re-renders
+    const nullifierHash = useGameStore(state => state.nullifierHash)
+    const particles = useGameStore(state => state.particles)
+    const addParticles = useGameStore(state => state.addParticles)
     const [isSpinning, setIsSpinning] = useState(false)
     const [variant, setVariant] = useState<'small' | 'big'>('small')
     const [reels, setReels] = useState([0, 0, 0])
