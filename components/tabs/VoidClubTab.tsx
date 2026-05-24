@@ -8,10 +8,9 @@ import { MiniKit } from '@worldcoin/minikit-js'
 import { getVoidBalance } from '@/lib/token'
 
 export default function VoidClubTab() {
-    const {
-        nullifierHash,
-        loadGameState
-    } = useGameStore()
+    // Optimization: specific state selectors prevent unnecessary re-renders
+    const nullifierHash = useGameStore(state => state.nullifierHash)
+    const loadGameState = useGameStore(state => state.loadGameState)
 
     const [voidBalance, setVoidBalance] = useState<number | null>(null)
     const [checkingVoid, setCheckingVoid] = useState(false)
