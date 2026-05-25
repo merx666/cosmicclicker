@@ -1,0 +1,3 @@
+## 2024-05-24 - Zustand store selections
+**Learning:** Destructuring the entire `useGameStore()` in functional React components causes performance bottlenecks because it subscribes the component to every single state change in the global store. In this codebase, passive particle generation happens frequently, leading to massive unnecessary re-renders across all tabs and screens.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties, and `useShallow` from `zustand/react/shallow` when multiple properties must be selected, to ensure components only re-render when the specific data they consume changes.
