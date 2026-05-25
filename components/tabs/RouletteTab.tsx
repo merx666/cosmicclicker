@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
 import Image from 'next/image'
+import { useShallow } from 'zustand/react/shallow'
 
 // Fake winners data for the marquee
 const FAKE_WINNERS = [
@@ -25,7 +26,15 @@ const FAKE_WINNERS = [
 const FREE_SPIN_COOLDOWN = 24 * 60 * 60 * 1000
 
 export default function RouletteTab() {
-    const { nullifierHash, particles, addParticles } = useGameStore()
+    const {
+        nullifierHash,
+        particles,
+        addParticles
+    } = useGameStore(useShallow(state => ({
+        nullifierHash: state.nullifierHash,
+        particles: state.particles,
+        addParticles: state.addParticles
+    })))
     const [isSpinning, setIsSpinning] = useState(false)
     const [variant, setVariant] = useState<'small' | 'big'>('small')
     const [reels, setReels] = useState([0, 0, 0])

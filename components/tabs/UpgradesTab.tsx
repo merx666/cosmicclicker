@@ -6,6 +6,7 @@ import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
+import { useShallow } from 'zustand/react/shallow'
 
 const RECEIVER_ADDRESS = '0xeF648A1876a38612Ea1eF7A2DC8DF7Cbe186835a'
 
@@ -37,7 +38,14 @@ export default function UpgradesTab() {
         purchaseUpgrade,
         unlockedPremiumUpgrades,
         nullifierHash
-    } = useGameStore()
+    } = useGameStore(useShallow(state => ({
+        particles: state.particles,
+        upgradeClickPower: state.upgradeClickPower,
+        upgradeAutoCollector: state.upgradeAutoCollector,
+        purchaseUpgrade: state.purchaseUpgrade,
+        unlockedPremiumUpgrades: state.unlockedPremiumUpgrades,
+        nullifierHash: state.nullifierHash
+    })))
 
     const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
 
