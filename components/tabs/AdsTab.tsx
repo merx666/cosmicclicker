@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
 import toast from 'react-hot-toast'
-import Image from 'next/image'
 import { useGameStore } from '@/store/gameStore'
 
 const RECEIVER_ADDRESS = '0xeF648A1876a38612Ea1eF7A2DC8DF7Cbe186835a'
@@ -24,7 +23,8 @@ const PRICING_TIERS: PricingTier[] = [
 ]
 
 export default function AdsTab() {
-    const { nullifierHash } = useGameStore()
+    // Performance optimization: Direct selector prevents AdsTab from re-rendering on every particle tick.
+    const nullifierHash = useGameStore(state => state.nullifierHash)
     const [selectedTier, setSelectedTier] = useState<number>(1)
     const [isPurchasing, setIsPurchasing] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -58,7 +58,7 @@ export default function AdsTab() {
 
             const { commandPayload } = await MiniKit.commandsAsync.pay(payload)
 
-            if ((commandPayload as any)?.status === 'success') {
+            if ((commandPayload as { status: string })?.status === 'success') {
                 const response = await fetch('/api/purchase-ad', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -77,8 +77,8 @@ export default function AdsTab() {
                     const data = await response.json()
                     toast.error(data.error || 'Failed to process payment on server')
                 }
-            } else if ((commandPayload as any)?.status === 'error') {
-                toast.error(`Payment failed: ${(commandPayload as any)?.error_code}`)
+            } else if ((commandPayload as { status: string })?.status === 'error') {
+                toast.error(`Payment failed: ${(commandPayload as { status: string })?.error_code}`)
             } else {
                 toast.error('Payment cancelled')
             }
