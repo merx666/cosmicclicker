@@ -1,0 +1,3 @@
+## 2024-05-24 - Zustand store selections in Tabs
+**Learning:** Destructuring the entire `useGameStore()` in components causes them to re-render every time *any* property in the global state changes (such as the frequently updating `particles` count). This is a major performance issue when not using selectors.
+**Action:** Always use specific state selectors (`useGameStore(state => state.property)`) for single properties, and `useShallow` from `zustand/react/shallow` when extracting multiple properties from the store. Ensure `useShallow` is correctly imported and all used properties are correctly mapped in the selector to avoid breaking functionality.
