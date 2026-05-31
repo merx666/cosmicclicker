@@ -1,0 +1,3 @@
+## 2026-05-31 - Zustand Store Subscriptions in Tabs
+**Learning:** Destructuring the entire `useGameStore()` directly in UI components (like Tabs) subscribes the component to every state change in the global store. In a game where state properties like `particles` update multiple times per second, this causes massive, unnecessary re-renders across the entire application interface.
+**Action:** Always use specific state selectors (e.g., `const property = useGameStore(state => state.property)`) or `useShallow` from `zustand/react/shallow` when selecting multiple properties. Never blindly destructure the whole store without selectors.
