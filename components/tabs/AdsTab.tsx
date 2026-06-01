@@ -6,6 +6,7 @@ import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 
 const RECEIVER_ADDRESS = '0xeF648A1876a38612Ea1eF7A2DC8DF7Cbe186835a'
 
@@ -24,7 +25,11 @@ const PRICING_TIERS: PricingTier[] = [
 ]
 
 export default function AdsTab() {
-    const { nullifierHash } = useGameStore()
+    const {
+        nullifierHash
+    } = useGameStore(useShallow(state => ({
+        nullifierHash: state.nullifierHash
+    })))
     const [selectedTier, setSelectedTier] = useState<number>(1)
     const [isPurchasing, setIsPurchasing] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
