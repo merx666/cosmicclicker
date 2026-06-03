@@ -1,0 +1,4 @@
+
+## 2024-05-18 - Zustand Full Store Subscription Re-render Anti-pattern
+**Learning:** Using `useGameStore()` without selectors (e.g., destructuring the entire store in components like Tabs) subscribes the component to the entire global state. Because the store contains frequently updating values (like the passive particle generator incrementing `particles` every second), *every* component destructuring the full store re-renders on every tick, causing massive unnecessary rendering across the app.
+**Action:** Always use specific state selectors with Zustand. For single properties, use direct selectors (e.g., `useGameStore(state => state.property)`). For multiple properties, use `useShallow` from `zustand/react/shallow` (e.g., `useGameStore(useShallow(state => ({ a: state.a, b: state.b })))`).
