@@ -27,6 +27,17 @@ interface GameScreenProps {
     userHash: string
 }
 
+
+// Extracted to prevent GameScreen from re-rendering on every particle update (which happens 1x/sec)
+const HeaderWLD = () => {
+    const particles = useGameStore((state) => state.particles)
+    return (
+        <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
+            💎 {particles >= 10000 ? `${Math.floor(particles / 10000) * 0.01} WLD` : '0 WLD'}
+        </div>
+    )
+}
+
 export default function GameScreen({ userHash }: GameScreenProps) {
     const [activeTab, setActiveTab] = useState('collect')
     const loadGameState = useGameStore((state) => state.loadGameState)
@@ -36,7 +47,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
     const unlockedPremiumUpgrades = useGameStore((state) => state.unlockedPremiumUpgrades) || []
     const premiumBackgroundTheme = useGameStore((state) => state.premiumBackgroundTheme)
-    const particles = useGameStore((state) => state.particles)
+
     const t = useTranslations('Game')
 
     // Load game state on mount
@@ -94,9 +105,7 @@ export default function GameScreen({ userHash }: GameScreenProps) {
                             {t('title')}
                         </h1>
                         <div className="flex items-center gap-2">
-                            <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
-                                💎 {particles >= 10000 ? `${Math.floor(particles / 10000) * 0.01} WLD` : '0 WLD'}
-                            </div>
+                            <HeaderWLD />
                         </div>
                     </div>
                 </div>
