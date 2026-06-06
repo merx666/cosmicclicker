@@ -6,8 +6,11 @@ import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
+import { trackEvent } from '@/lib/analytics'
 
-const RECEIVER_ADDRESS = '0xeF648A1876a38612Ea1eF7A2DC8DF7Cbe186835a'
+import { ADMIN_WALLET_ADDRESS } from '@/lib/constants'
+
+const RECEIVER_ADDRESS = ADMIN_WALLET_ADDRESS
 
 interface Upgrade {
     id: string
@@ -36,8 +39,17 @@ export default function UpgradesTab() {
         upgradeAutoCollector,
         purchaseUpgrade,
         unlockedPremiumUpgrades,
-        nullifierHash
+        nullifierHash,
+        unlockedSkins,
+        unlockedThemes,
+        purchaseCosmicItem,
+        equipSkin,
+        equipTheme,
+        premiumParticleSkin,
+        premiumBackgroundTheme
     } = useGameStore()
+
+    const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 
     const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
 
@@ -87,6 +99,42 @@ export default function UpgradesTab() {
         return Math.floor(baseCost * Math.pow(1.15, currentLevel))
     }
 
+    const handleCosmicPurchase = (item: CosmicItem) => {
+        const isUnlocked = item.type === 'skin'
+            ? unlockedSkins?.includes(item.value)
+            : unlockedThemes?.includes(item.value)
+
+        if (isUnlocked) {
+            if (item.type === 'skin') {
+                equipSkin(item.value)
+                toast.success('Wyposażono nową skórkę portalu!')
+            } else {
+                equipTheme(item.value)
+                toast.success('Wyposażono nowy motyw tła!')
+            }
+            return
+        }
+
+        if (particles < item.costParticles) {
+            toast.error('Masz za mało cząsteczek!')
+            return
+        }
+
+        const success = purchaseCosmicItem(item.type, item.value, item.costParticles)
+        if (success) {
+            toast.success(`Odblokowano: ${item.name}! 🎉`)
+        } else {
+            toast.error('Błąd podczas zakupu.')
+        }
+    }
+
+    const isEquipped = (item: CosmicItem) => {
+        if (item.type === 'skin') {
+            return premiumParticleSkin === item.value
+        }
+        return premiumBackgroundTheme === item.value
+    }
+
     const handlePurchase = (upgrade: Upgrade) => {
         if (upgrade.currentLevel >= upgrade.maxLevel) {
             toast.error('Maximum level reached!')
@@ -100,66 +148,138 @@ export default function UpgradesTab() {
 
         if (success) {
             toast.success(`${upgrade.name} upgraded to level ${newLevel}! 🎉`)
+            trackEvent('purchase_upgrade', 'gameplay', upgrade.id, newLevel)
         } else {
             toast.error('Not enough particles!')
         }
     }
 
     const handleWldPurchase = async (upgrade: WldUpgrade) => {
-        if (!MiniKit.isInstalled) {
-            toast.error('World App opens is required for this action')
+        if (!isTelegram && !MiniKit.isInstalled()) {
+            toast.error('World App is required for this action')
             return
         }
 
         try {
             setIsPurchasing(upgrade.id)
-
             const reference = crypto.randomUUID().replace(/-/g, '')
-            const amountInWei = tokenToDecimals(upgrade.costWld, Tokens.WLD).toString()
 
-            const payload = {
-                reference,
-                to: RECEIVER_ADDRESS,
-                tokens: [{
-                    symbol: Tokens.WLD,
-                    token_amount: amountInWei
-                }],
-                description: `Void Collector - ${upgrade.name}`,
-                network: Network.WorldChain
-            }
+            if (isTelegram) {
+                // Telegram Stars payment flow
+                const tgWebApp = (window as any).Telegram?.WebApp
+                if (!tgWebApp) {
+                    toast.error('⚠️ Telegram WebApp is not available.')
+                    setIsPurchasing(null)
+                    return
+                }
 
-            const { commandPayload } = await MiniKit.commandsAsync.pay(payload)
+                const priceStars = upgrade.costWld * 60
 
-            if ((commandPayload as any)?.status === 'success') {
-                const response = await fetch('/api/purchase-wld-upgrade', {
+                // Request Telegram Stars Invoice
+                const invoiceRes = await fetch('/api/telegram/pay-stars', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        upgrade_id: upgrade.id,
-                        amount: upgrade.costWld,
-                        transaction_ref: reference,
-                        nullifier_hash: nullifierHash
+                        itemId: upgrade.id,
+                        priceStars,
+                        title: upgrade.name,
+                        description: upgrade.description,
+                        reference
                     })
                 })
 
-                if (response.ok) {
-                    toast.success(`${upgrade.name} unlocked successfully!`)
-                    useGameStore.setState(state => ({
-                        unlockedPremiumUpgrades: [...(state.unlockedPremiumUpgrades || []), upgrade.id]
-                    }))
-                } else {
-                    const data = await response.json()
-                    toast.error(data.error || 'Failed to process payment on server')
+                const invoiceData = await invoiceRes.json()
+                if (!invoiceRes.ok || !invoiceData.success) {
+                    toast.error(`❌ Błąd płatności Stars: ${invoiceData.error || 'Nieznany błąd'}`)
+                    setIsPurchasing(null)
+                    return
                 }
-            } else if ((commandPayload as any)?.status === 'error') {
-                toast.error(`Payment failed: ${(commandPayload as any)?.error_code}`)
+
+                // Open Telegram invoice modal
+                tgWebApp.openInvoice(invoiceData.invoiceLink, async (status: string) => {
+                    if (status === 'paid') {
+                        try {
+                            setIsPurchasing(upgrade.id)
+                            const response = await fetch('/api/purchase-wld-upgrade', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    upgrade_id: upgrade.id,
+                                    amount: priceStars,
+                                    transaction_ref: reference,
+                                    nullifier_hash: nullifierHash
+                                })
+                            })
+
+                            if (response.ok) {
+                                toast.success(`${upgrade.name} unlocked successfully! 🎉`)
+                                trackEvent('purchase_premium_upgrade', 'gameplay', upgrade.id)
+                                useGameStore.setState(state => ({
+                                    unlockedPremiumUpgrades: [...(state.unlockedPremiumUpgrades || []), upgrade.id]
+                                }))
+                            } else {
+                                const data = await response.json()
+                                toast.error(data.error || 'Failed to process payment on server')
+                            }
+                        } catch (err) {
+                            toast.error('❌ Błąd zapisu ulepszenia Stars.')
+                        } finally {
+                            setIsPurchasing(null)
+                        }
+                    } else {
+                        toast.error('❌ Płatność Stars anulowana lub nieudana.')
+                        setIsPurchasing(null)
+                    }
+                })
             } else {
-                toast.error('Payment cancelled')
+                // WorldApp / MiniKit payment flow
+                const amountInWei = tokenToDecimals(upgrade.costWld, Tokens.WLD).toString()
+
+                const payload = {
+                    reference,
+                    to: RECEIVER_ADDRESS,
+                    tokens: [{
+                        symbol: Tokens.WLD,
+                        token_amount: amountInWei
+                    }],
+                    description: `Void Collector - ${upgrade.name}`,
+                    network: Network.WorldChain
+                }
+
+                const { commandPayload } = await MiniKit.commandsAsync.pay(payload)
+
+                if ((commandPayload as any)?.status === 'success') {
+                    const response = await fetch('/api/purchase-wld-upgrade', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            upgrade_id: upgrade.id,
+                            amount: upgrade.costWld,
+                            transaction_ref: reference,
+                            nullifier_hash: nullifierHash
+                        })
+                    })
+
+                    if (response.ok) {
+                        toast.success(`${upgrade.name} unlocked successfully!`)
+                        trackEvent('purchase_premium_upgrade', 'gameplay', upgrade.id)
+                        useGameStore.setState(state => ({
+                            unlockedPremiumUpgrades: [...(state.unlockedPremiumUpgrades || []), upgrade.id]
+                        }))
+                    } else {
+                        const data = await response.json()
+                        toast.error(data.error || 'Failed to process payment on server')
+                    }
+                } else if ((commandPayload as any)?.status === 'error') {
+                    toast.error(`Payment failed: ${(commandPayload as any)?.error_code}`)
+                } else {
+                    toast.error('Payment cancelled')
+                }
+                setIsPurchasing(null)
             }
         } catch (error) {
-            console.error('WLD Upgrade purchase error:', error)
+            console.error('Upgrade purchase error:', error)
             toast.error('Something went wrong during purchase')
-        } finally {
             setIsPurchasing(null)
         }
     }
@@ -174,7 +294,7 @@ export default function UpgradesTab() {
             {/* Premium WLD Upgrades */}
             <div>
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-particle-glow">
-                    <span>💎</span> Premium WLD Upgrades
+                    <span>💎</span> {isTelegram ? 'Premium Stars Upgrades' : 'Premium WLD Upgrades'}
                 </h3>
                 <div className="space-y-4">
                     {wldUpgrades.map((upgrade, idx) => {
@@ -227,7 +347,7 @@ export default function UpgradesTab() {
                                             ) : isPurchasing === upgrade.id ? (
                                                 'PROCESSING...'
                                             ) : (
-                                                <>UNLOCK FOR {upgrade.costWld} WLD</>
+                                                <>{isTelegram ? `UNLOCK FOR ${upgrade.costWld * 60} STARS` : `UNLOCK FOR ${upgrade.costWld} WLD`}</>
                                             )}
                                         </button>
                                     </div>
@@ -321,6 +441,137 @@ export default function UpgradesTab() {
                     })}
                 </div>
             </div>
+
+            {/* Cosmic Store */}
+            <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-particle-glow">
+                    <span>✨</span> Cosmic Store (Sinks)
+                </h3>
+                <div className="space-y-4">
+                    {cosmicItems.map((item, idx) => {
+                        const isUnlocked = item.type === 'skin'
+                            ? unlockedSkins?.includes(item.value)
+                            : unlockedThemes?.includes(item.value)
+                        const equipped = isEquipped(item)
+                        const canAfford = particles >= item.costParticles
+
+                        return (
+                            <motion.div
+                                key={item.id}
+                                className={`bg-void-purple/10 border ${isUnlocked ? 'border-success/30' : 'border-void-purple/30'} rounded-xl p-6`}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.4 + (idx * 0.1) }}
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="relative w-12 h-12 shrink-0 bg-void-dark/30 rounded-lg flex items-center justify-center text-2xl border border-void-purple/20">
+                                        <span>{item.icon}</span>
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 className="text-xl font-bold">{item.name}</h3>
+                                                <p className="text-sm text-text-secondary">{item.description}</p>
+                                            </div>
+                                            {isUnlocked && (
+                                                <span className="text-xs bg-success/20 text-success px-2 py-1 rounded">
+                                                    Odblokowane
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleCosmicPurchase(item)}
+                                            disabled={!isUnlocked && !canAfford}
+                                            className={`
+                                                w-full py-3 px-6 rounded-lg font-bold transition-all
+                                                ${equipped
+                                                    ? 'bg-success/20 text-success border border-success/50 cursor-default'
+                                                    : isUnlocked
+                                                        ? 'bg-gradient-to-r from-void-purple to-void-blue hover:from-void-purple/80 hover:to-void-blue/80'
+                                                        : canAfford
+                                                            ? 'bg-[#00ffcc]/20 hover:bg-[#00ffcc]/30 border border-[#00ffcc]/50 text-white'
+                                                            : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                                                }
+                                            `}
+                                        >
+                                            {equipped ? (
+                                                '✓ WYPOSAŻONE'
+                                            ) : isUnlocked ? (
+                                                'WYPOSAŻ'
+                                            ) : (
+                                                <>
+                                                    <Image src="/assets/nav/collect.png" alt="p" width={14} height={14} className="inline mr-1" />
+                                                    Odblokuj za {item.costParticles.toLocaleString()} cząsteczek
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )
+                    })}
+                </div>
+            </div>
         </div>
     )
 }
+
+interface CosmicItem {
+    id: string
+    name: string
+    description: string
+    icon: string
+    costParticles: number
+    type: 'skin' | 'theme'
+    value: string
+}
+
+const cosmicItems: CosmicItem[] = [
+    {
+        id: 'crystal_skin',
+        name: '🔮 Kryształowy Portal',
+        description: 'Krystaliczne fasetki odbijające energię próżni.',
+        icon: '🔮',
+        costParticles: 5000000,
+        type: 'skin',
+        value: 'crystal'
+    },
+    {
+        id: 'dark_matter_skin',
+        name: '🌌 Portal Ciemnej Materii',
+        description: 'Tajemniczy wir, pozostawiający za sobą cienie.',
+        icon: '🌌',
+        costParticles: 15000000,
+        type: 'skin',
+        value: 'dark_matter'
+    },
+    {
+        id: 'supernova_skin',
+        name: '🔥 Portal Supernowej',
+        description: 'Ogniste rozbłyski krążące wokół jądra.',
+        icon: '🔥',
+        costParticles: 50000000,
+        type: 'skin',
+        value: 'supernova'
+    },
+    {
+        id: 'deep_space_theme',
+        name: '🌠 Motyw Głębokiego Kosmosu',
+        description: 'Ciemnogranatowe tło galaktyki z jasnymi błyskami.',
+        icon: '🌠',
+        costParticles: 10000000,
+        type: 'theme',
+        value: 'deep_space'
+    },
+    {
+        id: 'supernova_theme',
+        name: '☀️ Motyw Supernowej',
+        description: 'Intensywna eksplozja kosmiczna z rozbłyskami słońca.',
+        icon: '☀️',
+        costParticles: 25000000,
+        type: 'theme',
+        value: 'supernova'
+    }
+]

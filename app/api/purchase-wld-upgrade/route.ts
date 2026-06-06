@@ -24,37 +24,60 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid upgrade' }, { status: 400 })
         }
 
-        // Validate amounts and IDs
-        const expectedAmounts: Record<string, number> = {
-            'void_core_multiplier': 10,
-            'overclocked_drone': 15
-        }
+        const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 
-        if (expectedAmounts[upgrade_id] !== amount) {
-            console.error('[API] Invalid amount for upgrade:', upgrade_id, amount)
-            return NextResponse.json({ error: 'Invalid amount for selected upgrade' }, { status: 400 })
-        }
-
-        // We use direct RAW SQL to append the upgrade to the jsonb array securely
-        // We also log the transaction reference into a new table or just rely on the fact that if it's purchased it's in the array.
-        // Wait, to prevent replay attacks we must ensure transaction_ref is unique.
-        // Let's create `wld_transactions` table in our migration. 
-        // For now, let's insert into a tracking table (which we will create in the migration)
-
-        // Let's do a transaction-like approach or just insert into wld_transactions and if it succeeds, update user
-
-        try {
-            await query(
-                `INSERT INTO wld_transactions (transaction_ref, world_id_nullifier, item_id, amount, created_at)
-                 VALUES ($1, $2, $3, $4, NOW())`,
-                [transaction_ref, activeNullifier, upgrade_id, amount]
-            )
-        } catch (e: any) {
-            // Unique violation (transaction already processed)
-            if (e.code === '23505') {
-                return NextResponse.json({ error: 'Transaction already processed' }, { status: 409 })
+        // Validate amounts and IDs based on platform
+        if (isTelegram) {
+            const expectedStars: Record<string, number> = {
+                'void_core_multiplier': 300,
+                'overclocked_drone': 600
             }
-            throw e
+            if (expectedStars[upgrade_id] !== amount) {
+                return NextResponse.json({ error: 'Invalid Stars amount for selected upgrade' }, { status: 400 })
+            }
+        } else {
+            const expectedAmounts: Record<string, number> = {
+                'void_core_multiplier': 10,
+                'overclocked_drone': 15
+            }
+            if (expectedAmounts[upgrade_id] !== amount) {
+                console.error('[API] Invalid amount for upgrade:', upgrade_id, amount)
+                return NextResponse.json({ error: 'Invalid amount for selected upgrade' }, { status: 400 })
+            }
+        }
+
+        // Verify transaction
+        if (isTelegram) {
+            const user = await query(
+                'SELECT id FROM users WHERE world_id_nullifier = $1',
+                [activeNullifier]
+            )
+            if ((user.rowCount ?? 0) === 0) {
+                return NextResponse.json({ error: 'User not found' }, { status: 404 })
+            }
+            
+            const purchase = await query(
+                'SELECT id FROM purchases WHERE transaction_hash = $1 AND item_id = $2 AND user_id = $3',
+                [transaction_ref, upgrade_id, user.rows[0].id]
+            )
+            if ((purchase.rowCount ?? 0) === 0) {
+                return NextResponse.json({ error: 'Płatność Stars nie została zweryfikowana.' }, { status: 400 })
+            }
+        } else {
+            // For WorldApp, insert tracking into wld_transactions
+            try {
+                await query(
+                    `INSERT INTO wld_transactions (transaction_ref, world_id_nullifier, item_id, amount, created_at)
+                     VALUES ($1, $2, $3, $4, NOW())`,
+                    [transaction_ref, activeNullifier, upgrade_id, amount]
+                )
+            } catch (e: any) {
+                // Unique violation (transaction already processed)
+                if (e.code === '23505') {
+                    return NextResponse.json({ error: 'Transaction already processed' }, { status: 409 })
+                }
+                throw e
+            }
         }
 
         // Update the user's unlocked premium upgrades

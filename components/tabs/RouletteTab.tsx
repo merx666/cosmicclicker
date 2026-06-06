@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
 import Image from 'next/image'
+import { trackEvent } from '@/lib/analytics'
 
 // Fake winners data for the marquee
 const FAKE_WINNERS = [
@@ -160,6 +161,7 @@ export default function RouletteTab() {
             clearInterval(spinInterval)
 
             if (response.ok) {
+                trackEvent('spin_roulette', 'gameplay', isFree ? 'free' : variant)
                 // Set final reels
                 if (data.symbols) {
                     setReels(data.symbols)

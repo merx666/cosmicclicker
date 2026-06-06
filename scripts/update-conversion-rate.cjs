@@ -20,10 +20,10 @@ require('dotenv').config({ path: '.env.local' });
 const { Pool } = require('pg');
 
 // ===================== CONFIGURATION =====================
-const BASE_PARTICLES = 240000;       // Base threshold (raised 60% from 150,000)
+const BASE_PARTICLES = 480000;       // Base threshold (raised 100% from 240,000 to harden economy)
 const TARGET_PRICE = 0.50;           // Target WLD price in USD
-const MIN_PARTICLES = 180000;        // Floor - never go below this
-const MAX_PARTICLES = 500000;        // Ceiling - never go above this
+const MIN_PARTICLES = 350000;        // Floor - never go below this (raised from 180,000)
+const MAX_PARTICLES = 1000000;       // Ceiling - never go above this (raised from 500,000)
 // =========================================================
 
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector';

@@ -71,9 +71,19 @@ export class GameService {
             return { success: false, error: 'User not found', statusCode: 404 }
         }
 
-        // 2. Security: Block sensitive fields
-        const BLOCKED_FIELDS = ['id', 'created_at', 'updated_at', 'world_id_nullifier', 'wallet_address', 'last_login']
-        const allowedKeys = Object.keys(gameData).filter(k => !BLOCKED_FIELDS.includes(k))
+        // 2. Security: Strict Allowlist of Database Columns
+        const ALLOWED_FIELDS = [
+            'username', 'particles', 'total_particles_collected', 'total_passive_particles',
+            'total_clicks', 'particles_per_click', 'particles_per_second', 'upgrade_click_power',
+            'upgrade_auto_collector', 'upgrade_multiplier', 'upgrade_offline', 'premium_particle_skin',
+            'premium_background_theme', 'premium_auto_save', 'premium_statistics', 'premium_notifications',
+            'premium_lucky_particle', 'premium_offline_earnings', 'premium_daily_bonus', 'premium_vip',
+            'last_daily_bonus_time', 'unlocked_skins', 'unlocked_themes', 'daily_clicks',
+            'daily_passive_particles', 'daily_particles_collected', 'last_daily_reset', 'claimed_missions',
+            'total_wld_claimed', 'login_streak', 'vip_tier', 'unlocked_premium_upgrades',
+            'bp_level', 'bp_xp', 'bp_premium', 'bp_claimed_free', 'bp_claimed_premium', 'achievements'
+        ]
+        const allowedKeys = Object.keys(gameData).filter(k => ALLOWED_FIELDS.includes(k))
 
         if (allowedKeys.length === 0) {
             return { success: false, error: 'No data to update', statusCode: 400 }

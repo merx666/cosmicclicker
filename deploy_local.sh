@@ -20,17 +20,22 @@ rsync -avz --exclude 'node_modules' \
     lib \
     hooks \
     public \
+    messages \
+    i18n \
+    scripts \
+    proxy.ts \
     package.json \
     package-lock.json \
     next.config.ts \
     tsconfig.json \
-    postcss.config.mjs \
+    postcss.config.js \
     ecosystem.config.js \
+    ecosystem.config.cjs \
     $SERVER:$REMOTE_DIR
 
 # 2. Install dependencies, BUILD, & Restart on server
 echo "🔄 Updating server..."
-ssh $SERVER "cd $REMOTE_DIR && chmod +x scripts/*.sh && npm install --production && npm run build && pm2 delete void-collector || true && pm2 start ecosystem.config.js && pm2 save"
+ssh $SERVER "cd $REMOTE_DIR && chmod +x scripts/*.sh && npm install --legacy-peer-deps && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && pm2 delete void-collector || true && pm2 start ecosystem.config.cjs && pm2 save"
 
 echo "✅ Deployment complete!"
 

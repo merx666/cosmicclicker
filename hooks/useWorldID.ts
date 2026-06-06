@@ -64,12 +64,14 @@ export function useWorldID() {
 
             // 3. Send to backend for server-side verification of SIWE message
             console.log('[useWorldID] Sending to /api/verify-world-id...')
+            const referrer = typeof window !== 'undefined' ? window.sessionStorage.getItem('worldcoin_referrer') : null
             const response = await fetch('/api/verify-world-id', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     payload: finalPayload,
                     nonce: nonce,
+                    referrer: referrer,
                 })
             })
 
@@ -83,6 +85,16 @@ export function useWorldID() {
 
             const data = await response.json()
             console.log('[useWorldID] API success:', data)
+
+            if (data.referralClaimed) {
+                if (typeof window !== 'undefined') {
+                    window.sessionStorage.setItem('referral_claimed', 'true')
+                    if (data.referrerUsername) {
+                        window.sessionStorage.setItem('referrer_username', data.referrerUsername)
+                    }
+                    window.sessionStorage.removeItem('worldcoin_referrer')
+                }
+            }
 
             setState({
                 isVerified: true,

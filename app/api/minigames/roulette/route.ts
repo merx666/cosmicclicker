@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
         // 1. Get user
         const userResult = await query(
-            'SELECT id, vip_tier FROM users WHERE world_id_nullifier = $1',
+            'SELECT id, vip_tier, particles, achievements FROM users WHERE world_id_nullifier = $1',
             [nullifier_hash]
         )
 
@@ -23,9 +23,60 @@ export async function POST(request: NextRequest) {
         const user = userResult.rows[0]
 
         // Define costs and rewards based on variant
-        const isFree = variant === 'free'
+        const isFree = variant === 'free' || variant === 'particles'
         const isBig = variant === 'big'
-        const cost = isFree ? 0 : (isBig ? 1.5 : 0.45)
+        const cost = (variant === 'free' || variant === 'particles') ? 0 : (isBig ? 1.5 : 0.45)
+
+        // Parse achievements JSONB
+        let achievements = user.achievements || {}
+        if (typeof achievements === 'string') {
+            try {
+                achievements = JSON.parse(achievements)
+            } catch (e) {
+                achievements = {}
+            }
+        }
+
+        let particleCost = 0
+        if (variant === 'particles') {
+            let spinsCount = achievements.void_wheel_spins_bought_today || 0
+            const lastSpinDate = achievements.last_void_wheel_spin_date
+            const todayStr = new Date().toISOString().split('T')[0]
+
+            if (lastSpinDate !== todayStr) {
+                spinsCount = 0
+            }
+
+            particleCost = 10000 * Math.pow(5, spinsCount)
+            if (Number(user.particles || 0) < particleCost) {
+                return NextResponse.json({ error: 'Niewystarczająca ilość cząsteczek!' }, { status: 400 })
+            }
+
+            achievements.void_wheel_spins_bought_today = spinsCount + 1
+            achievements.last_void_wheel_spin_date = todayStr
+        }
+
+        // Cooldown check for free spins
+        if (variant === 'free') {
+            const lastSpinResult = await query(
+                `SELECT created_at FROM roulette_spins 
+                 WHERE user_id = $1 AND cost_wld = 0 AND transaction_ref NOT LIKE 'particle_spin_%'
+                 ORDER BY created_at DESC LIMIT 1`,
+                [user.id]
+            )
+            if ((lastSpinResult.rowCount ?? 0) > 0) {
+                const lastSpinTime = new Date(lastSpinResult.rows[0].created_at).getTime()
+                const cooldown = 24 * 60 * 60 * 1000 // 24 hours
+                const timePassed = Date.now() - lastSpinTime
+                if (timePassed < cooldown) {
+                    const secondsLeft = Math.ceil((cooldown - timePassed) / 1000)
+                    return NextResponse.json({ 
+                        error: 'Free spin on cooldown', 
+                        timeLeft: secondsLeft 
+                    }, { status: 400 })
+                }
+            }
+        }
 
         // Check if transaction ref already used
         const existingTx = await query(
@@ -35,6 +86,18 @@ export async function POST(request: NextRequest) {
 
         if ((existingTx.rowCount ?? 0) > 0) {
             return NextResponse.json({ error: 'Transaction already processed' }, { status: 400 })
+        }
+
+        // Verify Telegram Stars payment if running on Telegram
+        const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
+        if (isTelegram && variant !== 'free' && variant !== 'particles') {
+            const purchase = await query(
+                'SELECT id FROM purchases WHERE transaction_hash = $1 AND user_id = $2',
+                [transaction_ref, user.id]
+            )
+            if ((purchase.rowCount ?? 0) === 0) {
+                return NextResponse.json({ error: 'Płatność Stars nie została zweryfikowana.' }, { status: 400 })
+            }
         }
 
         // 2. RNG Logic - HOUSE ALWAYS WINS (mostly)
@@ -164,7 +227,7 @@ export async function POST(request: NextRequest) {
             // Let's stick to returning the "Winner" symbols and let the frontend spin to them.
         }
 
-        // 3. Apply Reward
+        // 3. Apply Reward & Particle deduction
         if (rewardType === 'vip') {
             // Only upgrade if new tier is higher
             if (rewardValue > user.vip_tier) {
@@ -173,28 +236,35 @@ export async function POST(request: NextRequest) {
                      SET vip_tier = $1, 
                          premium_vip = true,
                          premium_lucky_particle = true, -- VIP gets benefits
-                         premium_daily_bonus = true
-                     WHERE id = $2`,
-                    [rewardValue, user.id]
+                         premium_daily_bonus = true,
+                         particles = particles - $2,
+                         achievements = $3::jsonb
+                     WHERE id = $4`,
+                    [rewardValue, particleCost, JSON.stringify(achievements), user.id]
                 )
             } else {
-                // If already has this tier or higher, give particles compensation?
-                // For simplified MVP, just acknowledge the win but no downgrade.
-                // Or maybe give particles as fallback?
-                // Let's give a "duplicate" compensation of 200k particles
+                // Duplicate VIP compensation: 200k particles
                 rewardType = 'particles'
                 rewardValue = 200000
                 message = 'Duplicate VIP! Converted to 200,000 particles'
                 await query(
-                    'UPDATE users SET particles = particles + $1, total_particles_collected = total_particles_collected + $1 WHERE id = $2',
-                    [rewardValue, user.id]
+                    `UPDATE users 
+                     SET particles = particles - $1 + $2, 
+                         total_particles_collected = total_particles_collected + $2,
+                         achievements = $3::jsonb
+                     WHERE id = $4`,
+                    [particleCost, rewardValue, JSON.stringify(achievements), user.id]
                 )
             }
         } else {
             // Particles
             await query(
-                'UPDATE users SET particles = particles + $1, total_particles_collected = total_particles_collected + $1 WHERE id = $2',
-                [rewardValue, user.id]
+                `UPDATE users 
+                 SET particles = particles - $1 + $2, 
+                     total_particles_collected = total_particles_collected + $2,
+                     achievements = $3::jsonb
+                 WHERE id = $4`,
+                [particleCost, rewardValue, JSON.stringify(achievements), user.id]
             )
         }
 
@@ -206,12 +276,21 @@ export async function POST(request: NextRequest) {
             [user.id, nullifier_hash, wallet_address || '', cost, rewardType, rewardValue, transaction_ref]
         )
 
+        // Get updated user balance and achievements to return to the client
+        const updatedUserResult = await query(
+            'SELECT particles, achievements, vip_tier FROM users WHERE id = $1',
+            [user.id]
+        )
+        const userRow = updatedUserResult.rows[0]
+
         return NextResponse.json({
             success: true,
             rewardType,
             rewardValue,
             message,
-            vipTier: rewardType === 'vip' ? rewardValue : user.vip_tier,
+            vipTier: userRow.vip_tier,
+            particles: Number(userRow.particles),
+            achievements: userRow.achievements,
             symbols: symbolResult
         })
 

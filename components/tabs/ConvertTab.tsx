@@ -22,10 +22,10 @@ export default function ConvertTab() {
     const maintenance = false // Maintenance disabled, system live
     const [dailyStats, setDailyStats] = useState({
         totalClaimed: 0,
-        remaining: 100,
+        remaining: 3,
         limitReached: false,
         conversions: 0,
-        maxDaily: 100
+        maxDaily: 3
     })
     const [conversionRate, setConversionRate] = useState({
         particles_per_wld: 150000,
@@ -38,24 +38,24 @@ export default function ConvertTab() {
     const WLD_AMOUNT = 0.01
     const COOLDOWN = 24 * 60 * 60 * 1000 // 24 hours
 
-    const canConvert = particles >= PARTICLES_PER_WLD
+    const canConvert = particles >= 1000000 && particles >= PARTICLES_PER_WLD
     const claimableWLD = Math.floor(particles / PARTICLES_PER_WLD) * WLD_AMOUNT
 
     const getCooldownStatus = () => {
-        if (!lastClaimTime) return { ready: true, timeLeft: '' }
+        const todayStr = new Date().toISOString().split('T')[0]
+        const todaysWithdrawals = withdrawals.filter(w => w.created_at.startsWith(todayStr) && w.status !== 'rejected')
+        const dailyCount = todaysWithdrawals.length
 
-        const now = Date.now()
-        const timeSinceClaim = now - lastClaimTime
-
-        if (timeSinceClaim >= COOLDOWN) {
-            return { ready: true, timeLeft: '' }
+        if (dailyCount >= 5) {
+            return { ready: false, timeLeft: 'Dzienny limit 5 wypłat osiągnięty' }
         }
 
-        const timeLeft = COOLDOWN - timeSinceClaim
-        const hours = Math.floor(timeLeft / (60 * 60 * 1000))
-        const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000))
+        const totalDailyWld = todaysWithdrawals.reduce((sum, w) => sum + Number(w.wld_amount), 0)
+        if (totalDailyWld + WLD_AMOUNT > 0.05) {
+            return { ready: false, timeLeft: 'Dzienny limit 0.05 WLD osiągnięty' }
+        }
 
-        return { ready: false, timeLeft: `${hours}h ${minutes}m` }
+        return { ready: true, timeLeft: '' }
     }
 
     const cooldown = getCooldownStatus()
@@ -73,7 +73,7 @@ export default function ConvertTab() {
     const fetchWithdrawals = useCallback(async () => {
         if (!nullifierHash) return
         try {
-            const res = await fetch(`/api/user/withdrawals?nullifier=${nullifierHash}`)
+            const res = await fetch(`/api/user/withdrawals?nullifier_hash=${nullifierHash}`)
             const data = await res.json()
             if (data.withdrawals) {
                 setWithdrawals(data.withdrawals)
@@ -111,12 +111,12 @@ export default function ConvertTab() {
 
     const handleConvert = async () => {
         if (!canConvert) {
-            toast.error(`You need minimum ${PARTICLES_PER_WLD.toLocaleString()} particles!`)
+            toast.error(`You need minimum 1,000,000 particles!`)
             return
         }
 
         if (!cooldown.ready) {
-            toast.error(`Cooldown active! Next claim in ${cooldown.timeLeft}`)
+            toast.error(`Dzienny limit osiągnięty! ${cooldown.timeLeft}`)
             return
         }
 
@@ -184,22 +184,7 @@ export default function ConvertTab() {
                 <p className="text-text-secondary">Convert particles to real WLD tokens</p>
             </div>
 
-            {/* Developer Update */}
-            <div className="mb-6 mx-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                <h3 className="font-bold text-emerald-400 mb-2">✅ Message from the Developer</h3>
-                <p className="text-sm text-emerald-200/80 leading-relaxed">
-                    All payouts have been permanently fixed! The withdrawal system has been fully
-                    overhauled with a new, more reliable infrastructure. There should be no more
-                    issues with pending withdrawals or delayed payments.
-                </p>
-                <p className="text-sm text-emerald-200/80 leading-relaxed mt-2">
-                    Thank you for your patience while we resolved these issues. If you experience
-                    any problems, please don&apos;t hesitate to report them.
-                </p>
-                <p className="text-sm text-emerald-200/80 mt-3 font-semibold">
-                    Happy collecting! May the Void be with you. 🌌
-                </p>
-            </div>
+
             <motion.div
                 className="bg-gradient-to-br from-void-purple/20 to-void-blue/20 border-2 border-particle-glow/30 rounded-2xl p-8"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -217,7 +202,10 @@ export default function ConvertTab() {
                 <div className="mb-6 p-4 bg-void-dark/50 rounded-xl border border-particle-glow/20">
                     <div className="text-sm text-text-secondary mb-2">Exchange rate:</div>
                     <div className="text-xl font-bold mb-2">
-                        {PARTICLES_PER_WLD.toLocaleString()} particles = {WLD_AMOUNT} WLD
+                        1,000,000 particles ≈ {((1000000 / PARTICLES_PER_WLD) * WLD_AMOUNT).toFixed(4)} WLD
+                    </div>
+                    <div className="text-xs text-emerald-400 font-semibold mb-2">
+                        (Minimum claim: 1,000,000 particles = {(Math.floor(1000000 / PARTICLES_PER_WLD) * WLD_AMOUNT).toFixed(2)} WLD)
                     </div>
                     <div className="text-xs text-particle-glow/60 leading-relaxed">
                         💡 Rate adjusts automatically based on current WLD price (${conversionRate.wld_price_usd.toFixed(3)}).
@@ -263,12 +251,12 @@ export default function ConvertTab() {
                 {/* Cooldown status */}
                 <div className="mb-6 p-4 bg-void-dark/50 rounded-xl">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-text-secondary">Cooldown:</span>
+                        <span className="text-sm text-text-secondary">Dzienny limit:</span>
                         <span className={`font-bold ${cooldown.ready ? 'text-success' : 'text-warning'}`}>
                             {cooldown.ready ? (
                                 <span className="flex items-center gap-2 text-success">
                                     <Image src="/assets/ui/checkbox_checked.png" alt="Ready" width={16} height={16} />
-                                    Ready!
+                                    Dostępny
                                 </span>
                             ) : (
                                 <span className="flex items-center gap-2 text-warning">
@@ -307,9 +295,9 @@ export default function ConvertTab() {
 
                 {/* Info */}
                 <div className="mt-6 text-xs text-text-secondary text-center space-y-1">
-                    <p>• Minimum threshold: {PARTICLES_PER_WLD.toLocaleString()} particles</p>
-                    <p>• Maximum daily claim: 0.01 WLD</p>
-                    <p>• Cooldown: 24 hours between claims</p>
+                    <p>• Minimum threshold: 1,000,000 particles</p>
+                    <p>• Maximum daily limit: 5 claims of 0.01 WLD (0.05 WLD total)</p>
+                    <p>• Rate adjusts automatically based on WLD market price</p>
                 </div>
             </motion.div>
 

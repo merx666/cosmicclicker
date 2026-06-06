@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 
-const CONTEST_STORAGE_KEY = 'void_contest_finished_v3_FORCE' // Changed key to reset for users, implies "finished" interaction
+const CONTEST_STORAGE_KEY = 'void_contest_finished_v4_FORCE' // Changed key to reset for users, implies "finished" interaction
 
 export default function ContestModal() {
     const [isOpen, setIsOpen] = useState(false)
@@ -84,17 +84,23 @@ export default function ContestModal() {
                             <div className="mb-4 text-5xl animate-pulse">🎁</div>
 
                             <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-void-purple to-void-blue bg-clip-text text-transparent">
-                                100 WLD GIVEAWAY
+                                250 WLD GIVEAWAY
                             </h2>
 
-                            <p className="text-gray-300 mb-6 text-sm leading-relaxed">
-                                We are giving away <span className="text-void-purple font-bold">100 WLD</span> to our community!
+                            <p className="text-gray-300 mb-4 text-sm leading-relaxed">
+                                We are giving away <span className="text-void-purple font-bold">250 WLD</span> to our community!
                                 <br />
                                 Follow, Reply & Repost to win.
                             </p>
 
+                            <div className="mb-6 p-2.5 rounded-xl bg-white/5 border border-void-purple/20 text-xs text-text-secondary">
+                                <span className="block font-bold text-void-purple mb-0.5 uppercase tracking-wider">Previous 100 WLD Winner</span>
+                                <span className="font-mono text-gray-300">0x9fC47b9D3906F74e0dcfAd39fd79E315c0c02f6A</span>
+                                <span className="block text-[10px] text-yellow-500/80 mt-1">⚠️ Unclaimed - check your wallet!</span>
+                            </div>
+
                             <a
-                                href="https://x.com/Void_WorldApp/status/2022238416042172826"
+                                href="https://x.com/Void_WorldApp"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={handleLinkClick}

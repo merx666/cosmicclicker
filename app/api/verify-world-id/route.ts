@@ -4,7 +4,7 @@ import {
   MiniAppWalletAuthSuccessPayload,
   verifySiweMessage,
 } from '@worldcoin/minikit-js'
-import { query } from '@/lib/db'
+import { query, transaction } from '@/lib/db'
 
 interface IRequestPayload {
   payload: MiniAppWalletAuthSuccessPayload
@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        const body = (await req.json()) as IRequestPayload
-        const { payload, nonce } = body
+        const body = (await req.json()) as IRequestPayload & { referrer?: string | null }
+        const { payload, nonce, referrer: referrerAddress } = body
 
-        console.log('[WorldID Verify] Wallet Authentication verification request:', { nonce })
+        console.log('[WorldID Verify] Wallet Authentication verification request:', { nonce, referrerAddress })
 
         if (!payload || !nonce) {
             console.error('[WorldID Verify] Missing payload or nonce')
@@ -77,27 +77,88 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        console.log('[WorldID Verify] Creating/updating user with wallet address:', walletAddress)
+        let referralClaimed = false
+        let referrerUsername = ''
+        let userId: number | null = null
 
-        // The old app was using nullifier hash as user identifier. By inserting the wallet address into world_id_nullifier
-        // column, we can avoid full DB migration. We also update `wallet_address` since other endpoints query it.
-        const result = await query(
-            `INSERT INTO users (world_id_nullifier, wallet_address, last_login)
-             VALUES ($1, $1, NOW())
-             ON CONFLICT (world_id_nullifier) 
-             DO UPDATE SET wallet_address = $1, last_login = NOW(), updated_at = NOW()
-             RETURNING id`,
-            [walletAddress]
-        )
+        await transaction(async (client) => {
+            // Check if user already exists
+            const existingUserRes = await client.query(
+                'SELECT id FROM users WHERE world_id_nullifier = $1',
+                [walletAddress]
+            )
 
-        const user = result.rows[0]
+            if (existingUserRes.rows.length === 0) {
+                // New user!
+                let referrerRecord = null
+                if (referrerAddress && typeof referrerAddress === 'string' && referrerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+                    const referrerRes = await client.query(
+                        'SELECT id, wallet_address, username FROM users WHERE LOWER(wallet_address) = LOWER($1)',
+                        [referrerAddress]
+                    )
+                    if (referrerRes.rows.length > 0) {
+                        referrerRecord = referrerRes.rows[0]
+                    }
+                }
 
-        console.log('[WorldID Verify] User created/updated successfully:', user?.id)
+                const startParticles = referrerRecord ? 25000 : 0
+
+                // Create new user with starting particles
+                const insertRes = await client.query(
+                    `INSERT INTO users (world_id_nullifier, wallet_address, particles, total_particles_collected, last_login)
+                     VALUES ($1, $1, $2, $2, NOW())
+                     RETURNING id`,
+                    [walletAddress, startParticles]
+                )
+                userId = insertRes.rows[0].id
+
+                // Create user streak record to prevent database integrity constraint errors
+                await client.query(
+                    'INSERT INTO user_streaks (user_id) VALUES ($1) ON CONFLICT DO NOTHING',
+                    [userId]
+                )
+
+                // Award particles to the referrer
+                if (referrerRecord) {
+                    await client.query(
+                        `UPDATE users 
+                         SET particles = particles + 50000, 
+                             total_particles_collected = total_particles_collected + 50000,
+                             updated_at = NOW() 
+                         WHERE id = $1`,
+                        [referrerRecord.id]
+                    )
+                    referralClaimed = true
+                    referrerUsername = referrerRecord.username || 'znajomy'
+                }
+            } else {
+                // Existing user
+                userId = existingUserRes.rows[0].id
+                await client.query(
+                    `UPDATE users 
+                     SET wallet_address = $1, last_login = NOW(), updated_at = NOW() 
+                     WHERE world_id_nullifier = $1`,
+                    [walletAddress]
+                )
+            }
+        })
+
+        cookieStore.delete('siwe')
+        cookieStore.set('auth_address', walletAddress, {
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            sameSite: 'strict',
+            maxAge: 604800
+        })
+
+        console.log('[WorldID Verify] User created/updated successfully:', userId)
 
         return NextResponse.json({
             success: true,
             userAddress: walletAddress,
-            userId: user.id
+            userId: userId,
+            referralClaimed,
+            referrerUsername
         })
 
     } catch (error: any) {

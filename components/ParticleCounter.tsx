@@ -2,11 +2,35 @@
 
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
+import { useState, useEffect } from 'react'
 
 export default function ParticleCounter() {
     const particles = useGameStore((state) => state.particles)
     const particlesPerClick = useGameStore((state) => state.particlesPerClick)
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
+    const achievements = useGameStore((state) => state.achievements)
+    
+    const boosterExpiry = achievements?.booster_click_multiplier_until
+    const [timeLeft, setTimeLeft] = useState<number>(0)
+
+    useEffect(() => {
+        if (!boosterExpiry) {
+            setTimeLeft(0)
+            return
+        }
+        
+        const updateTimer = () => {
+            const diff = Number(boosterExpiry) - Date.now()
+            setTimeLeft(diff > 0 ? Math.ceil(diff / 1000) : 0)
+        }
+
+        updateTimer()
+        const interval = setInterval(updateTimer, 1000)
+        return () => clearInterval(interval)
+    }, [boosterExpiry])
+
+    const boosterActive = timeLeft > 0
+    const activeClickValue = boosterActive ? particlesPerClick * 6 : particlesPerClick
 
     const formatNumber = (num: number) => {
         if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
@@ -36,7 +60,9 @@ export default function ParticleCounter() {
             <div className="flex justify-center gap-6 text-sm text-text-secondary mt-4">
                 <div className="flex flex-col items-center">
                     <span className="text-xs opacity-70">per click</span>
-                    <span className="text-particle-glow font-bold">+{particlesPerClick}</span>
+                    <span className="text-particle-glow font-bold">
+                        +{activeClickValue} {boosterActive && <span className="text-xs text-pink-400 font-extrabold">(6X)</span>}
+                    </span>
                 </div>
                 {particlesPerSecond > 0 && (
                     <div className="flex flex-col items-center">
@@ -45,6 +71,12 @@ export default function ParticleCounter() {
                     </div>
                 )}
             </div>
+
+            {boosterActive && (
+                <div className="inline-block mt-3 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/30 text-xs font-bold text-pink-400 animate-pulse uppercase tracking-wider">
+                    💥 Void Surge ({timeLeft}s)
+                </div>
+            )}
         </div>
     )
 }

@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
+import { trackEvent } from '@/lib/analytics'
 
 // Vote pricing logic
 function getVoteCost(voteNumber: number): number {
@@ -25,8 +26,8 @@ interface Poll {
     userVotes: number
 }
 
-const CURRENT_POLL_ID = 'poll_002'
-const CURRENT_POLL_QUESTION = 'Should the next $VOID airdrop be 10x BIGGER? 🚀'
+const CURRENT_POLL_ID = 'poll_003'
+const CURRENT_POLL_QUESTION = 'Should we implement a dynamic token burn mechanism (1.5% per Tx) to achieve deflationary supply? 🔥'
 
 export default function SurveyTab() {
     const { nullifierHash } = useGameStore()
@@ -92,7 +93,7 @@ export default function SurveyTab() {
                     }
                 ],
                 network: Network.WorldChain,
-                description: `Vote: ${selectedVote.toUpperCase()} for "$VOID 10x Airdrop" (${nextVoteCost} WLD)`
+                description: `Vote: ${selectedVote.toUpperCase()} for "$VOID Burn Mechanism" (${nextVoteCost} WLD)`
             }
 
             const result = await MiniKit.commandsAsync.pay(payload) as any
@@ -120,6 +121,7 @@ export default function SurveyTab() {
                         userVotes: prev.userVotes + 1,
                     }))
                     toast.success(`Vote recorded! (${selectedVote.toUpperCase()})`)
+                    trackEvent('vote_poll', 'gameplay', selectedVote || undefined)
                 } else {
                     toast.error(data.error || 'Vote failed')
                 }
@@ -162,21 +164,21 @@ export default function SurveyTab() {
 
             {/* Contest Banner Mini */}
             <motion.a
-                href="https://x.com/void_worldapp/status/2024438564482593180"
+                href="https://x.com/Void_WorldApp"
                 target="_blank"
                 rel="noopener noreferrer"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 }}
-                className="w-full max-w-sm mb-5 p-3 rounded-xl bg-gradient-to-r from-yellow-600/15 to-orange-600/15 border border-yellow-500/25 hover:border-yellow-400/50 transition-all active:scale-[0.98]"
+                className="w-full max-w-sm mb-5 p-3 rounded-xl bg-gradient-to-r from-purple-600/15 to-blue-600/15 border border-purple-500/25 hover:border-purple-400/50 transition-all active:scale-[0.98]"
             >
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">🏆</span>
                     <div className="flex-1">
-                        <p className="text-xs font-bold text-yellow-400">$500 $VOID GIVEAWAY IS LIVE!</p>
-                        <p className="text-[10px] text-gray-400">Tap to join on 𝕏 → Follow, RT & Win! ⏳ 48h</p>
+                        <p className="text-xs font-bold text-void-purple">250 WLD GIVEAWAY IS LIVE!</p>
+                        <p className="text-[10px] text-gray-400">Tap to join on 𝕏 → Follow, RT & Win! 🎁</p>
                     </div>
-                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
                 </div>
             </motion.a>
 

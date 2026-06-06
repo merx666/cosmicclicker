@@ -11,6 +11,10 @@ export function MiniKitProvider({ children }: MiniKitProviderProps) {
     const [isReady, setIsReady] = useState(false)
 
     useEffect(() => {
+        if (process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true') {
+            setIsReady(true)
+            return
+        }
         const installMiniKit = async () => {
             try {
                 const appId = process.env.NEXT_PUBLIC_MINIKIT_APP_ID

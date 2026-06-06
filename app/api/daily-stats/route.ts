@@ -10,7 +10,7 @@ export async function GET() {
             [today]
         )
 
-        const MAX_DAILY_WLD = 7 // Adjusted to 7 WLD daily limit
+        const MAX_DAILY_WLD = 3 // Adjusted to 3 WLD daily limit
 
         // Check for active cooldown from previous limit reach
         const lastLimit = await queryOne<{ limit_reached_at: string }>(

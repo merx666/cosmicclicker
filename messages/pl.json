@@ -1,32 +1,41 @@
 {
-    "Navigation": {
-        "collect": "Zbieraj",
-        "upgrades": "Ulepszenia",
-        "missions": "Misje",
-        "leaderboard": "Ranking",
-        "premium": "Premium",
-        "convert": "Wymień",
-        "roulette": "Ruletka",
-        "machine": "Maszyna",
-        "survey": "Vote",
-        "media": "Media"
-    },
-    "Game": {
-        "title": "VOID COLLECTOR",
-        "clickInstruction": "Klikaj w cząsteczkę, aby zbierać Void Particles! ✨"
-    },
-    "Common": {
-        "loading": "Ładowanie...",
-        "error": "Błąd",
-        "verifying": "Weryfikacja..."
-    },
-    "Home": {
-        "subtitle": "Zbieraj Cząsteczki Pustki i zarabiaj WLD",
-        "verificationTitle": "Weryfikacja World ID",
-        "verificationDesc": "Zweryfikuj tożsamość, aby rozpocząć grę",
-        "verifyButton": "Zweryfikuj przez World ID",
-        "secureVerification": "Bezpieczna weryfikacja przez WorldApp",
-        "privacyProtected": "Twoja prywatność jest chroniona",
-        "worldAppRequired": "Wymagana aplikacja WorldApp"
-    }
+  "Navigation": {
+    "collect": "Zbieraj",
+    "upgrades": "Ulepszenia",
+    "missions": "Misje",
+    "leaderboard": "Ranking",
+    "premium": "Premium",
+    "convert": "Wymień",
+    "roulette": "Ruletka",
+    "machine": "Maszyna",
+    "survey": "Vote",
+    "media": "Media",
+    "void_block": "Void Block"
+  },
+  "Game": {
+    "title": "VOID COLLECTOR",
+    "clickInstruction": "Klikaj w cząsteczkę, aby zbierać Void Particles! ✨"
+  },
+  "Common": {
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "verifying": "Weryfikacja...",
+    "errHighTraffic": "Nasze serwery są obecnie bardzo obciążone. Spróbuj ponownie za chwilę.",
+    "errNetwork": "Problem z połączeniem sieciowym. Upewnij się, że masz połączenie z internetem i spróbuj ponownie.",
+    "errMaintenance": "Trwa aktualizacja Sezonu 2. Spróbuj ponownie później.",
+    "errSessionExpired": "Sesja wygasła lub podpis jest nieprawidłowy. Odśwież stronę i spróbuj ponownie."
+  },
+  "Home": {
+    "subtitle": "Zbieraj Cząsteczki Pustki i zarabiaj WLD 🌌",
+    "verificationTitle": "Weryfikacja World ID",
+    "verificationDesc": "Weryfikacja World ID zapewnia, że każdy gracz jest prawdziwym człowiekiem. Brak botów, uczciwa dystrybucja WLD!",
+    "verifyButton": "Zweryfikuj przez World ID",
+    "secureVerification": "Bezpieczna weryfikacja przez WorldApp",
+    "privacyProtected": "Twoja prywatność jest chroniona",
+    "worldAppRequired": "Wymagana aplikacja WorldApp",
+    "featureClick": "Klikaj i zbieraj cząsteczki pustki",
+    "featureUpgrade": "Ulepszaj system zbierania",
+    "featureConvert": "Wymieniaj na prawdziwe tokeny WLD",
+    "featureLeaderboard": "Rywalizuj w globalnym rankingu"
+  }
 }

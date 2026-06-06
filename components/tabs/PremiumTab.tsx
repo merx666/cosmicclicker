@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -39,6 +39,45 @@ export default function PremiumTab() {
     } = useGameStore()
 
     const [purchasing, setPurchasing] = useState<string | null>(null)
+
+    // Telegram-specific states
+    const isTelegram = typeof window !== 'undefined' && (process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true' || !!(window as any).Telegram?.WebApp)
+    const [paymentMethodItem, setPaymentMethodItem] = useState<any | null>(null)
+    const [verifyingTon, setVerifyingTon] = useState(false)
+    const [tonWalletConnected, setTonWalletConnected] = useState(false)
+    const [tonConnectUI, setTonConnectUI] = useState<any>(null)
+    const [tonPrice, setTonPrice] = useState<number>(5.25)
+
+    useEffect(() => {
+        if (isTelegram) {
+            // Fetch TON price once on mount
+            fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd')
+                .then(r => r.json())
+                .then(data => {
+                    const price = data['the-open-network']?.usd
+                    if (price) setTonPrice(price)
+                })
+                .catch(e => console.warn('Failed to fetch TON price on mount:', e))
+
+            // Initialize TON Connect
+            if (typeof window !== 'undefined' && window.TonConnectSDK) {
+                try {
+                    const ui = new window.TonConnectSDK.TonConnectUI({
+                        manifestUrl: 'https://tgvoid.skyreel.art/tonconnect-manifest.json'
+                    })
+                    setTonConnectUI(ui)
+                    setTonWalletConnected(ui.connected)
+
+                    const unsubscribe = ui.onStatusChange((wallet: any) => {
+                        setTonWalletConnected(!!wallet)
+                    })
+                    return () => unsubscribe()
+                } catch (e) {
+                    console.error('Failed to initialize TON Connect UI:', e)
+                }
+            }
+        }
+    }, [isTelegram])
 
     const upgrades: PremiumUpgrade[] = [
         // Cosmetic
@@ -121,6 +160,36 @@ export default function PremiumTab() {
     ]
 
     const handlePurchase = async (upgradeId: string, price: number) => {
+        // Handle tier purchases vs regular upgrades
+        let upgradeName = ''
+        let isTierPurchase = false
+
+        if (upgradeId.startsWith('vip_tier_')) {
+            isTierPurchase = true
+            const tier = parseInt(upgradeId.replace('vip_tier_', ''))
+            const tierNames = ['', 'Bronze VIP', 'Silver VIP', 'Gold VIP', 'Platinum VIP']
+            upgradeName = tierNames[tier] || 'VIP Tier'
+        } else {
+            upgradeName = upgrades.find(u => u.id === upgradeId)?.name || 'Premium Upgrade'
+
+            // Check if already owned
+            const upgrade = upgrades.find(u => u.id === upgradeId)
+            if (upgrade?.owned) {
+                toast.error('Already owned')
+                return
+            }
+        }
+
+        if (isTelegram) {
+            setPaymentMethodItem({
+                id: upgradeId,
+                name: upgradeName,
+                description: `Purchase ${upgradeName}`,
+                price: price
+            })
+            return
+        }
+
         setPurchasing(upgradeId)
 
         try {
@@ -237,6 +306,171 @@ export default function PremiumTab() {
         }
     }
 
+    const payWithStars = async (item: any) => {
+        setPurchasing(item.id)
+        setPaymentMethodItem(null)
+        try {
+            const priceStars = Math.round(item.price * 50) // 1 USD = 50 Stars
+            const response = await fetch('/api/telegram/pay-stars', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    itemId: item.id,
+                    priceStars,
+                    title: item.name,
+                    description: item.description
+                })
+            })
+            const data = await response.json()
+            if (!response.ok || !data.success) {
+                toast.error(data.error || 'Failed to create invoice')
+                return
+            }
+
+            const tg = (window as any).Telegram
+            if (tg?.WebApp) {
+                tg.WebApp.openInvoice(data.invoiceLink, async (status: string) => {
+                    if (status === 'paid') {
+                        toast.success(`✅ ${item.name} purchased successfully!`)
+                        if (nullifierHash) {
+                            await loadGameState(nullifierHash)
+                        }
+                        window.location.reload()
+                    } else if (status === 'cancelled') {
+                        toast.error('Payment cancelled')
+                    } else {
+                        toast.error('Payment failed or pending')
+                    }
+                })
+            } else {
+                toast.error('Telegram WebApp interface not found')
+            }
+        } catch (err: any) {
+            console.error(err)
+            toast.error('Error processing Stars payment')
+        } finally {
+            setPurchasing(null)
+        }
+    }
+
+    const payWithTon = async (item: any) => {
+        if (!tonConnectUI) {
+            toast.error('TON Connect not initialized')
+            return
+        }
+
+        if (!tonWalletConnected) {
+            try {
+                await tonConnectUI.openModal()
+                return
+            } catch (e) {
+                toast.error('Failed to open wallet modal')
+                return
+            }
+        }
+
+        setPurchasing(item.id)
+        setPaymentMethodItem(null)
+        setVerifyingTon(true)
+        toast.loading('Sending transaction request to wallet...', { id: 'ton-purchase' })
+
+        try {
+            const configRes = await fetch('/api/telegram/verify-ton')
+            const configData = await configRes.json()
+            const merchantAddress = configData.merchantAddress
+
+            if (!merchantAddress) {
+                toast.error('Merchant TON wallet not configured on server', { id: 'ton-purchase' })
+                setVerifyingTon(false)
+                setPurchasing(null)
+                return
+            }
+
+            const tonAmount = item.price / tonPrice
+            const tonAmountNano = Math.ceil(tonAmount * 1e9)
+
+            if (!nullifierHash) {
+                toast.error('Session not found. Please log in again.', { id: 'ton-purchase' })
+                setVerifyingTon(false)
+                setPurchasing(null)
+                return
+            }
+
+            const expectedComment = `VC-${nullifierHash}-${item.id}`
+
+            const textToHex = (text: string) => {
+                let hex = ''
+                for (let i = 0; i < text.length; i++) {
+                    hex += text.charCodeAt(i).toString(16).padStart(2, '0')
+                }
+                return hex
+            }
+            const payloadHex = '00000000' + textToHex(expectedComment)
+
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 360,
+                messages: [
+                    {
+                        address: merchantAddress,
+                        amount: tonAmountNano.toString(),
+                        payload: payloadHex
+                    }
+                ]
+            }
+
+            await tonConnectUI.sendTransaction(transaction)
+
+            toast.loading('Transaction submitted. Confirming on blockchain...', { id: 'ton-purchase' })
+
+            let attempts = 0
+            const maxAttempts = 15
+            const verifyInterval = setInterval(async () => {
+                attempts++
+                try {
+                    const verifyRes = await fetch('/api/telegram/verify-ton', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: nullifierHash,
+                            itemId: item.id
+                        })
+                    })
+                    const verifyData = await verifyRes.json()
+
+                    if (verifyRes.ok && verifyData.success) {
+                        clearInterval(verifyInterval)
+                        setVerifyingTon(false)
+                        setPurchasing(null)
+                        toast.success(`✅ ${item.name} purchased successfully via TON!`, { id: 'ton-purchase' })
+                        if (nullifierHash) {
+                            await loadGameState(nullifierHash)
+                        }
+                        window.location.reload()
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(verifyInterval)
+                        setVerifyingTon(false)
+                        setPurchasing(null)
+                        toast.error('Verification timed out. Purchase will be processed once transaction is confirmed.', { id: 'ton-purchase' })
+                    }
+                } catch (err) {
+                    console.error('Error verifying TON purchase:', err)
+                    if (attempts >= maxAttempts) {
+                        clearInterval(verifyInterval)
+                        setVerifyingTon(false)
+                        setPurchasing(null)
+                        toast.error('Verification timed out or failed.', { id: 'ton-purchase' })
+                    }
+                }
+            }, 4000)
+
+        } catch (err: any) {
+            console.error('TON Purchase failed:', err)
+            toast.error(err.message || 'Transaction rejected by wallet', { id: 'ton-purchase' })
+            setVerifyingTon(false)
+            setPurchasing(null)
+        }
+    }
+
     const handleEquip = (upgradeId: string) => {
         if (upgradeId.startsWith('particle_skin_')) {
             const skinId = upgradeId.replace('particle_skin_', '')
@@ -297,117 +531,194 @@ export default function PremiumTab() {
         <div className="py-8">
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">💎 Premium Shop</h2>
-                <p className="text-text-secondary">Exclusive upgrades powered by WLD & VOID</p>
+                <p className="text-text-secondary">
+                    {isTelegram ? 'Exclusive upgrades powered by Stars, TON & VOID' : 'Exclusive upgrades powered by WLD & VOID'}
+                </p>
             </div>
 
             {/* VIP Tier Section */}
-            <div className="mb-8">
-                <h3 className="text-xl font-bold mb-4 text-center">👑 VIP Tiers</h3>
+            <div className="mb-10">
+                <h3 className="text-xl font-bold mb-4 text-center">👑 Poziomy VIP</h3>
 
                 {/* Current Tier Badge */}
                 {vipTier > 0 && (
-                    <div className="mb-4 text-center">
-                        <div className="inline-block px-4 py-2 bg-gradient-to-r from-void-purple to-void-blue rounded-full">
-                            <span className="text-lg font-bold">
-                                {['', '🥉 Bronze VIP', '🥈 Silver VIP', '🥇 Gold VIP', '💎 Platinum VIP'][vipTier]}
+                    <div className="mb-6 text-center">
+                        <div className="inline-block px-4 py-2 bg-gradient-to-r from-void-purple to-void-blue rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                            <span className="text-sm font-bold text-white">
+                                Aktualny Status: {['', '🥉 Bronze VIP', '🥈 Silver VIP', '🥇 Gold VIP', '💎 Platinum VIP'][vipTier]}
                             </span>
                         </div>
                     </div>
                 )}
 
                 {/* Tier Cards */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                     {[
-                        { tier: 1, name: '🥉 Bronze (PROMO!)', price: 1.75, benefits: ['All features', 'Lucky 5%/2x'] },
-                        { tier: 2, name: '🥈 Silver (PROMO!)', price: 2.75, benefits: ['Lucky 8%/2x', '+2 per click', 'Ad-free'] },
-                        { tier: 3, name: '🥇 Gold (PROMO!)', price: 3.75, benefits: ['Lucky 12%/3x', 'Mega 1%/10x', 'Priority'] },
-                        { tier: 4, name: '💎 Platinum (PROMO!)', price: 5.00, benefits: ['Lucky 15%/5x', 'Mega 3%/15x', 'Instant'] }
-                    ].map(({ tier, name, price, benefits }) => {
+                        { tier: 1, name: '🥉 Bronze VIP', price: 1.75, originalPrice: 4.00, discount: '56%', benefits: ['Wszystkie ulepszenia', 'Lucky 5% szans na 2x'] },
+                        { tier: 2, name: '🥈 Silver VIP', price: 2.75, originalPrice: 6.00, discount: '54%', benefits: ['Lucky 8% szans na 2x', '+2 na kliknięcie', 'Brak reklam'] },
+                        { tier: 3, name: '🥇 Gold VIP', price: 3.75, originalPrice: 9.00, discount: '58%', benefits: ['Lucky 12% na 3x', 'Mega 1% na 10x', 'Priorytet'], isPopular: true },
+                        { tier: 4, name: '💎 Platinum VIP', price: 5.00, originalPrice: 12.00, discount: '58%', benefits: ['Lucky 15% na 5x', 'Mega 3% na 15x', 'Natychmiastowe'] }
+                    ].map(({ tier, name, price, originalPrice, discount, benefits, isPopular }) => {
                         const isCurrent = vipTier === tier
                         const canUpgrade = vipTier < tier
-                        const tierColors = ['', 'from-amber-600/20 to-amber-800/20 border-amber-500/30',
-                            'from-gray-400/20 to-gray-600/20 border-gray-400/30',
-                            'from-yellow-500/20 to-yellow-700/20 border-yellow-400/30',
-                            'from-purple-500/20 to-pink-500/20 border-purple-400/30']
+                        const tierColors = ['', 'from-amber-600/10 to-amber-800/10 border-amber-500/20 hover:border-amber-500/40',
+                            'from-gray-400/10 to-gray-600/10 border-gray-400/20 hover:border-gray-400/40',
+                            'from-yellow-500/20 to-yellow-700/20 border-yellow-400/50 shadow-[0_0_15px_rgba(234,179,8,0.15)]',
+                            'from-purple-500/10 to-pink-500/10 border-purple-400/20 hover:border-purple-400/40']
 
                         return (
                             <div
                                 key={tier}
-                                className={`p-3 bg-gradient-to-br ${tierColors[tier]} border rounded-xl ${isCurrent ? 'ring-2 ring-particle-glow' : ''}`}
+                                className={`relative p-4 bg-gradient-to-br ${tierColors[tier]} border rounded-2xl flex flex-col justify-between transition-all duration-300 ${
+                                    isCurrent ? 'ring-2 ring-particle-glow border-transparent' : ''
+                                } ${isPopular ? 'ring-2 ring-yellow-400 border-transparent scale-[1.02]' : ''}`}
                             >
-                                <div className="text-center mb-2">
-                                    <div className="font-bold">{name}</div>
-                                    <div className="text-sm text-yellow-400">{price.toFixed(2)} WLD</div>
-                                </div>
-                                <div className="text-xs text-text-secondary space-y-1">
-                                    {benefits.map((b, i) => <div key={i}>• {b}</div>)}
-                                </div>
-                                {isCurrent && (
-                                    <div className="mt-2 text-xs font-bold text-center text-green-400">ACTIVE</div>
+                                {/* Popular/Decoy Badge */}
+                                {isPopular && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-yellow-400 text-black text-[10px] font-black rounded-full uppercase tracking-wider shadow-md">
+                                        Najpopularniejszy 🔥
+                                    </div>
                                 )}
-                                {canUpgrade && (
-                                    <button
-                                        onClick={() => {
-                                            // Calculate upgrade cost: simply the full price of the new tier minus price of current tier
-                                            // Prices: [0, 1.75, 2.75, 3.75, 5.00]
-                                            const tierPrices = [0, 1.75, 2.75, 3.75, 5.00]
-                                            const upgradeCost = tierPrices[tier] - tierPrices[vipTier]
 
-                                            console.log('[Premium] Tier purchase:', { tier, vipTier, price, upgradeCost })
-                                            if (upgradeCost > 0) {
-                                                handlePurchase(`vip_tier_${tier}`, upgradeCost)
-                                            } else {
-                                                toast.error("Cannot upgrade to lower/same tier")
-                                            }
-                                        }}
-                                        className="mt-2 w-full py-1 bg-void-purple hover:bg-void-purple/80 rounded text-xs font-bold"
-                                    >
-                                        {vipTier === 0 ? 'Purchase' : 'Upgrade'}
-                                    </button>
-                                )}
+                                <div>
+                                    <div className="text-center mb-2">
+                                        <div className="font-extrabold text-sm text-white tracking-wide">{name}</div>
+                                        {/* Slashed pricing & Discount percentages (Price Psychology) */}
+                                        <div className="flex items-center justify-center gap-1.5 mt-1">
+                                            <span className="text-xs line-through text-text-secondary">
+                                                {isTelegram ? `${Math.round(originalPrice * 50)} ⭐️` : `${originalPrice.toFixed(2)} WLD`}
+                                            </span>
+                                            <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-black">
+                                                -{discount}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm font-black text-yellow-400 mt-0.5">
+                                            {isTelegram ? `${Math.round(price * 50)} ⭐️` : `${price.toFixed(2)} WLD`}
+                                        </div>
+                                        {isTelegram && (
+                                            <div className="text-[10px] text-text-secondary">
+                                                / {(price / tonPrice).toFixed(3)} TON
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="text-[11px] text-text-secondary space-y-1.5 my-3 border-t border-white/5 pt-3">
+                                        {benefits.map((b, i) => <div key={i} className="flex items-start gap-1"><span>•</span> <span>{b}</span></div>)}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    {isCurrent && (
+                                        <div className="mt-2 text-xs font-black text-center text-green-400 tracking-widest bg-green-500/10 py-1.5 rounded-lg border border-green-500/20">
+                                            AKTYWNY
+                                        </div>
+                                    )}
+                                    {canUpgrade && (
+                                        <button
+                                            onClick={() => {
+                                                const tierPrices = [0, 1.75, 2.75, 3.75, 5.00]
+                                                const upgradeCost = tierPrices[tier] - tierPrices[vipTier]
+
+                                                console.log('[Premium] Tier purchase:', { tier, vipTier, price, upgradeCost })
+                                                if (upgradeCost > 0) {
+                                                    handlePurchase(`vip_tier_${tier}`, upgradeCost)
+                                                } else {
+                                                    toast.error("Nie możesz przejść na niższy lub ten sam poziom")
+                                                }
+                                            }}
+                                            className={`mt-2 w-full py-2 hover:scale-105 rounded-xl text-xs font-bold transition-all duration-200 ${
+                                                isPopular 
+                                                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-extrabold shadow-lg shadow-yellow-500/20' 
+                                                    : 'bg-void-purple hover:bg-void-purple/80 text-white'
+                                            }`}
+                                        >
+                                            {vipTier === 0 ? 'Kupuję' : 'Ulepszam'}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )
                     })}
                 </div>
             </div>
 
-            {/* Daily Bonus Section */}
+            {/* Daily Bonus & Interactive Streak Track Section */}
             {premiumDailyBonus && (
                 <motion.div
-                    className="mb-8 p-6 bg-gradient-to-br from-void-purple/20 to-void-blue/20 border-2 border-particle-glow/30 rounded-2xl"
+                    className="mb-8 p-6 bg-gradient-to-br from-void-purple/20 via-void-blue/15 to-transparent border-2 border-particle-glow/30 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-2xl">🎁</span>
-                                <h3 className="font-bold text-lg">Daily Bonus</h3>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-2xl animate-bounce">🎁</span>
+                                <h3 className="font-extrabold text-lg text-white">Codzienny Bonus</h3>
                             </div>
-                            <p className="text-sm text-text-secondary">
-                                Login Streak: {loginStreak} days 🔥
+                            <p className="text-xs text-text-secondary">
+                                Seria logowań: <span className="text-yellow-400 font-bold">{loginStreak} dni</span> 🔥
                             </p>
                         </div>
                         <div className="text-right">
-                            <div className="text-sm text-text-secondary mb-2">
-                                {getCooldownStatus()}
+                            <div className="text-xs font-semibold text-text-secondary mb-2">
+                                Następny za: <span className="text-particle-glow font-bold">{getCooldownStatus()}</span>
                             </div>
                             <button
                                 onClick={handleClaimDaily}
                                 disabled={getCooldownStatus() !== 'Ready!'}
                                 className={`
-                                    px-6 py-2 rounded-lg font-bold text-sm
+                                    px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300
                                     ${getCooldownStatus() === 'Ready!'
-                                        ? 'bg-gradient-to-r from-void-purple to-void-blue hover:scale-105'
-                                        : 'bg-gray-600 opacity-50 cursor-not-allowed'
+                                        ? 'bg-gradient-to-r from-void-purple to-void-blue hover:scale-105 shadow-[0_0_15px_rgba(139,92,246,0.4)] text-white'
+                                        : 'bg-white/5 text-white/30 border border-white/5 opacity-50 cursor-not-allowed'
                                     }
-                                    transition-all
                                 `}
                             >
-                                Claim +760
+                                Odbierz +760 cząsteczek
                             </button>
                         </div>
                     </div>
+
+                    {/* Choice Architecture & Streak Progression Grid */}
+                    <div className="mt-6 border-t border-white/5 pt-5">
+                        <div className="text-xs font-bold text-white/70 mb-3 uppercase tracking-wider">Twoja seria w tym tygodniu:</div>
+                        <div className="grid grid-cols-7 gap-2">
+                            {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+                                const currentStreakDay = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0
+                                const isReady = getCooldownStatus() === 'Ready!'
+                                const isClaimed = day < currentStreakDay || (day === currentStreakDay && !isReady)
+                                const isCurrent = day === currentStreakDay && isReady
+
+                                return (
+                                    <div
+                                        key={day}
+                                        className={`relative flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-300 ${
+                                            isClaimed
+                                                ? 'bg-green-500/10 border-green-500/30 text-green-400 shadow-[inset_0_0_10px_rgba(74,222,128,0.05)]'
+                                                : isCurrent
+                                                    ? 'bg-particle-glow/20 border-particle-glow text-white shadow-[0_0_10px_rgba(192,132,252,0.4)] animate-pulse'
+                                                    : 'bg-white/5 border-white/5 text-white/30'
+                                        }`}
+                                    >
+                                        <span className="text-[9px] font-semibold mb-1">Dzień {day}</span>
+                                        <span className="text-base select-none">
+                                            {isClaimed ? '✅' : day === 7 ? '👑' : '🎁'}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Loss Aversion Warning Banner */}
+                    {loginStreak > 0 && (
+                        <div className="mt-4 p-3 bg-red-950/20 border border-red-500/20 rounded-2xl flex items-start gap-3">
+                            <span className="text-base select-none">⚠️</span>
+                            <div className="text-[11px] text-red-200/90 leading-relaxed">
+                                <span className="font-bold text-red-400">Ochrona serii logowań:</span> Twoja seria to obecnie <span className="font-bold text-red-400">{loginStreak} dni</span>. Odbieraj nagrody codziennie! Jeśli pominiesz jeden dzień, licznik serii logowań zresetuje się całkowicie do zera.
+                            </div>
+                        </div>
+                    )}
                 </motion.div>
             )}
 
@@ -487,6 +798,8 @@ export default function PremiumTab() {
                                                         <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
                                                     ) : isOwned ? (
                                                         'Unlocked'
+                                                    ) : isTelegram ? (
+                                                        <>⭐️ {Math.round(upgrade.price * 50)} / {(upgrade.price / tonPrice).toFixed(3)} TON</>
                                                     ) : (
                                                         <>💎 {upgrade.price} WLD</>
                                                     )}
@@ -500,6 +813,155 @@ export default function PremiumTab() {
                     </div>
                 </div>
             ))}
+
+            {/* Telegram Payment Method Selection Modal */}
+            {paymentMethodItem && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(5, 3, 15, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    zIndex: 200,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '16px',
+                }}>
+                    <div style={{
+                        width: '100%',
+                        maxWidth: '380px',
+                        background: 'radial-gradient(circle at top left, #1c0e35 0%, #0a0518 100%)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        borderRadius: '24px',
+                        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.15)',
+                        padding: '24px',
+                        position: 'relative',
+                    }}>
+                        {/* Title */}
+                        <h3 style={{
+                            fontSize: '20px',
+                            fontWeight: 800,
+                            color: '#e0e0ff',
+                            textAlign: 'center',
+                            marginBottom: '6px',
+                            letterSpacing: '0.5px'
+                        }}>
+                            Select Payment Method
+                        </h3>
+                        <p style={{
+                            fontSize: '12px',
+                            color: '#9ca3af',
+                            textAlign: 'center',
+                            marginBottom: '20px'
+                        }}>
+                            Choose how you want to purchase <span style={{ color: '#fbbf24', fontWeight: 600 }}>{paymentMethodItem.name}</span>
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {/* Stars Payment Card */}
+                            <div 
+                                onClick={() => payWithStars(paymentMethodItem)}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                                    borderRadius: '16px',
+                                    padding: '16px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{
+                                        fontSize: '24px',
+                                        background: 'rgba(251, 191, 36, 0.1)',
+                                        width: '44px',
+                                        height: '44px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        ⭐
+                                    </div>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#f3f4f6' }}>Telegram Stars</div>
+                                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>Fast in-app checkout</div>
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '16px', fontWeight: 800, color: '#fbbf24' }}>
+                                    {Math.round(paymentMethodItem.price * 50)} ⭐️
+                                </div>
+                            </div>
+
+                            {/* TON Connect Payment Card */}
+                            <div 
+                                onClick={() => payWithTon(paymentMethodItem)}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    border: '1px solid rgba(56, 189, 248, 0.2)',
+                                    borderRadius: '16px',
+                                    padding: '16px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{
+                                        fontSize: '24px',
+                                        background: 'rgba(56, 189, 248, 0.1)',
+                                        width: '44px',
+                                        height: '44px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        💎
+                                    </div>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#f3f4f6' }}>TON Connect</div>
+                                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                                            {tonWalletConnected ? 'Wallet connected' : 'Connect wallet'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8' }}>
+                                    {(paymentMethodItem.price / tonPrice).toFixed(3)} TON
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Cancel Button */}
+                        <button
+                            onClick={() => setPaymentMethodItem(null)}
+                            style={{
+                                width: '100%',
+                                marginTop: '20px',
+                                padding: '12px',
+                                borderRadius: '14px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                background: 'rgba(255,255,255,0.05)',
+                                color: '#9ca3af',
+                                fontWeight: 700,
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

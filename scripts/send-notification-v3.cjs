@@ -9,7 +9,15 @@
  *   node scripts/send-notification-v3.cjs   (uses default title/message)
  */
 
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+const envPath = path.resolve(__dirname, '../.env.production');
+if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+} else {
+    require('dotenv').config();
+}
 const { Pool } = require('pg');
 
 // ─── CLI Args ───────────────────────────────────────────
@@ -98,6 +106,16 @@ async function sendMassNotification() {
             return;
         }
 
+        let authHeader;
+        if (API_KEY.includes(':') && !API_KEY.startsWith('Basic')) {
+            const base64Creds = Buffer.from(API_KEY).toString('base64');
+            authHeader = `Basic ${base64Creds}`;
+        } else if (API_KEY.startsWith('Basic ')) {
+            authHeader = API_KEY;
+        } else {
+            authHeader = `Bearer ${API_KEY}`;
+        }
+
         const BATCH_SIZE = 1000;
         let totalSent = 0;
 
@@ -110,7 +128,7 @@ async function sendMassNotification() {
             const response = await fetch('https://developer.worldcoin.org/api/v2/minikit/send-notification', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${API_KEY}`,
+                    'Authorization': authHeader,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({

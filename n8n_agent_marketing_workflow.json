@@ -1,0 +1,248 @@
+{
+  "name": "Cosmic Clicker Marketing Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "fieldApiName": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "id": "e98c764a-2e45-420d-b8d4-ef792ef0e311",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        380,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Wygeneruj chwytliwy, perswazyjny post marketingowy promujący naszą grę \"Cosmic Clicker & Void Bastion\" zintegrowaną z ekosystemem World App (World ID). \n\nWykorzystaj najnowsze dane z gry (użyj narzędzia fetch_game_leaderboard) oraz wyszukaj aktualne trendy lub hashtagi związane z Worldcoin, Web3, L2 lub klikerami (użyj narzędzia web_search), aby post był jak najbardziej dopasowany do bieżących trendów.\n\nPost powinien być krótki, dostosowany do X (Twittera) - maksymalnie 280 znaków, zawierać hashtagi takie jak #Worldcoin #Web3 #VoidBastion #CosmicClicker #WorldApp, bezpośredni link do aplikacji: https://void.skyreel.art oraz zachęcać do zweryfikowania swojego człowieczeństwa przez World ID w celu odebrania bonusów.",
+        "systemPrompt": "Jesteś ekspertem ds. marketingu Web3 i wzrostu (Growth Hacking) dla gry Cosmic Clicker & Void Bastion zintegrowanej z World App. Twoim celem jest tworzenie angażujących postów społecznościowych, które przyciągają graczy i zachęcają do weryfikacji World ID. \n\nZasady tworzenia treści:\n1. Bądź entuzjastyczny, profesjonalny i lekko tajemniczy (motywy kosmiczne, Void, walka z pustką).\n2. Zawsze podawaj link do aplikacji: https://void.skyreel.art\n3. Wspominaj o integracji z World App i korzyściach z weryfikacji World ID (np. unikalne jednostki, tokeny, nagrody).\n4. Używaj maksymalnie 3-5 trafnych hashtagów.\n5. Post musi mieścić się w limitach znaków dla X (Twitter) - max 280 znaków.\n6. Odpowiadaj wyłącznie wygenerowanym tekstem posta, bez dodatkowych komentarzy.",
+        "options": {}
+      },
+      "id": "2b6b5d92-bf3d-4956-a19f-0744e83cde68",
+      "name": "Marketing AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        600,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.75
+        }
+      },
+      "id": "787c88a3-2ee9-4bbf-8547-2bf7eb21516e",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        500,
+        440
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sjJSZwOPzvkacC1k",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "cosmic_clicker_marketing"
+      },
+      "id": "0d9c490a-f8be-4f4b-84a1-db9bfa7cd4ee",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "name": "fetch_game_leaderboard",
+        "description": "Pobiera aktualną listę top 5 graczy z rankingu Void Bastion, w tym ich pseudonimy i wyniki, aby móc wspomnieć o liderach w poście.",
+        "url": "https://void.skyreel.art/api/leaderboard?limit=5",
+        "toolDescription": "Pobiera aktualną listę top 5 graczy z rankingu Void Bastion, w tym ich pseudonimy i wyniki, aby móc wspomnieć o liderach w poście."
+      },
+      "id": "fc56c8de-df76-47e0-af96-fbfae8b15d2a",
+      "name": "HTTP Request Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        740,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "name": "web_search",
+        "description": "Wyszukuje w sieci aktualne trendy, hashtagi i nowinki dotyczące Worldcoin, World ID i gier Web3.",
+        "options": {},
+        "toolDescription": "Wyszukuje w sieci aktualne trendy, hashtagi i nowinki dotyczące Worldcoin, World ID i gier Web3."
+      },
+      "id": "0ef37722-127b-4029-ba9d-cf199a0a03bb",
+      "name": "SerpAPI",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        860,
+        440
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "e1r7uwO4sH4duBHm",
+          "name": "SerpAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1507265219464925217/nVckJ48iSG3ug6Tf12_cBqq3LdeDYR1RJyHBls-8eAqciadkfnWZsRT34CfpFPDyPsVG",
+        "sendHeaders": true,
+        "headersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "content",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "31b268df-ee6d-4767-a2f0-f9fbfeae6313",
+      "name": "Post to Discord",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        920,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "@your_telegram_channel_or_group",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "18cfcde7-a4b5-4b47-b86a-7b3b7bbcf68c",
+      "name": "Post to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        360
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "uTF9DnHYdGsA4w8B",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Post to Discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionTimeout": 300
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

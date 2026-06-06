@@ -9,9 +9,9 @@ if (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'production') {
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector',
     ssl: false, // Local connection, no SSL needed
-    max: 10, // Maximum connections in pool
+    max: 25, // Maximum connections in pool (optimized for high traffic)
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000, // Timeout extended to 5s to survive database spike load
 })
 
 // Test connection on startup

@@ -27,7 +27,7 @@ export interface GameState {
     bpClaimedPremium: string[]
 
     // Season 2: Achievements
-    achievements: Record<string, { level: number, progress: number }>
+    achievements: Record<string, any>
 
     // Upgrade levels
     upgradeClickPower: number
@@ -73,6 +73,7 @@ export interface GameState {
     handleClick: () => void
     purchaseUpgrade: (upgradeType: string, cost: number, level: number) => boolean
     purchasePremiumUpgrade: (upgradeType: string) => boolean
+    purchaseCosmicItem: (type: 'skin' | 'theme', value: string, cost: number) => boolean
     equipSkin: (skinId: string) => void
     equipTheme: (themeId: string) => void
     claimDailyBonus: () => boolean
@@ -204,6 +205,13 @@ export const useGameStore = create<GameState>()(
                 // Apply Premium WLD Upgrades
                 if (Array.isArray(state.unlockedPremiumUpgrades) && state.unlockedPremiumUpgrades.includes('void_core_multiplier')) {
                     earned *= 2
+                }
+
+                // Apply active click booster (Void Surge: +500% / multiplied by 6)
+                const boosterExpiry = state.achievements?.booster_click_multiplier_until
+                const now = Date.now()
+                if (boosterExpiry && Number(boosterExpiry) > now) {
+                    earned *= 6
                 }
 
                 set({
@@ -417,6 +425,30 @@ export const useGameStore = create<GameState>()(
                 return true
             },
 
+            purchaseCosmicItem: (type, value, cost) => {
+                const state = get()
+                if (state.particles < cost) {
+                    return false
+                }
+
+                if (type === 'skin') {
+                    if (state.unlockedSkins.includes(value)) return false
+                    set({
+                        particles: state.particles - cost,
+                        unlockedSkins: [...state.unlockedSkins, value]
+                    })
+                } else if (type === 'theme') {
+                    if (state.unlockedThemes.includes(value)) return false
+                    set({
+                        particles: state.particles - cost,
+                        unlockedThemes: [...state.unlockedThemes, value]
+                    })
+                }
+
+                get().saveGameState()
+                return true
+            },
+
             // Check and reset daily stats at 00:00 UTC
             checkAndResetDailyStats: () => {
                 const now = Date.now()
@@ -553,6 +585,7 @@ export const useGameStore = create<GameState>()(
 
                             achievements: data.achievements && typeof data.achievements === 'object' ? data.achievements : {},
 
+                            lastSaveTime: data.updated_at ? new Date(data.updated_at).getTime() : Date.now(),
                             nullifierHash: userHash
                         })
 

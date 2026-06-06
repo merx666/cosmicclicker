@@ -196,8 +196,12 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const hotWalletAddress = process.env.HOT_WALLET_PRIVATE_KEY ?
-            '0x68b4aa6fB4f00dD1A8F8d9AfD6401e4baF67C817' : null
+        let hotWalletAddress = null
+        try {
+            hotWalletAddress = getHotWalletAddress()
+        } catch (e) {
+            // Hot wallet not configured
+        }
 
         // Get pending count
         const pending = await queryOne<{ count: string }>(

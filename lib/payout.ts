@@ -181,3 +181,47 @@ export async function batchTransferWLD(
 
     return results
 }
+
+/**
+ * Transfer WLD tokens to a jackpot winner
+ * Bypasses standard reward payout limits since it is funded by deposits
+ */
+export async function transferJackpotWLD(
+    toAddress: string,
+    amount: number
+): Promise<{ success: boolean; hash?: string; error?: string }> {
+    try {
+        if (amount <= 0) {
+            return { success: false, error: 'Amount must be positive' }
+        }
+        if (amount > 100.0) {
+            return { success: false, error: 'Amount exceeds safety limit of 100 WLD' }
+        }
+        if (!toAddress || !toAddress.startsWith('0x') || toAddress.length !== 42) {
+            return { success: false, error: 'Invalid wallet address' }
+        }
+
+        const balance = await getHotWalletBalance()
+        if (balance < amount) {
+            return { success: false, error: `Insufficient hot wallet balance. Available: ${balance} WLD` }
+        }
+
+        const { walletClient } = createClients()
+        const amountInWei = parseUnits(amount.toString(), WLD_DECIMALS)
+
+        const hash = await walletClient.writeContract({
+            address: WLD_TOKEN_ADDRESS,
+            abi: ERC20_ABI,
+            functionName: 'transfer',
+            args: [toAddress as `0x${string}`, amountInWei]
+        })
+
+        console.log(`[Jackpot Payout] Transferred ${amount} WLD to ${toAddress}. Tx: ${hash}`)
+        return { success: true, hash }
+
+    } catch (error: any) {
+        console.error('[Jackpot Payout] Transfer failed:', error)
+        return { success: false, error: error?.message || 'Jackpot transfer failed' }
+    }
+}
+

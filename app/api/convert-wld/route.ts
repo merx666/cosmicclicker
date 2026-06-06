@@ -13,7 +13,7 @@ export async function POST(request: Request) {
         }
 
         const today = new Date().toISOString().split('T')[0]
-        const MAX_DAILY_WLD = 100
+        const MAX_DAILY_WLD = 3
 
         // Fetch dynamic conversion rate
         const rateConfig = await queryOne<{ value: any }>(
@@ -58,23 +58,39 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
+        // SECURITY: Single withdrawal limit of 0.01 WLD
+        if (wld_amount > 0.01) {
+            return NextResponse.json({
+                error: 'Limit exceeded',
+                message: 'Maksymalna jednorazowa wypłata to 0.01 WLD.'
+            }, { status: 400 })
+        }
+
         // 1b. SECURITY: Daily withdrawal limits per user
         if (user.last_withdrawal_date === today) {
-            // Check max 1 withdrawal per day
-            if (user.daily_withdrawal_count >= 1) {
+            // Check max 5 withdrawals per day
+            if (user.daily_withdrawal_count >= 5) {
                 return NextResponse.json({
-                    error: 'Daily limit reached',
-                    message: 'You can only withdraw once per 24h. Try again tomorrow!'
+                    error: 'Dzienny limit osiągnięty',
+                    message: 'Możesz dokonać maksymalnie 5 wypłat na dobę. Spróbuj ponownie jutro!'
                 }, { status: 429 })
             }
 
             // Check max 0.05 WLD per day
             if (user.daily_withdrawal_amount + wld_amount > 0.05) {
                 return NextResponse.json({
-                    error: 'Daily limit exceeded',
-                    message: `Daily limit is 0.05 WLD. You've already withdrawn ${user.daily_withdrawal_amount} WLD today.`
+                    error: 'Przekroczono limit',
+                    message: `Dzienny limit wypłat wynosi 0.05 WLD. Dzisiaj wypłaciłeś już ${user.daily_withdrawal_amount} WLD.`
                 }, { status: 429 })
             }
+        }
+
+        // 1c. Enforce minimum withdrawal threshold of 1,000,000 particles
+        if (user.particles < 1000000) {
+            return NextResponse.json({
+                error: 'Minimum threshold not met',
+                message: 'Minimalna ilość cząsteczek potrzebna do wypłaty to 1 000 000 cząsteczek!'
+            }, { status: 400 })
         }
 
         if (user.particles < PARTICLES_COST) {

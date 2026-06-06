@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const CHANGELOG_VERSION = 'changelog_v2_seen'
+const CHANGELOG_VERSION = 'changelog_v2.2_seen'
 
 export default function ChangelogModal() {
     const [isVisible, setIsVisible] = useState(false)
@@ -46,16 +46,35 @@ export default function ChangelogModal() {
                                 transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
                                 className="text-5xl mb-3"
                             >
-                                📋
+                                🚀
                             </motion.div>
                             <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                                 What&apos;s New
                             </h2>
-                            <p className="text-xs text-gray-500 mt-1">v2.1 — February 2026</p>
+                            <p className="text-xs text-gray-500 mt-1">v2.2 — May 2026</p>
                         </div>
 
                         {/* Content */}
                         <div className="px-6 pb-4 space-y-4">
+
+                            {/* World App Referrals */}
+                            <div className="bg-purple-500/20 border border-purple-500/40 rounded-xl p-4 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">🔗</span>
+                                    <div>
+                                        <h3 className="font-bold text-purple-400 text-sm">NEW: World App Referrals!</h3>
+                                        <p className="text-xs text-gray-200 mt-1 leading-relaxed font-semibold">
+                                            Invite friends directly through World App! 
+                                            Go to the <span className="text-[#00ffcc] font-black">MEDIA</span> tab (📡), click <span className="text-purple-300 font-bold">ZAPROŚ ZNAJOMYCH</span> and share your link.
+                                        </p>
+                                        <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                                            🎁 <span className="text-[#00ffcc] font-bold">You get:</span> +50,000 particles!
+                                            <br />
+                                            🚀 <span className="text-purple-400 font-bold">Friend gets:</span> +25,000 start particles!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Payment Fix */}
                             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">

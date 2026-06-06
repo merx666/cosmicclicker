@@ -3,8 +3,8 @@ import { query } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-const CURRENT_POLL_ID = 'poll_002'
-const CURRENT_POLL_QUESTION = 'Should the next $VOID airdrop be 10x BIGGER? 🚀'
+const CURRENT_POLL_ID = 'poll_003'
+const CURRENT_POLL_QUESTION = 'Should we implement a dynamic token burn mechanism (1.5% per Tx) to achieve deflationary supply? 🔥'
 
 export async function GET(request: NextRequest) {
     try {

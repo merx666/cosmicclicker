@@ -48,7 +48,11 @@ const generateRewards = (): PassLevel[] => {
 
 const rewards = generateRewards()
 
-export default function SeasonPassTab() {
+interface SeasonPassTabProps {
+    onUnlockPremium?: () => void
+}
+
+export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
     const {
         bpLevel,
         bpXp,
@@ -144,7 +148,10 @@ export default function SeasonPassTab() {
 
                 {!hasPremium && (
                     <div className="mt-4 text-center">
-                        <button className="px-6 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-bold rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+                        <button 
+                            onClick={onUnlockPremium}
+                            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-bold rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(251,191,36,0.5)]"
+                        >
                             Unlock Premium Pass
                         </button>
                         <p className="text-xs text-white/50 mt-2">Get access to exclusive skins, themes, and massive particle drops!</p>

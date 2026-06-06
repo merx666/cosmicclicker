@@ -1,32 +1,41 @@
 {
-    "Navigation": {
-        "collect": "Collect",
-        "upgrades": "Upgrades",
-        "missions": "Missions",
-        "leaderboard": "Ranking",
-        "premium": "Premium",
-        "convert": "Convert",
-        "roulette": "Roulette",
-        "machine": "Machine",
-        "survey": "Vote",
-        "media": "Media"
-    },
-    "Game": {
-        "title": "VOID COLLECTOR",
-        "clickInstruction": "Click the particle to collect Void Particles! ✨"
-    },
-    "Common": {
-        "loading": "Loading...",
-        "error": "Error",
-        "verifying": "Verifying..."
-    },
-    "Home": {
-        "subtitle": "Collect Void Particles and earn WLD",
-        "verificationTitle": "World ID Verification",
-        "verificationDesc": "Verify your identity to start playing",
-        "verifyButton": "Verify with World ID",
-        "secureVerification": "Secure verification through WorldApp",
-        "privacyProtected": "Your privacy is protected",
-        "worldAppRequired": "You need WorldApp to play"
-    }
+  "Navigation": {
+    "collect": "Collect",
+    "upgrades": "Upgrades",
+    "missions": "Missions",
+    "leaderboard": "Ranking",
+    "premium": "Premium",
+    "convert": "Convert",
+    "roulette": "Roulette",
+    "machine": "Machine",
+    "survey": "Vote",
+    "media": "Media",
+    "void_block": "Void Block"
+  },
+  "Game": {
+    "title": "VOID COLLECTOR",
+    "clickInstruction": "Click the particle to collect Void Particles! ✨"
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "verifying": "Verifying...",
+    "errHighTraffic": "Our servers are experiencing high traffic right now. Please try again in a minute.",
+    "errNetwork": "Network connection issue. Please check your internet connection and try again.",
+    "errMaintenance": "Season 2 update in progress. Please try again later.",
+    "errSessionExpired": "Session expired or signature invalid. Please refresh the page and try again."
+  },
+  "Home": {
+    "subtitle": "Collect Void Particles and earn WLD 🌌",
+    "verificationTitle": "World ID Required",
+    "verificationDesc": "World ID verification ensures every player is a real human. No bots, fair WLD distribution!",
+    "verifyButton": "Verify with World ID",
+    "secureVerification": "Secure verification through WorldApp",
+    "privacyProtected": "Your privacy is protected",
+    "worldAppRequired": "You need WorldApp to play",
+    "featureClick": "Click and collect particles",
+    "featureUpgrade": "Upgrade collecting system",
+    "featureConvert": "Convert to real WLD tokens",
+    "featureLeaderboard": "Compete on the leaderboard"
+  }
 }

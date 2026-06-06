@@ -2,8 +2,17 @@
 
 import { useWorldID } from '@/hooks/useWorldID'
 import GameScreen from '@/components/GameScreen'
+import VerificationScreen from '@/components/VerificationScreen'
+import Season3PRScreen from '@/components/Season3PRScreen'
+import SelectionMenuScreen from '@/components/SelectionMenuScreen'
+import VoidBastionScreen from '@/components/VoidBastionScreen'
+import VoidWheelScreen from '@/components/VoidWheelScreen'
+import VoidPredictionsScreen from '@/components/VoidPredictionsScreen'
+import VoidBlockScreen from '@/components/VoidBlockScreen'
+import ChangelogModal from '@/components/ChangelogModal'
+import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
-import { useTranslations } from 'next-intl'
+import ApiTinyAd from '@/components/ApiTinyAd'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 
@@ -175,14 +184,128 @@ function MaintenanceScreen() {
   )
 }
 
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        ready: () => void
+        expand: () => void
+        initData: string
+        themeParams: any
+        HapticFeedback: {
+          impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void
+          notificationOccurred: (type: 'error' | 'success' | 'warning') => void
+        }
+      }
+    }
+  }
+}
+
 export default function Home() {
-  const { isVerified, userAddress, isLoading, error, verify } = useWorldID()
-  const t = useTranslations('Home')
-  const tCommon = useTranslations('Common')
+  const { isVerified, userAddress, isLoading, error, verify, logout } = useWorldID()
   const searchParams = useSearchParams()
+
+  // Capture Worldcoin referral from query params
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const ref = searchParams.get('ref')
+      if (ref) {
+        window.sessionStorage.setItem('worldcoin_referrer', ref)
+        console.log('[Worldcoin Referral] Saved referrer in session storage:', ref)
+      }
+    }
+  }, [searchParams])
 
   const [maintenanceMode, setMaintenanceMode] = useState<boolean | null>(null)
   const [checkingMaintenance, setCheckingMaintenance] = useState(true)
+  const [selectedGame, setSelectedGame] = useState<'menu' | 'collector' | 'bastion' | 'wheel' | 'predictions' | 'void_block'>('menu')
+  const loadGameState = useGameStore((state) => state.loadGameState)
+  const particles = useGameStore((state) => state.particles)
+
+  // Telegram TMA integration states
+  const [isTelegram, setIsTelegram] = useState(false)
+  const [tgUser, setTgUser] = useState<any>(null)
+  const [tgLoading, setTgLoading] = useState(true)
+
+  // Register Service Worker for validation/monetization
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
+        .catch((err) => console.error('Service Worker registration failed:', err));
+    }
+  }, [])
+
+  // Telegram TMA auto-login detector with polling to handle script loading races
+  useEffect(() => {
+    let checkInterval: NodeJS.Timeout
+    let retries = 0
+
+    const initTelegram = async () => {
+      const webapp = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null
+      if (webapp) {
+        if (checkInterval) clearInterval(checkInterval)
+        webapp.ready()
+        webapp.expand()
+
+        const initData = webapp.initData || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('tg_init_data') : '')
+
+        if (initData) {
+          setIsTelegram(true)
+          try {
+            const res = await fetch('/api/auth/telegram', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ initData })
+            })
+            const data = await res.json()
+            if (res.ok && data.success && data.user) {
+              setTgUser(data.user)
+              console.log('[Telegram Auth] Automatically logged in as:', data.user.address)
+              loadGameState(data.user.address)
+
+              if (data.referralClaimed) {
+                if (typeof window !== 'undefined') {
+                  window.sessionStorage.setItem('referral_claimed', 'true')
+                  if (data.referrerUsername) {
+                    window.sessionStorage.setItem('referrer_username', data.referrerUsername)
+                  }
+                }
+              }
+            } else {
+              console.error('[Telegram Auth] Failed to authenticate initData:', data.error)
+            }
+          } catch (e) {
+            console.error('[Telegram Auth] Connection error:', e)
+          } finally {
+            setTgLoading(false)
+          }
+        } else {
+          console.warn('[Telegram Auth] WebApp detected, but initData is empty')
+          setTgLoading(false)
+        }
+      } else {
+        retries++
+        if (retries > 30) { // Clear check after 3 seconds
+          if (checkInterval) clearInterval(checkInterval)
+          console.warn('[Telegram Auth] WebApp not found after 30 retries')
+          setTgLoading(false)
+        }
+      }
+    }
+
+    // Run check immediately on mount
+    initTelegram()
+
+    // If not found yet, poll every 100ms
+    if (typeof window !== 'undefined' && !(window as any).Telegram?.WebApp) {
+      checkInterval = setInterval(initTelegram, 100)
+    }
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval)
+    }
+  }, [loadGameState])
 
   // Check if admin bypass is active via URL param
   const bypassParam = searchParams.get('bypass')
@@ -205,6 +328,14 @@ export default function Home() {
     checkMaintenance()
   }, [])
 
+  const isTelegramBuild = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
+
+  useEffect(() => {
+    if (isVerified && userAddress && !isTelegram && !isTelegramBuild) {
+      loadGameState(userAddress)
+    }
+  }, [isVerified, userAddress, loadGameState, isTelegram, isTelegramBuild])
+
   // Show loading while checking maintenance
   if (checkingMaintenance) {
     return (
@@ -219,81 +350,119 @@ export default function Home() {
     return <MaintenanceScreen />
   }
 
-  // Show verification screen if not verified
-  if (!isVerified) {
+  // Hybrid authentication verification logic
+  const isAuthenticated = isTelegramBuild ? !!tgUser : (isTelegram ? !!tgUser : isVerified)
+  const isAuthLoading = isTelegramBuild ? tgLoading : (isTelegram ? tgLoading : false)
+
+  if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-void-dark flex items-center justify-center px-4 safe-area-top safe-area-bottom">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full"
-        >
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">🌌</div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-void-purple to-particle-glow bg-clip-text text-transparent mb-2">
-              Void Collector
-            </h1>
-            <p className="text-text-secondary">
-              {t('subtitle')}
-            </p>
-          </div>
-
-          <div className="bg-void-purple/5 border-2 border-void-purple/30 rounded-2xl p-8">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">🔐</div>
-              <h2 className="text-xl font-bold mb-2">{t('verificationTitle')}</h2>
-              <p className="text-sm text-text-secondary">
-                {t('verificationDesc')}
-              </p>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
-                ⚠️ {error}
-              </div>
-            )}
-
-            <button
-              onClick={verify}
-              disabled={isLoading}
-              className={`
-                w-full py-4 px-6 rounded-xl font-bold text-lg
-                bg-gradient-to-r from-void-purple to-void-blue
-                hover:scale-105 active:scale-95
-                transition-all flex items-center justify-center gap-3
-                ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-                  {tCommon('verifying')}
-                </>
-              ) : (
-                <>
-                  <span>✨</span>
-                  {t('verifyButton')}
-                </>
-              )}
-            </button>
-
-            <div className="mt-6 pt-6 border-t border-void-purple/20">
-              <p className="text-xs text-text-secondary text-center">
-                🔒 {t('secureVerification')}
-                <br />
-                {t('privacyProtected')}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center text-xs text-text-secondary">
-            <p>{t('worldAppRequired')}</p>
-          </div>
-        </motion.div>
+      <div className="min-h-screen bg-void-dark flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-purple-500" />
       </div>
     )
   }
 
-  // User is verified - show game with their wallet address
-  return <GameScreen userHash={userAddress!} />
+  // Show verification screen if not verified
+  if (!isAuthenticated) {
+    if (isTelegramBuild || isTelegram) {
+      const hasTelegramWebApp = typeof window !== 'undefined' && (!!window.Telegram?.WebApp?.initData || (typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem('tg_init_data')))
+
+      if (!hasTelegramWebApp) {
+        return (
+          <div className="min-h-screen bg-void-dark flex flex-col items-center justify-center text-white p-6 text-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(168,85,247,0.2) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(59,130,246,0.15) 0%, transparent 50%)',
+              }}
+            />
+            <div className="relative z-10 max-w-md w-full border border-purple-500/20 bg-purple-950/10 rounded-2xl p-8 backdrop-blur-md shadow-2xl">
+              <h1 className="text-4xl font-extrabold mb-3 tracking-tighter bg-gradient-to-r from-purple-400 via-fuchsia-500 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                VOID COLLECTOR
+              </h1>
+              <div className="text-5xl mb-6">🤖</div>
+              <h2 className="text-xl font-bold text-white mb-3">Graj w Telegramie</h2>
+              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                Ta wersja Void Collector jest przeznaczona wyłącznie jako Telegram Mini App. Uruchom grę bezpośrednio w Telegramie, aby zacząć zarabiać i zbierać cząsteczki.
+              </p>
+              <a 
+                href="https://t.me/Voidbot_official_bot/play" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block w-full py-4 px-8 rounded-xl font-bold text-base uppercase tracking-wider bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all duration-300 border border-white/10 active:scale-[0.98] hover:scale-[1.02]"
+              >
+                Otwórz w Telegramie
+              </a>
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <div className="min-h-screen bg-void-dark flex items-center justify-center text-white p-6 text-center">
+          <div className="max-w-md w-full border border-red-500/20 bg-red-950/10 rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-red-400 mb-2">Autoryzacja Telegram Nieudana</h2>
+            <p className="text-sm text-gray-400">
+              Nie udało się bezpiecznie zweryfikować Twojej sesji Telegram. Zamknij aplikację i uruchom ją ponownie z oficjalnego bota.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <VerificationScreen
+        onVerify={verify}
+        isLoading={isLoading}
+        error={error}
+      />
+    )
+  }
+
+  const displayName = (isTelegramBuild || isTelegram)
+    ? (tgUser?.telegramUsername ? `@${tgUser.telegramUsername}` : 'Telegram Officer')
+    : (userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : 'Anonymous Officer')
+
+  const activeAddress = (isTelegramBuild || isTelegram) ? tgUser?.address : userAddress
+
+  return (
+    <div className="min-h-screen bg-void-dark text-white flex flex-col justify-between relative overflow-hidden">
+      <div className="flex-1">
+        {selectedGame === 'menu' && (
+          <SelectionMenuScreen
+            username={displayName}
+            particles={particles}
+            onSelectGame={(game) => setSelectedGame(game)}
+          />
+        )}
+
+        {selectedGame === 'collector' && (
+          <GameScreen userHash={activeAddress!} onBackToMenu={() => setSelectedGame('menu')} />
+        )}
+
+        {selectedGame === 'bastion' && (
+          <VoidBastionScreen onBackToMenu={() => setSelectedGame('menu')} />
+        )}
+
+        {selectedGame === 'wheel' && (
+          <VoidWheelScreen onBackToMenu={() => setSelectedGame('menu')} />
+        )}
+
+        {selectedGame === 'predictions' && (
+          <VoidPredictionsScreen onBackToMenu={() => setSelectedGame('menu')} />
+        )}
+
+        {selectedGame === 'void_block' && (
+          <VoidBlockScreen onBackToMenu={() => setSelectedGame('menu')} />
+        )}
+      </div>
+
+      {/* Global Ads visible on all screens except the main collector game (since collector has sidebar styling) */}
+      {selectedGame !== 'collector' && (
+        <div className="w-full flex justify-center py-4 bg-void-dark/80 backdrop-blur-md border-t border-void-purple/10 z-40">
+          <ApiTinyAd userWallet={activeAddress!} />
+        </div>
+      )}
+      <ChangelogModal />
+    </div>
+  )
 }

@@ -2,10 +2,11 @@
 
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { MiniKit } from '@worldcoin/minikit-js'
 import toast from 'react-hot-toast'
 import ParticleEffects from './effects/ParticleEffects'
+import VoidCaptchaModal from './UI/VoidCaptchaModal'
 
 export default function VoidParticle() {
     const handleClick = useGameStore((state) => state.handleClick)
@@ -16,7 +17,17 @@ export default function VoidParticle() {
     const [clickEffect, setClickEffect] = useState(false)
     const [luckyEffect, setLuckyEffect] = useState(false)
 
-    // Anti-bot protection state (Rate limiting only)
+    // Captcha and Anomaly Detector States
+    const [isCaptchaOpen, setIsCaptchaOpen] = useState(false)
+    const clickCoordinatesRef = useRef<{ x: number; y: number }[]>([])
+    const clickIntervalsRef = useRef<number[]>([])
+    const lastClickTimeRef = useRef<number>(0)
+
+    // Dynamic states for design spells
+    const [floatingTexts, setFloatingTexts] = useState<{ id: number; x: number; y: number; text: string; color: string; size: string; angle: number }[]>([])
+    const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number; color: string }[]>([])
+
+    // Anti-bot protection state (Rate limiting & Anomaly Detection)
     const clickHistoryRef = useRef<number[]>([])
     const cooldownUntilRef = useRef<number>(0)
     const penaltyLevelRef = useRef<number>(0)
@@ -34,7 +45,27 @@ export default function VoidParticle() {
         })
     }
 
-    const isValidClick = (now: number): boolean => {
+    const getStandardDeviation = (values: number[]): number => {
+        if (values.length < 5) return 999
+        const avg = values.reduce((sum, val) => sum + val, 0) / values.length
+        const squareDiffs = values.map(val => Math.pow(val - avg, 2))
+        const avgSquareDiff = squareDiffs.reduce((sum, val) => sum + val, 0) / squareDiffs.length
+        return Math.sqrt(avgSquareDiff)
+    }
+
+    const getPixelDeviation = (coords: { x: number; y: number }[]): number => {
+        if (coords.length < 5) return 999
+        const xs = coords.map(c => c.x)
+        const ys = coords.map(c => c.y)
+        return getStandardDeviation(xs) + getStandardDeviation(ys)
+    }
+
+    const isValidClick = (now: number, x: number, y: number): boolean => {
+        // Check if Captcha is currently active/open
+        if (isCaptchaOpen) {
+            return false
+        }
+
         // Reset penalty level after 30s of no penalties
         if (now - lastPenaltyTimeRef.current > 30000) {
             penaltyLevelRef.current = 0
@@ -52,18 +83,49 @@ export default function VoidParticle() {
             return false
         }
 
+        // 1. ANOMALY DETECTOR: Check Pixel Variance (Clicking same spot)
+        clickCoordinatesRef.current.push({ x, y })
+        if (clickCoordinatesRef.current.length > 10) {
+            clickCoordinatesRef.current.shift()
+        }
+        
+        const pixelDev = getPixelDeviation(clickCoordinatesRef.current)
+        if (clickCoordinatesRef.current.length >= 10 && pixelDev < 0.2) {
+            console.warn(`[Anti-Bot] Pixel anomaly detected! Variance: ${pixelDev}px`)
+            setIsCaptchaOpen(true)
+            return false
+        }
+
+        // 2. ANOMALY DETECTOR: Check Interval Variance (Autoclicker stały rytm)
+        if (lastClickTimeRef.current > 0) {
+            const diff = now - lastClickTimeRef.current
+            clickIntervalsRef.current.push(diff)
+            if (clickIntervalsRef.current.length > 30) {
+                clickIntervalsRef.current.shift()
+            }
+
+            const intervalDev = getStandardDeviation(clickIntervalsRef.current)
+            if (clickIntervalsRef.current.length >= 30 && intervalDev < 8) {
+                console.warn(`[Anti-Bot] Time interval anomaly! Variance: ${intervalDev}ms`)
+                setIsCaptchaOpen(true)
+                return false
+            }
+        }
+        lastClickTimeRef.current = now
+
         return true
     }
 
     const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
         const now = Date.now()
 
-        // Give a clear click area, no variance or moving target checks
-        // as they randomly fail on mobile touchscreen synthetic events (clientX=0)
-
+        // Get coordinates relative to target element
+        const rect = event.currentTarget.getBoundingClientRect()
+        const clickX = event.clientX - rect.left
+        const clickY = event.clientY - rect.top
 
         // Anti-bot validation
-        if (!isValidClick(now)) {
+        if (!isValidClick(now, clickX, clickY)) {
             return
         }
 
@@ -77,14 +139,17 @@ export default function VoidParticle() {
         const randomCooldown = 50 + Math.random() * 150
         cooldownUntilRef.current = now + randomCooldown
 
+        // 1. Click calculation & core game logic
         handleClick()
         setClickEffect(true)
 
-        // Lucky Particle chance - tiered system
-        // Bronze: 5% chance 2x, Silver: 8% chance 2x, Gold: 12% chance 3x, Platinum: 15% chance 5x
+        let currentMultiplier = 1
+        let isLuckyClick = false
+        let isMegaLucky = false
+
         if (premiumLuckyParticle) {
             const state = useGameStore.getState()
-            const vipTier = state.vipTier || 1 // Default to Bronze if premium
+            const vipTier = state.vipTier || 1
 
             const tierStats = [
                 { chance: 0, multiplier: 1 },     // No tier
@@ -97,26 +162,81 @@ export default function VoidParticle() {
             const { chance, multiplier } = tierStats[vipTier] || tierStats[1]
 
             if (Math.random() < chance) {
-                // Grant bonus particles (multiplier - 1 because handleClick already added 1x)
-                addParticles(particlesPerClick * (multiplier - 1))
-                setLuckyEffect(true)
-                toast.success(`🍀 Lucky! +${multiplier}x particles!`)
-
-                setTimeout(() => setLuckyEffect(false), 1000)
+                currentMultiplier = multiplier
+                isLuckyClick = true
             }
 
             // Mega Lucky for Gold/Platinum tiers
             if (vipTier >= 3) {
-                const megaChance = vipTier === 3 ? 0.01 : 0.03 // Gold: 1%, Platinum: 3%
+                const megaChance = vipTier === 3 ? 0.01 : 0.03
                 const megaMulti = vipTier === 3 ? 10 : 15
 
                 if (Math.random() < megaChance) {
-                    addParticles(particlesPerClick * (megaMulti - 1))
-                    setLuckyEffect(true)
-                    toast.success(`💎 MEGA LUCKY! +${megaMulti}x particles!`, { duration: 2000 })
+                    currentMultiplier = megaMulti
+                    isMegaLucky = true
+                    isLuckyClick = true
                 }
             }
         }
+
+        const totalEarned = particlesPerClick * currentMultiplier
+        if (currentMultiplier > 1) {
+            addParticles(particlesPerClick * (currentMultiplier - 1))
+            setLuckyEffect(true)
+            if (isMegaLucky) {
+                toast.success(`💎 MEGA LUCKY! +${currentMultiplier}x particles!`, { duration: 2000 })
+            } else {
+                toast.success(`🍀 Lucky! +${currentMultiplier}x particles!`)
+            }
+            setTimeout(() => setLuckyEffect(false), 1000)
+        }
+
+        // 2. Click coordinates for precise design spells
+        const x = clickX
+        const y = clickY
+
+        // Skin color mapping
+        let color = '#a78bfa' // cosmic purple
+        let size = 'text-lg'
+        if (premiumParticleSkin === 'gold') {
+            color = '#fbbf24' // gold
+        } else if (premiumParticleSkin === 'rainbow') {
+            const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9']
+            color = colors[Math.floor(Math.random() * colors.length)]
+        } else if (premiumParticleSkin === 'crystal') {
+            color = '#38bdf8' // crystal cyan
+        } else if (premiumParticleSkin === 'dark_matter') {
+            color = '#6d28d9' // dark violet
+        } else if (premiumParticleSkin === 'supernova') {
+            color = '#f97316' // orange/red
+        }
+
+        if (isMegaLucky) {
+            color = '#38bdf8' // diamond blue
+            size = 'text-2xl font-black tracking-widest'
+        } else if (isLuckyClick) {
+            color = '#4ade80' // emerald green
+            size = 'text-xl font-extrabold'
+        }
+
+        // Trigger Shockwave ripple
+        const waveId = Date.now() + Math.random()
+        setShockwaves(prev => [...prev, { id: waveId, x, y, color }])
+        setTimeout(() => {
+            setShockwaves(prev => prev.filter(w => w.id !== waveId))
+        }, 600)
+
+        // Spawn floating text
+        const textId = Date.now() + Math.random()
+        let textString = `+${totalEarned}`
+        if (isMegaLucky) textString = `💎 +${totalEarned} MEGA!`
+        else if (isLuckyClick) textString = `🍀 +${totalEarned} LUCKY!`
+
+        const randomAngle = (Math.random() - 0.5) * 50 // -25px to 25px drift
+        setFloatingTexts(prev => [...prev, { id: textId, x, y, text: textString, color, size, angle: randomAngle }])
+        setTimeout(() => {
+            setFloatingTexts(prev => prev.filter(t => t.id !== textId))
+        }, 800)
 
         // Haptic feedback
         if (typeof window !== 'undefined' && MiniKit.isInstalled()) {
@@ -130,23 +250,91 @@ export default function VoidParticle() {
         setTimeout(() => setClickEffect(false), 300)
     }
 
+    const handleCaptchaSuccess = () => {
+        setIsCaptchaOpen(false)
+        clickCoordinatesRef.current = []
+        clickIntervalsRef.current = []
+        lastClickTimeRef.current = 0
+        toast.success('🛡️ Kalibracja pomyślna. Blokada zdjęta!')
+    }
+
+    const handleCaptchaFailure = () => {
+        setIsCaptchaOpen(false)
+        clickCoordinatesRef.current = []
+        clickIntervalsRef.current = []
+        lastClickTimeRef.current = 0
+        
+        // Zastosuj ciężką karę (np. 15 sekund cooldownu)
+        const now = Date.now()
+        cooldownUntilRef.current = now + 15000
+        toast.error('🤖 Wykryto aktywność botów! Blokada klikania na 15 sekund.')
+    }
+
     return (
-        <div className="relative flex items-center justify-center h-[400px] tap-target">
+        <div className="relative flex items-center justify-center h-[400px] tap-target w-full select-none overflow-hidden">
             {/* Premium particle effects */}
             <ParticleEffects
-                skinType={premiumParticleSkin as 'default' | 'rainbow' | 'gold'}
+                skinType={premiumParticleSkin as any}
                 isClicking={clickEffect}
                 isLucky={luckyEffect}
             />
+
+            {/* Shockwaves */}
+            {shockwaves.map((wave) => (
+                <motion.div
+                    key={wave.id}
+                    className="absolute rounded-full border pointer-events-none z-10"
+                    style={{
+                        left: wave.x,
+                        top: wave.y,
+                        transform: 'translate(-50%, -50%)',
+                        width: '30px',
+                        height: '30px',
+                        boxShadow: `0 0 20px ${wave.color}, inset 0 0 15px ${wave.color}`,
+                        borderColor: wave.color,
+                    }}
+                    initial={{ scale: 0, opacity: 0.9 }}
+                    animate={{ scale: 5, opacity: 0 }}
+                    transition={{ duration: 0.55, ease: "easeOut" }}
+                />
+            ))}
+
+            {/* Floating texts */}
+            {floatingTexts.map((txt) => {
+                return (
+                    <motion.div
+                        key={txt.id}
+                        className={`absolute pointer-events-none z-20 select-none font-bold text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] ${txt.size}`}
+                        style={{
+                            left: txt.x,
+                            top: txt.y,
+                            color: txt.color,
+                            textShadow: `0 0 10px ${txt.color}, 0 0 20px ${txt.color}88`,
+                            transform: 'translate(-50%, -50%)'
+                        }}
+                        initial={{ opacity: 1, scale: 0.8, y: 0, x: 0 }}
+                        animate={{
+                            opacity: 0,
+                            scale: [0.8, 1.2, 1],
+                            y: -120,
+                            x: txt.angle
+                        }}
+                        transition={{ duration: 0.75, ease: "easeOut" }}
+                    >
+                        {txt.text}
+                    </motion.div>
+                )
+            })}
+
             {/* Main clickable particle */}
             <motion.div
-                className="relative w-64 h-64 cursor-pointer select-none tap-target"
-                whileTap={{ scale: 0.9 }}
+                className="relative w-64 h-64 cursor-pointer select-none tap-target z-20"
+                whileTap={{ scale: 0.93 }}
                 onClick={onClick}
                 animate={{
                     scale: clickEffect ? [1, 1.05, 1] : 1,
                 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.25 }}
             >
                 {/* Outer glow */}
                 <div className="absolute inset-0 bg-gradient-radial from-particle-glow/40 to-transparent rounded-full blur-3xl" />
@@ -195,25 +383,27 @@ export default function VoidParticle() {
                     }}
                 />
 
-                {/* Click indicator */}
+                {/* Click indicator burst */}
                 {clickEffect && (
                     <>
                         {[...Array(8)].map((_, i) => (
                             <motion.div
                                 key={i}
-                                className="absolute w-2 h-2 bg-particle-glow rounded-full"
+                                className="absolute w-2.5 h-2.5 rounded-full"
                                 style={{
                                     left: '50%',
                                     top: '50%',
+                                    backgroundColor: premiumParticleSkin === 'gold' ? '#fbbf24' : premiumParticleSkin === 'rainbow' ? '#ec4899' : premiumParticleSkin === 'crystal' ? '#38bdf8' : premiumParticleSkin === 'dark_matter' ? '#6d28d9' : premiumParticleSkin === 'supernova' ? '#f97316' : '#c084fc',
+                                    boxShadow: `0 0 10px ${premiumParticleSkin === 'gold' ? '#fbbf24' : premiumParticleSkin === 'crystal' ? '#38bdf8' : premiumParticleSkin === 'dark_matter' ? '#6d28d9' : premiumParticleSkin === 'supernova' ? '#f97316' : '#c084fc'}`
                                 }}
                                 initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
                                 animate={{
-                                    x: Math.cos((i * Math.PI * 2) / 8) * 100,
-                                    y: Math.sin((i * Math.PI * 2) / 8) * 100,
+                                    x: Math.cos((i * Math.PI * 2) / 8) * 110,
+                                    y: Math.sin((i * Math.PI * 2) / 8) * 110,
                                     scale: 0,
                                     opacity: 0,
                                 }}
-                                transition={{ duration: 0.5 }}
+                                transition={{ duration: 0.45 }}
                             />
                         ))}
                     </>
@@ -234,12 +424,19 @@ export default function VoidParticle() {
                         opacity: [0.2, 0.5, 0.2],
                     }}
                     transition={{
-                        duration: 3 + Math.random() * 2,
+                        duration: 3 + (i % 3),
                         repeat: Infinity,
-                        delay: Math.random() * 2,
+                        delay: (i % 2),
                     }}
                 />
             ))}
+
+            {/* Void Slider Captcha Modal */}
+            <VoidCaptchaModal 
+                isOpen={isCaptchaOpen}
+                onSuccess={handleCaptchaSuccess}
+                onFailure={handleCaptchaFailure}
+            />
         </div>
     )
 }
