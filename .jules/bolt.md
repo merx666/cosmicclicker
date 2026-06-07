@@ -1,0 +1,3 @@
+## 2024-06-15 - React Component Re-renders & Zustand Pattern
+**Learning:** Component `Tabs` inside of Next.js that access Zustand without explicit selectors (e.g., `const { nullifierHash } = useGameStore()`) subscribe the component to the entire store state. This causes frequent, unnecessary re-renders in every tab each time background properties (like particle counts updating passively) change. This drastically slows down rendering performance as more tabs and nested views are added.
+**Action:** Always use specific state selectors (`const value = useGameStore(state => state.value)`) or `useShallow` from `zustand/react/shallow` when destructing multiple properties to ensure minimal re-renders.
