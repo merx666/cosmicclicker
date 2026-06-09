@@ -3,7 +3,8 @@
 import { useGameStore } from '@/store/gameStore'
 
 export default function AniAdsBanner() {
-    const { nullifierHash } = useGameStore()
+    // ⚡ Bolt Perf Optimization: Specific selector prevents this component from re-rendering on passive particle generation
+    const nullifierHash = useGameStore(state => state.nullifierHash)
 
     if (!nullifierHash) return null
 

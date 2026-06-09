@@ -1,0 +1,3 @@
+## 2024-05-19 - Component Unnecessary Rerenders via Store Destructuring
+**Learning:** Found several components (like Tabs and smaller components) directly destructuring multiple values or unneeded values from `useGameStore()`. Since `useGameStore()` returns the entire state object, this causes components to subscribe to the entire store, causing unnecessary re-renders on unrelated state changes (like the frequent `particles` counter ticking).
+**Action:** When extracting properties from Zustand store, use specific state selectors (`useGameStore(state => state.property)`) for single properties or `useShallow` for multiple properties to prevent massive performance bottlenecks.
