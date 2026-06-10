@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
@@ -280,7 +281,7 @@ interface HistoryItem {
 // ─── MAIN COMPONENT ─────────────
 // ─────────────────────────────────
 export default function VoidBlockTab() {
-    const { nullifierHash } = useGameStore()
+    const { nullifierHash } = useGameStore(useShallow(state => ({ nullifierHash: state.nullifierHash })))
 
     // UI state
     const [round, setRound] = useState<Round | null>(null)

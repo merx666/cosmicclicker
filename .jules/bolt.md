@@ -1,0 +1,3 @@
+## 2024-05-24 - Zustand store destructuring performance anti-pattern
+**Learning:** Using `useGameStore()` without a selector in large components (like `RouletteTab`, `UpgradesTab`, etc) causes re-renders whenever *any* state in the store updates. Since this store tracks frequent updates like `particles` (which changes via `autoCollector` or manual clicks), these components are re-rendering far too often, hurting UI performance and battery life.
+**Action:** Always use specific state selectors, like `useGameStore(state => state.property)` or `useShallow` for multiple properties, to ensure components only re-render when their specific dependencies change.

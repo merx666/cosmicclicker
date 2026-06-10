@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
@@ -18,25 +19,7 @@ interface PremiumUpgrade {
 }
 
 export default function PremiumTab() {
-    const {
-        premiumParticleSkin,
-        premiumBackgroundTheme,
-        premiumLuckyParticle,
-        premiumOfflineEarnings,
-        premiumDailyBonus,
-        premiumVIP,
-        vipTier,
-        purchasePremiumUpgrade,
-        equipSkin,
-        equipTheme,
-        unlockedSkins,
-        unlockedThemes,
-        claimDailyBonus,
-        lastDailyBonusTime,
-        loginStreak,
-        nullifierHash,
-        loadGameState
-    } = useGameStore()
+    const { premiumParticleSkin, premiumBackgroundTheme, premiumLuckyParticle, premiumOfflineEarnings, premiumDailyBonus, premiumVIP, vipTier, purchasePremiumUpgrade, equipSkin, equipTheme, unlockedSkins, unlockedThemes, claimDailyBonus, lastDailyBonusTime, loginStreak, nullifierHash, loadGameState } = useGameStore(useShallow(state => ({ premiumParticleSkin: state.premiumParticleSkin, premiumBackgroundTheme: state.premiumBackgroundTheme, premiumLuckyParticle: state.premiumLuckyParticle, premiumOfflineEarnings: state.premiumOfflineEarnings, premiumDailyBonus: state.premiumDailyBonus, premiumVIP: state.premiumVIP, vipTier: state.vipTier, purchasePremiumUpgrade: state.purchasePremiumUpgrade, equipSkin: state.equipSkin, equipTheme: state.equipTheme, unlockedSkins: state.unlockedSkins, unlockedThemes: state.unlockedThemes, claimDailyBonus: state.claimDailyBonus, lastDailyBonusTime: state.lastDailyBonusTime, loginStreak: state.loginStreak, nullifierHash: state.nullifierHash, loadGameState: state.loadGameState })))
 
     const [purchasing, setPurchasing] = useState<string | null>(null)
 
