@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useShallow } from 'zustand/react/shallow'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
@@ -30,7 +31,11 @@ const CURRENT_POLL_ID = 'poll_003'
 const CURRENT_POLL_QUESTION = 'Should we implement a dynamic token burn mechanism (1.5% per Tx) to achieve deflationary supply? 🔥'
 
 export default function SurveyTab() {
-    const { nullifierHash } = useGameStore()
+    const {
+        nullifierHash
+    } = useGameStore(useShallow(state => ({
+        nullifierHash: state.nullifierHash
+    })))
     const [poll, setPoll] = useState<Poll>({
         id: CURRENT_POLL_ID,
         question: CURRENT_POLL_QUESTION,
