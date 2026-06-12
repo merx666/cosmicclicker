@@ -1,0 +1,1 @@
+## 2024-06-12 - Zustand Store Selections | **Learning:** Destructuring entire Zustand stores without selectors causes massive unnecessary re-renders when frequent updates occur (like passive particle generation). | **Action:** Always use specific state selectors or useShallow when extracting multiple properties from a Zustand store.
