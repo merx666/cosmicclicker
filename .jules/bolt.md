@@ -1,0 +1,1 @@
+## 2024-05-18 - Zustand Full State Subscription | **Learning:** Destructuring the entire useGameStore without selectors subscribes the component to all state updates, causing massive re-renders on frequent updates like passive particle generation. | **Action:** Always use specific state selectors or useShallow when multiple properties are needed.
