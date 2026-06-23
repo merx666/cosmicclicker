@@ -3,7 +3,7 @@
 import { useGameStore } from '@/store/gameStore'
 
 export default function AniAdsBanner() {
-    const { nullifierHash } = useGameStore()
+    const nullifierHash = useGameStore(state => state.nullifierHash)
 
     if (!nullifierHash) return null
 
