@@ -1,0 +1,3 @@
+## 2024-05-18 - Zustand Selector Anti-Pattern
+**Learning:** Components destructuring the entire `useGameStore()` (e.g., `const { nullifierHash } = useGameStore()`) subscribe to the entire store, causing unnecessary re-renders on any state change, which is especially problematic due to frequent passive particle generation updates.
+**Action:** Always use specific state selectors (e.g., `useGameStore(state => state.nullifierHash)`) or `useShallow` for multiple properties to isolate re-renders. When refactoring multiple files, use isolated tools per file to satisfy the specificity rule, and ensure inline comments document the optimization as required by the persona.

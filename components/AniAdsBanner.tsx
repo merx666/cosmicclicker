@@ -3,7 +3,8 @@
 import { useGameStore } from '@/store/gameStore'
 
 export default function AniAdsBanner() {
-    const { nullifierHash } = useGameStore()
+    // Performance optimization: Select specific state to prevent unnecessary re-renders
+    const nullifierHash = useGameStore(state => state.nullifierHash)
 
     if (!nullifierHash) return null
 
