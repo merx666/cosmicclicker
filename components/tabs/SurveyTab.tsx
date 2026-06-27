@@ -30,7 +30,8 @@ const CURRENT_POLL_ID = 'poll_003'
 const CURRENT_POLL_QUESTION = 'Should we implement a dynamic token burn mechanism (1.5% per Tx) to achieve deflationary supply? 🔥'
 
 export default function SurveyTab() {
-    const { nullifierHash } = useGameStore()
+    // Performance optimization: Select specific state to prevent unnecessary re-renders
+    const nullifierHash = useGameStore(state => state.nullifierHash)
     const [poll, setPoll] = useState<Poll>({
         id: CURRENT_POLL_ID,
         question: CURRENT_POLL_QUESTION,
