@@ -1,5 +1,6 @@
 'use client'
 
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -53,15 +54,7 @@ interface SeasonPassTabProps {
 }
 
 export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
-    const {
-        bpLevel,
-        bpXp,
-        bpPremium,
-        premiumVIP,
-        bpClaimedFree,
-        bpClaimedPremium,
-        claimBpReward
-    } = useGameStore()
+    const { bpLevel, bpXp, bpPremium, premiumVIP, bpClaimedFree, bpClaimedPremium, claimBpReward } = useGameStore(useShallow(state => ({ bpLevel: state.bpLevel, bpXp: state.bpXp, bpPremium: state.bpPremium, premiumVIP: state.premiumVIP, bpClaimedFree: state.bpClaimedFree, bpClaimedPremium: state.bpClaimedPremium, claimBpReward: state.claimBpReward })))
 
     // VIP automatically unlocks standard Battle Pass Premium
     const hasPremium = bpPremium || premiumVIP
