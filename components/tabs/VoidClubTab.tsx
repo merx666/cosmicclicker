@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -8,10 +9,7 @@ import { MiniKit } from '@worldcoin/minikit-js'
 import { getVoidBalance } from '@/lib/token'
 
 export default function VoidClubTab() {
-    const {
-        nullifierHash,
-        loadGameState
-    } = useGameStore()
+    const { nullifierHash, loadGameState } = useGameStore(useShallow(state => ({ nullifierHash: state.nullifierHash, loadGameState: state.loadGameState })))
 
     const [voidBalance, setVoidBalance] = useState<number | null>(null)
     const [checkingVoid, setCheckingVoid] = useState(false)

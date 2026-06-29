@@ -1,0 +1,3 @@
+## 2025-02-22 - Zustand Selector Anti-Pattern Fix
+**Learning:** Destructuring entire Zustand stores without selectors or `useShallow` (e.g., `const { ... } = useGameStore()`) causes unnecessary component re-renders on any store update. For this app, `useGameStore()` without selectors is a serious performance bottleneck, especially in frequently updated stores like a game store with a passive income mechanic generating particles every second.
+**Action:** Replaced destructuring with direct state selectors (e.g., `const particles = useGameStore((state) => state.particles)`) or `useShallow` from `zustand/react/shallow` across components where it was incorrectly implemented.

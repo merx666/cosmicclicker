@@ -280,7 +280,7 @@ interface HistoryItem {
 // ─── MAIN COMPONENT ─────────────
 // ─────────────────────────────────
 export default function VoidBlockTab() {
-    const { nullifierHash } = useGameStore()
+    const nullifierHash = useGameStore((state) => state.nullifierHash)
 
     // UI state
     const [round, setRound] = useState<Round | null>(null)
