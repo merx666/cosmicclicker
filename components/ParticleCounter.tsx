@@ -42,7 +42,7 @@ export default function ParticleCounter() {
         <div className="text-center space-y-2 tap-target">
             {/* Main particle count */}
             <motion.div
-                className="text-7xl font-bold bg-gradient-to-r from-void-purple via-particle-glow to-void-blue bg-clip-text text-transparent"
+                className="text-7xl font-bold bg-gradient-to-r from-white via-particle-glow to-void-purple bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(184,101,255,0.4)]"
                 key={Math.floor(particles / 10)} // Re-animate every 10 particles
                 initial={{ scale: 1.1 }}
                 animate={{ scale: 1 }}

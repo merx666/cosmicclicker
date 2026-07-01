@@ -149,7 +149,7 @@ export default function GameScreen({ userHash, onBackToMenu }: GameScreenProps) 
                                     <span>←</span> Menu
                                 </button>
                             )}
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-void-purple to-particle-glow bg-clip-text text-transparent">
+                            <h1 className="text-xl font-bold bg-gradient-to-r from-white to-particle-glow bg-clip-text text-transparent drop-shadow-md">
                                 {t('title')}
                             </h1>
                         </div>

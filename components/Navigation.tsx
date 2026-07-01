@@ -88,10 +88,10 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
                                     src={tab.icon}
                                     alt={tab.label}
                                     fill
-                                    className={`object-contain ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-70 grayscale'}`}
+                                    className={`object-contain ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-50'}`}
                                 />
                             ) : (
-                                <span className={`text-xl leading-none ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-70 grayscale'}`}>
+                                <span className={`text-xl leading-none ${activeTab === tab.id ? 'brightness-125 drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'opacity-50'}`}>
                                     {tab.icon}
                                 </span>
                             )}

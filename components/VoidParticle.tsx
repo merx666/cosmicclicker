@@ -404,7 +404,7 @@ export default function VoidParticle() {
                 <div className="absolute inset-0 bg-gradient-radial from-particle-glow/40 to-transparent rounded-full blur-3xl" />
 
                 {/* Main particle body */}
-                <div className="absolute inset-0 bg-gradient-radial from-void-purple via-void-blue to-transparent rounded-full shadow-2xl" />
+                <div className="absolute inset-0 bg-gradient-radial from-particle-glow via-void-purple to-transparent rounded-full shadow-2xl drop-shadow-[0_0_30px_rgba(184,101,255,0.6)]" />
 
                 {/* Pulsing ring */}
                 <motion.div
@@ -437,9 +437,9 @@ export default function VoidParticle() {
 
                 {/* Inner sparkle */}
                 <motion.div
-                    className="absolute inset-10 bg-gradient-radial from-white/30 to-transparent rounded-full"
+                    className="absolute inset-10 bg-gradient-radial from-white/60 to-transparent rounded-full blur-sm"
                     animate={{
-                        opacity: [0.3, 0.6, 0.3],
+                        opacity: [0.6, 0.9, 0.6],
                     }}
                     transition={{
                         duration: 1.5,
