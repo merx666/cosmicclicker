@@ -36,7 +36,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
         { id: 'collect', label: t('collect'), icon: '/assets/nav/collect.png' },
         { id: 'season_pass', label: 'VOID PASS', icon: '🎟️', badge: 'NEW' },
         { id: 'void_club', label: 'VOID CLUB', icon: '🟣' },
-        { id: 'ads', label: t('ads') || 'ADS', icon: '📺' },
+        { id: 'ads', label: 'ADS', icon: '📺' },
         { id: 'upgrades', label: t('upgrades'), icon: '/assets/nav/upgrades.png' },
         { id: 'missions', label: t('missions'), icon: '/assets/nav/missions.png' },
         { id: 'leaderboard', label: t('leaderboard'), icon: '/assets/nav/leaderboard.png' },
