@@ -35,16 +35,11 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
     const tabs = [
         { id: 'collect', label: t('collect'), icon: '/assets/nav/collect.png' },
         { id: 'season_pass', label: 'VOID PASS', icon: '🎟️', badge: 'NEW' },
-        { id: 'void_club', label: 'VOID CLUB', icon: '🟣' },
-        { id: 'ads', label: 'ADS', icon: '📺' },
         { id: 'upgrades', label: t('upgrades'), icon: '/assets/nav/upgrades.png' },
         { id: 'missions', label: t('missions'), icon: '/assets/nav/missions.png' },
         { id: 'leaderboard', label: t('leaderboard'), icon: '/assets/nav/leaderboard.png' },
         { id: 'premium', label: t('premium'), icon: '/assets/nav/premium.png' },
         ...(!isTelegram ? [{ id: 'convert', label: t('convert'), icon: '/assets/nav/convert.png', highlight: true }] : []),
-        { id: 'roulette', label: t('machine'), icon: '/assets/nav/roulette.png', badge: freeSpinAvailable ? 'FREE' : undefined },
-        { id: 'survey', label: t('survey'), icon: '/assets/nav/survey.png' },
-        { id: 'media', label: t('media'), icon: '📡' },
     ]
 
     return (
