@@ -38,6 +38,17 @@ export async function GET(request: NextRequest) {
             )
         `)
 
+        // Alter users table to support referrals if not exist
+        await execute(`
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by TEXT;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_reward_claimed BOOLEAN DEFAULT FALSE;
+        `)
+
+        await execute(`
+            CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
+        `)
+
         // 2. Fetch current active round
         let activeRoundResult = await query(
             "SELECT * FROM void_block_rounds WHERE status = 'active' ORDER BY id DESC LIMIT 1"
@@ -47,7 +58,7 @@ export async function GET(request: NextRequest) {
 
         // 3. If no active round exists, initialize the first one!
         if (!activeRound) {
-            const durationSeconds = 60
+            const durationSeconds = 300
             const endTime = new Date(Date.now() + durationSeconds * 1000)
             
             const insertResult = await query(
@@ -56,6 +67,25 @@ export async function GET(request: NextRequest) {
                 [endTime]
             )
             activeRound = insertResult.rows[0]
+        } else {
+            // Auto-extend rounds if expired and has less than 3 bets
+            const now = new Date()
+            const endTime = new Date(activeRound.end_time)
+            
+            const betsCountRes = await query(
+                "SELECT COUNT(*)::int as count FROM void_block_bets WHERE round_id = $1",
+                [activeRound.id]
+            )
+            const betsCount = betsCountRes.rows[0]?.count || 0
+
+            if (now >= endTime && (parseFloat(activeRound.total_pool || '0') === 0 || betsCount < 3)) {
+                const nextEndTime = new Date(Date.now() + 300 * 1000)
+                const extendResult = await query(
+                    "UPDATE void_block_rounds SET end_time = $1 WHERE id = $2 RETURNING *",
+                    [nextEndTime, activeRound.id]
+                )
+                activeRound = extendResult.rows[0]
+            }
         }
 
         // 4. Fetch bets for this round
@@ -95,6 +125,7 @@ export async function GET(request: NextRequest) {
                 end_time: new Date(activeRound.end_time).getTime(),
                 start_time: new Date(activeRound.start_time).getTime(),
             },
+            server_time: Date.now(),
             bets: bets.map(b => ({
                 id: b.id,
                 username: b.username || 'Anonymous',

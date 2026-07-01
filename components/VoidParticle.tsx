@@ -2,11 +2,12 @@
 
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { MiniKit } from '@worldcoin/minikit-js'
 import toast from 'react-hot-toast'
 import ParticleEffects from './effects/ParticleEffects'
 import VoidCaptchaModal from './UI/VoidCaptchaModal'
+import DynamicAdRotator from './DynamicAdRotator'
 
 export default function VoidParticle() {
     const handleClick = useGameStore((state) => state.handleClick)
@@ -32,6 +33,59 @@ export default function VoidParticle() {
     const cooldownUntilRef = useRef<number>(0)
     const penaltyLevelRef = useRef<number>(0)
     const lastPenaltyTimeRef = useRef<number>(0)
+
+    // Ads verification anti-bot state
+    const [cps, setCps] = useState(0)
+    const [adVerificationDeadline, setAdVerificationDeadline] = useState<number | null>(null)
+    const [hasAdClicked, setHasAdClicked] = useState(false)
+    const [adPenaltyActive, setAdPenaltyActive] = useState(false)
+    const [formattedDeadline, setFormattedDeadline] = useState('')
+
+    // Decay CPS and handle countdown timers
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const now = Date.now()
+            const recent = clickHistoryRef.current.filter(t => now - t < 1000)
+            setCps(recent.length)
+
+            if (adPenaltyActive && now >= cooldownUntilRef.current) {
+                setAdPenaltyActive(false)
+            }
+
+            if (recent.length === 0 && hasAdClicked) {
+                setHasAdClicked(false)
+            }
+
+            if (adVerificationDeadline !== null) {
+                const diff = adVerificationDeadline - now
+                if (diff <= 0) {
+                    setAdVerificationDeadline(null)
+                    setAdPenaltyActive(true)
+                    setFormattedDeadline('')
+                    const penaltyDuration = 15000
+                    cooldownUntilRef.current = now + penaltyDuration
+                    toast.error('🤖 Czas minął! Wykryto zbyt szybkie klikanie. Blokada na 15 sekund.')
+                } else {
+                    const secondsLeft = Math.ceil(diff / 1000)
+                    const date = new Date(adVerificationDeadline)
+                    const timeStr = date.toTimeString().split(' ')[0]
+                    setFormattedDeadline(`${timeStr} (za ${secondsLeft}s)`)
+                }
+            } else {
+                setFormattedDeadline('')
+            }
+        }, 200)
+
+        return () => clearInterval(timer)
+    }, [adVerificationDeadline, adPenaltyActive, hasAdClicked])
+
+    const handleAdClick = () => {
+        setAdVerificationDeadline(null)
+        setAdPenaltyActive(false)
+        setHasAdClicked(true)
+        cooldownUntilRef.current = 0
+        toast.success('🛡️ Zweryfikowano! Blokada usunięta, możesz klikać dalej.')
+    }
 
     const applyPenalty = () => {
         const now = Date.now()
@@ -61,29 +115,39 @@ export default function VoidParticle() {
     }
 
     const isValidClick = (now: number, x: number, y: number): boolean => {
-        // Check if Captcha is currently active/open
         if (isCaptchaOpen) {
             return false
         }
 
-        // Reset penalty level after 30s of no penalties
+        if (adPenaltyActive) {
+            toast.error('🤖 Klikanie zablokowane! Kliknij reklamę poniżej, aby odblokować.')
+            return false
+        }
+
         if (now - lastPenaltyTimeRef.current > 30000) {
             penaltyLevelRef.current = 0
         }
 
-        // Check cooldown
         if (now < cooldownUntilRef.current) {
             return false
         }
 
-        // Check rate limit (15 clicks per second max)
         const recentClicks = clickHistoryRef.current.filter(t => now - t < 1000)
-        if (recentClicks.length >= 15) {
+        const currentCps = recentClicks.length + 1
+
+        // Activate ad verification if clicking fast (CPS >= 11) and not yet immune/challenged
+        if (currentCps >= 11 && adVerificationDeadline === null && !hasAdClicked) {
+            setAdVerificationDeadline(now + 10000)
+            toast('Szybkie klikanie! Kliknij reklamę poniżej w ciągu 10 sekund, aby uniknąć blokady.', {
+                icon: '⚠️'
+            })
+        }
+
+        if (recentClicks.length >= 22) {
             applyPenalty()
             return false
         }
 
-        // 1. ANOMALY DETECTOR: Check Pixel Variance (Clicking same spot)
         clickCoordinatesRef.current.push({ x, y })
         if (clickCoordinatesRef.current.length > 10) {
             clickCoordinatesRef.current.shift()
@@ -96,7 +160,6 @@ export default function VoidParticle() {
             return false
         }
 
-        // 2. ANOMALY DETECTOR: Check Interval Variance (Autoclicker stały rytm)
         if (lastClickTimeRef.current > 0) {
             const diff = now - lastClickTimeRef.current
             clickIntervalsRef.current.push(diff)
@@ -271,7 +334,8 @@ export default function VoidParticle() {
     }
 
     return (
-        <div className="relative flex items-center justify-center h-[400px] tap-target w-full select-none overflow-hidden">
+        <div className="flex flex-col items-center w-full">
+            <div className="relative flex items-center justify-center h-[350px] tap-target w-full select-none overflow-hidden">
             {/* Premium particle effects */}
             <ParticleEffects
                 skinType={premiumParticleSkin as any}
@@ -329,12 +393,12 @@ export default function VoidParticle() {
             {/* Main clickable particle */}
             <motion.div
                 className="relative w-64 h-64 cursor-pointer select-none tap-target z-20"
-                whileTap={{ scale: 0.93 }}
+                whileTap={{ scale: 0.9, transition: { type: "spring", stiffness: 400, damping: 10 } }}
                 onClick={onClick}
                 animate={{
-                    scale: clickEffect ? [1, 1.05, 1] : 1,
+                    scale: clickEffect ? 1.05 : 1,
                 }}
-                transition={{ duration: 0.25 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
                 {/* Outer glow */}
                 <div className="absolute inset-0 bg-gradient-radial from-particle-glow/40 to-transparent rounded-full blur-3xl" />
@@ -438,5 +502,48 @@ export default function VoidParticle() {
                 onFailure={handleCaptchaFailure}
             />
         </div>
-    )
+
+        {/* Anti-Bot verification section */}
+        {(adVerificationDeadline !== null || adPenaltyActive) && (
+            <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`w-full max-w-sm rounded-3xl p-5 border text-center backdrop-blur-lg mt-6 shadow-[0_0_30px_rgba(239,68,68,0.15)] ${
+                    adPenaltyActive 
+                        ? 'bg-red-950/20 border-red-500/40 animate-pulse' 
+                        : 'bg-void-purple/10 border-void-purple/30'
+                }`}
+            >
+                <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-xl">🤖</span>
+                    <h4 className="text-sm font-extrabold tracking-wider uppercase text-red-400">
+                        {adPenaltyActive ? 'Blokada Antybotowa' : `Weryfikacja Klikania (CPS: ${cps})`}
+                    </h4>
+                </div>
+
+                <p className="text-xs text-gray-300 font-medium mb-3">
+                    {adPenaltyActive ? (
+                        <span>
+                            Klikanie zablokowane na 15s. <br />
+                            <span className="text-white font-bold">Kliknij reklamę poniżej, aby natychmiast odblokować!</span>
+                        </span>
+                    ) : (
+                        <span>
+                            Kliknij reklamę przed: <span className="text-white font-mono font-bold bg-white/10 px-2 py-0.5 rounded">{formattedDeadline}</span>, aby kontynuować grę.
+                        </span>
+                    )}
+                </p>
+
+                {/* Scaled ads based on CPS */}
+                <div className="flex flex-col gap-3">
+                    {Array.from({ length: cps >= 15 ? 3 : cps >= 12 ? 2 : 1 }).map((_, idx) => (
+                        <div key={idx} className="transition-all hover:scale-[1.01]">
+                            <DynamicAdRotator onAdClick={handleAdClick} />
+                        </div>
+                    ))}
+                </div>
+            </motion.div>
+        )}
+    </div>
+)
 }

@@ -1,0 +1,32 @@
+Subject: Urgent Inquiry: Revenue Discrepancies and Audit Request for Account void.skyreel.art
+
+Dear TinyAdz Support & Compliance Team,
+
+I am writing to formally address serious discrepancies in the reporting and payout metrics on my publisher dashboard for the website void.skyreel.art. 
+
+Upon auditing our internal analytics and comparing your network’s performance with other tier-1 ad networks (such as Monetag), we have identified several highly concerning patterns that suggest potential violations of transparent advertising standards and fair business practices.
+
+1. Unexplained Data Discrepancies:
+Your dashboard reports a total of 99,068 views and 5,009 verified clicks, resulting in $47.47 in estimated earnings. However, the sum of all individual banners listed on the same page (Custom Inlined Ad, Corner Mini Pop-Up, and Full-screen Banner) accounts for only 26,825 views and $12.74 in earnings. There is an unaccounted gap of 72,243 views and $34.73 in earnings that is completely missing from the breakdown. Please explain why this data is hidden and how these figures are calculated.
+
+2. Retroactive Click Deductions ("Shaving"):
+Your FAQ openly states: "Why do clicks sometimes decrease when I refresh the page?" Retroactively deducting already registered "verified" clicks is a highly questionable practice often associated with "click shaving". Under standard publisher transparency rules, we request a detailed, timestamped log of all deducted clicks, including the specific reasons and IP addresses classified as invalid.
+
+3. Extremely Low CPM/CPC Rates:
+Our current stats show an average CPM of $0.48 and a CPC of $0.009 per verified click. In comparison, our alternative network (Monetag) yields a CPM of $3.18 for the same traffic—over 6.6x higher. A CPC under 1 cent for verified user clicks is statistically anomalous and indicates either a severe mispricing or a massive revenue-share imbalance.
+
+4. Arbitrary Earning Caps:
+We note that our account has an artificial limit of "capped at $432/month". Placing arbitrary caps on traffic monetization without prior agreement is an unfair trade restriction.
+
+We request a formal audit report of our account’s traffic from your quality assurance department within 7 business days, including:
+- A complete breakdown of the unaccounted 72,243 views.
+- Full details on the "Tier 29" classification and how to remove it.
+- Traffic logs explaining any click deductions.
+
+Should we not receive a transparent explanation, we will be forced to terminate our partnership, move all remaining slots to Monetag, and file official complaints with relevant advertising standards authorities and consumer protection bodies.
+
+We expect your prompt response.
+
+Sincerely,
+[Your Name/Company Name]
+void.skyreel.art

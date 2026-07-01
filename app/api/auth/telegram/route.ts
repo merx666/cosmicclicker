@@ -71,13 +71,18 @@ export async function POST(req: NextRequest) {
         let referralClaimed = false
         let referrerUsername = ''
 
-        // Wyciągamy telegram_id polecającego
+        // Wyciągamy telegram_id polecającego lub kod polecający
         let referrerTgId: number | null = null
-        if (startParam.startsWith('ref_')) {
-            const tgIdStr = startParam.substring(4)
-            const parsed = parseInt(tgIdStr, 10)
-            if (!isNaN(parsed)) {
-                referrerTgId = parsed
+        let referralCodeParam = ''
+        if (startParam) {
+            if (startParam.startsWith('ref_')) {
+                const tgIdStr = startParam.substring(4)
+                const parsed = parseInt(tgIdStr, 10)
+                if (!isNaN(parsed)) {
+                    referrerTgId = parsed
+                }
+            } else {
+                referralCodeParam = startParam
             }
         }
 
@@ -94,18 +99,29 @@ export async function POST(req: NextRequest) {
                 // Sprawdzamy czy mamy polecającego i pobieramy jego dane przed transakcją
                 let referrer = null
                 if (referrerTgId && referrerTgId !== telegramId) {
-                    referrer = await queryOne('SELECT id, telegram_username, username FROM users WHERE telegram_id = $1', [referrerTgId])
+                    referrer = await queryOne('SELECT id, telegram_username, username, world_id_nullifier FROM users WHERE telegram_id = $1', [referrerTgId])
+                } else if (referralCodeParam) {
+                    referrer = await queryOne('SELECT id, telegram_username, username, world_id_nullifier FROM users WHERE UPPER(referral_code) = UPPER($1)', [referralCodeParam])
                 }
 
                 // Create new Telegram user
                 await transaction(async (client) => {
-                    const startParticles = referrer ? 25000 : 0
+                    // Generate new user referral code
+                    let referralCode = ''
+                    let isUnique = false
+                    while (!isUnique) {
+                        referralCode = `void-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+                        const check = await client.query("SELECT id FROM users WHERE referral_code = $1", [referralCode])
+                        if (check.rows.length === 0) {
+                            isUnique = true
+                        }
+                    }
 
                     const insertRes = await client.query(
-                        `INSERT INTO users (telegram_id, telegram_username, wallet_address, username, world_id_nullifier, particles, total_particles_collected) 
-                         VALUES ($1, $2, $3, $4, $3, $5, $5) 
+                        `INSERT INTO users (telegram_id, telegram_username, wallet_address, username, world_id_nullifier, referral_code, referred_by, referral_reward_claimed) 
+                         VALUES ($1, $2, $3, $4, $3, $5, $6, FALSE) 
                          RETURNING *`,
-                        [telegramId, telegramUsername, syntheticAddress.toLowerCase(), displayName, startParticles]
+                        [telegramId, telegramUsername, syntheticAddress.toLowerCase(), displayName, referralCode, referrer ? referrer.world_id_nullifier : null]
                     )
                     user = insertRes.rows[0]
 
@@ -115,16 +131,7 @@ export async function POST(req: NextRequest) {
                         [user.id]
                     )
 
-                    // Jeśli polecający istnieje, przyznajemy mu 50,000 cząsteczek
                     if (referrer) {
-                        await client.query(
-                            `UPDATE users 
-                             SET particles = particles + 50000, 
-                                 total_particles_collected = total_particles_collected + 50000,
-                                 updated_at = NOW() 
-                             WHERE id = $1`,
-                            [referrer.id]
-                        )
                         referralClaimed = true
                         referrerUsername = referrer.telegram_username || referrer.username || 'znajomy'
                     }

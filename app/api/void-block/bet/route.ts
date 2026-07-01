@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid bet amount' }, { status: 400 })
         }
 
+        let referralAwarded = false
+
         // Run as a database transaction
         const result = await transaction(async (client) => {
             // 1. Check if round is active
@@ -39,21 +41,74 @@ export async function POST(request: NextRequest) {
                 [round_id, nullifier_hash, username || null, wallet_address, betVal, transaction_ref]
             )
 
-            // 3. Update round pool & fee calculations
-            const updatedRoundRes = await client.query(
-                `UPDATE void_block_rounds 
-                 SET total_pool = total_pool + $1,
-                     fee_amount = (total_pool + $1) * 0.13,
-                     net_pool = (total_pool + $1) * 0.87
-                 WHERE id = $2 RETURNING *`,
-                [betVal, round_id]
+            // Get total count of bets for this round now
+            const countRes = await client.query(
+                "SELECT COUNT(*)::int as count FROM void_block_bets WHERE round_id = $1",
+                [round_id]
             )
+            const betsCount = countRes.rows[0]?.count || 0
+
+            // 3. Referral processing
+            const userRes = await client.query(
+                "SELECT referred_by, referral_reward_claimed FROM users WHERE world_id_nullifier = $1 FOR UPDATE",
+                [nullifier_hash]
+            )
+            const user = userRes.rows[0]
+
+            if (user && user.referred_by && !user.referral_reward_claimed) {
+                // Award 100k to referrer
+                await client.query(
+                    `UPDATE users 
+                     SET particles = particles + 100000, 
+                         total_particles_collected = total_particles_collected + 100000,
+                         updated_at = NOW() 
+                     WHERE world_id_nullifier = $1`,
+                    [user.referred_by]
+                )
+                // Award 50k to referee (current user)
+                await client.query(
+                    `UPDATE users 
+                     SET particles = particles + 50000, 
+                         total_particles_collected = total_particles_collected + 50000,
+                         referral_reward_claimed = TRUE,
+                         updated_at = NOW() 
+                     WHERE world_id_nullifier = $1`,
+                    [nullifier_hash]
+                )
+                referralAwarded = true
+            }
+
+            // 4. Update round pool & fee calculations
+            // If we just reached exactly 3 bets, set end_time to 5 minutes from now!
+            let updatedRoundRes
+            if (betsCount === 3) {
+                const newEndTime = new Date(Date.now() + 300 * 1000)
+                updatedRoundRes = await client.query(
+                    `UPDATE void_block_rounds 
+                     SET total_pool = total_pool + $1,
+                         fee_amount = (total_pool + $1) * 0.13,
+                         net_pool = (total_pool + $1) * 0.87,
+                         end_time = $2
+                     WHERE id = $3 RETURNING *`,
+                    [betVal, newEndTime, round_id]
+                )
+            } else {
+                updatedRoundRes = await client.query(
+                    `UPDATE void_block_rounds 
+                     SET total_pool = total_pool + $1,
+                         fee_amount = (total_pool + $1) * 0.13,
+                         net_pool = (total_pool + $1) * 0.87
+                     WHERE id = $2 RETURNING *`,
+                    [betVal, round_id]
+                )
+            }
 
             return updatedRoundRes.rows[0]
         })
 
         return NextResponse.json({
             success: true,
+            referral_awarded: referralAwarded,
             round: {
                 id: result.id,
                 total_pool: parseFloat(result.total_pool),

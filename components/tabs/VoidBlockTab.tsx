@@ -7,9 +7,10 @@ import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
 import { trackEvent } from '@/lib/analytics'
 
-import { Zap, Trophy, Clock } from 'lucide-react'
+import { Zap, Trophy, Clock, Share2, Copy, Check } from 'lucide-react'
+import { ADMIN_WALLET_ADDRESS } from '@/lib/constants'
 
-const RECEIVER_ADDRESS = process.env.NEXT_PUBLIC_WALLET_ADDRESS || '0x68b4aa6fB4f00dD1A8F8d9AfD6401e4baF67C817'
+const RECEIVER_ADDRESS = ADMIN_WALLET_ADDRESS
 
 // ─── Animated Number Component ───
 function AnimatedNumber({ value, decimals = 2 }: { value: number; decimals?: number }) {
@@ -280,7 +281,7 @@ interface HistoryItem {
 // ─── MAIN COMPONENT ─────────────
 // ─────────────────────────────────
 export default function VoidBlockTab() {
-    const { nullifierHash } = useGameStore()
+    const { nullifierHash, referralCode } = useGameStore()
 
     // UI state
     const [round, setRound] = useState<Round | null>(null)
@@ -292,9 +293,44 @@ export default function VoidBlockTab() {
     const [timeLeft, setTimeLeft] = useState<number>(0)
     const [showConfetti, setShowConfetti] = useState(false)
     const [latestBetId, setLatestBetId] = useState<number | null>(null)
+    
+    // Referrals state & handlers
+    const [copied, setCopied] = useState(false)
+    const shareUrl = `https://void.skyreel.art/?ref=${referralCode || ''}`
+    const shareText = `Zagraj ze mną w Void Block na World Chain i odbierz 50 000 cząsteczek na start! 🌌`
+
+    const handleCopy = () => {
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+            navigator.clipboard.writeText(shareUrl)
+            setCopied(true)
+            toast.success('Skopiowano link polecający!')
+            setTimeout(() => setCopied(false), 2000)
+        }
+    }
+
+    const handleShareX = () => {
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`
+        window.open(url, '_blank')
+    }
+
+    const handleShareTelegram = () => {
+        const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`
+        window.open(url, '_blank')
+    }
+
+    const handleShareFacebook = () => {
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+        window.open(url, '_blank')
+    }
+
+    const handleShareWhatsApp = () => {
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`
+        window.open(url, '_blank')
+    }
 
     const prevRoundIdRef = useRef<number | null>(null)
     const prevBetCountRef = useRef<number>(0)
+    const serverTimeOffsetRef = useRef<number>(0)
 
     // Compute round total duration for ring timer
     const totalDuration = useMemo(() => {
@@ -319,6 +355,10 @@ export default function VoidBlockTab() {
             setBets(data.bets)
             setUserStats(data.user)
             setHistory(data.history)
+
+            if (data.server_time) {
+                serverTimeOffsetRef.current = data.server_time - Date.now()
+            }
 
             // Track new bets for highlight
             if (data.bets.length > prevBetCountRef.current && prevBetCountRef.current > 0) {
@@ -365,7 +405,8 @@ export default function VoidBlockTab() {
         if (!round) return
 
         const updateTimer = () => {
-            const diff = round.end_time - Date.now()
+            const adjustedNow = Date.now() + serverTimeOffsetRef.current
+            const diff = round.end_time - adjustedNow
             setTimeLeft(Math.max(0, Math.floor(diff / 1000)))
         }
 
@@ -429,6 +470,11 @@ export default function VoidBlockTab() {
                 })
 
                 if (response.ok) {
+                    const resData = await response.json()
+                    if (resData.referral_awarded) {
+                        useGameStore.getState().addParticles(50000)
+                        toast.success('🎉 Otrzymałeś 50 000 cząsteczek z programu poleceń!')
+                    }
                     toast.success('Zakład przyjęty! Powodzenia! 🌌')
                     trackEvent('place_void_block_bet', 'gameplay', round?.id.toString(), betAmount)
                     loadState()
@@ -484,7 +530,22 @@ export default function VoidBlockTab() {
                         <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
                             Round #{round?.id || '...'}
                         </span>
-                        <CountdownRing timeLeft={timeLeft} totalDuration={totalDuration} />
+                        {bets.length < 3 ? (
+                            <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 w-44">
+                                <motion.span 
+                                    className="text-xs font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5"
+                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                    ⚠️ Oczekiwanie
+                                </motion.span>
+                                <span className="text-[10px] text-gray-300 mt-1 uppercase font-bold tracking-widest">
+                                    Zakłady: {bets.length} / 3
+                                </span>
+                            </div>
+                        ) : (
+                            <CountdownRing timeLeft={timeLeft} totalDuration={totalDuration} />
+                        )}
                     </div>
 
                     {/* Jackpot Amount */}
@@ -646,6 +707,99 @@ export default function VoidBlockTab() {
                             ))
                         )}
                     </AnimatePresence>
+                </div>
+            </div>
+
+            {/* ─── Program Poleceń (Referrals) ─── */}
+            <div className="flex flex-col gap-3">
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider flex items-center gap-2">
+                    <Share2 className="w-3.5 h-3.5 text-purple-400" />
+                    Void Referrals
+                </h3>
+
+                <div className="bg-gradient-to-b from-[#12072b] to-[#0a0418] border border-purple-500/20 rounded-3xl p-5 flex flex-col gap-4 shadow-[0_0_20px_rgba(168,85,247,0.08)]">
+                    <div>
+                        <h4 className="text-xs font-extrabold text-white uppercase tracking-wider mb-1">
+                            Polecaj znajomych i zgarniaj nagrody!
+                        </h4>
+                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                            Wyślij link znajomemu. Gdy zagra minimum jedną grę w <span className="text-purple-400 font-bold">Void Block</span>:
+                            <br />
+                            • Otrzymasz <span className="text-emerald-400 font-extrabold">+100 000 cząsteczek</span>.
+                            <br />
+                            • Znajomy otrzyma <span className="text-purple-300 font-extrabold">+50 000 cząsteczek</span>!
+                        </p>
+                    </div>
+
+                    {/* Code Display */}
+                    <div className="flex items-center gap-2 bg-black/40 border border-white/5 rounded-2xl p-2.5">
+                        <div className="flex-1 min-w-0 pl-1.5">
+                            <span className="text-[9px] uppercase text-white/30 font-bold block">Twój kod polecający</span>
+                            <span className="text-sm font-black text-white tracking-widest uppercase font-mono block mt-0.5">
+                                {referralCode || 'Generowanie...'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={handleCopy}
+                            disabled={!referralCode}
+                            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copied ? 'Skopiowano' : 'Kopiuj'}
+                        </button>
+                    </div>
+
+                    {/* Social Media Share Buttons */}
+                    <div className="flex flex-col gap-2">
+                        <span className="text-[9px] text-white/30 uppercase tracking-widest font-bold text-center block mb-1">
+                            Udostępnij szybko na:
+                        </span>
+                        <div className="grid grid-cols-4 gap-2">
+                            {/* X (Twitter) */}
+                            <button
+                                onClick={handleShareX}
+                                className="py-2.5 rounded-xl bg-black/50 border border-white/10 hover:bg-black hover:border-white/20 text-white text-xs font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                            >
+                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                                <span className="text-[9px] uppercase tracking-wider opacity-70">X</span>
+                            </button>
+
+                            {/* Telegram */}
+                            <button
+                                onClick={handleShareTelegram}
+                                className="py-2.5 rounded-xl bg-[#24A1DE]/15 border border-[#24A1DE]/30 hover:bg-[#24A1DE]/35 text-[#24A1DE] text-xs font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                            >
+                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M11.944 0C5.344 0 0 5.344 0 11.944c0 5.622 3.88 10.35 9.126 11.603-.122-.976-.11-2.427.232-3.886l1.378-5.836s-.341-.683-.341-1.695c0-1.586.92-2.77 2.062-2.77.97 0 1.44.73 1.44 1.603 0 .976-.622 2.433-.945 3.787-.27 1.134.57 2.06 1.683 2.06 2.024 0 3.586-2.134 3.586-5.22 0-2.732-1.963-4.64-4.768-4.64-3.248 0-5.152 2.433-5.152 4.95 0 .976.378 2.03.854 2.61.09.11.11.21.08.341l-.33 1.341c-.05.21-.183.27-.4.17-1.44-.67-2.335-2.77-2.335-4.463 0-3.634 2.64-6.976 7.616-6.976 4.002 0 7.11 2.854 7.11 6.66 0 3.976-2.506 7.17-5.988 7.17-1.17 0-2.274-.61-2.652-1.335l-.72 2.744c-.262.988-.97 2.226-1.445 2.994 1.116.341 2.298.53 3.524.53 6.6 0 11.944-5.34 11.944-11.943C23.888 5.344 18.544 0 11.944 0z"/>
+                                </svg>
+                                <span className="text-[9px] uppercase tracking-wider opacity-70">Telegram</span>
+                            </button>
+
+                            {/* Facebook */}
+                            <button
+                                onClick={handleShareFacebook}
+                                className="py-2.5 rounded-xl bg-[#1877F2]/15 border border-[#1877F2]/30 hover:bg-[#1877F2]/35 text-[#1877F2] text-xs font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                            >
+                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                </svg>
+                                <span className="text-[9px] uppercase tracking-wider opacity-70">FB</span>
+                            </button>
+
+                            {/* WhatsApp */}
+                            <button
+                                onClick={handleShareWhatsApp}
+                                className="py-2.5 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 hover:bg-[#25D366]/35 text-[#25D366] text-xs font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                            >
+                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                </svg>
+                                <span className="text-[9px] uppercase tracking-wider opacity-70">WhatsApp</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

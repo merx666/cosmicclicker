@@ -50,13 +50,28 @@ export class GameService {
             return { success: false, error: 'Missing hash parameter', statusCode: 400 }
         }
 
-        const user = await queryOne(
+        let user = await queryOne(
             'SELECT * FROM users WHERE world_id_nullifier = $1',
             [hash]
         )
 
         if (!user) {
             return { success: false, error: 'User not found', statusCode: 404 }
+        }
+
+        // Generate referral code on-demand if missing
+        if (!user.referral_code) {
+            let code = ''
+            let isUnique = false
+            while (!isUnique) {
+                code = `void-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+                const check = await queryOne("SELECT id FROM users WHERE referral_code = $1", [code])
+                if (!check) {
+                    isUnique = true
+                }
+            }
+            await query("UPDATE users SET referral_code = $1 WHERE world_id_nullifier = $2", [code, hash])
+            user.referral_code = code
         }
 
         return { success: true, data: user }
@@ -89,7 +104,8 @@ export class GameService {
             'last_daily_bonus_time', 'unlocked_skins', 'unlocked_themes', 'daily_clicks',
             'daily_passive_particles', 'daily_particles_collected', 'last_daily_reset', 'claimed_missions',
             'total_wld_claimed', 'login_streak', 'vip_tier', 'unlocked_premium_upgrades',
-            'bp_level', 'bp_xp', 'bp_premium', 'bp_claimed_free', 'bp_claimed_premium', 'achievements'
+            'bp_level', 'bp_xp', 'bp_premium', 'bp_claimed_free', 'bp_claimed_premium', 'achievements',
+            'referral_code', 'referred_by', 'referral_reward_claimed'
         ]
 
         const allowedKeys = Object.keys(gameData).filter(k => ALLOWED_FIELDS.includes(k))

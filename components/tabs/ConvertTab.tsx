@@ -301,6 +301,55 @@ export default function ConvertTab() {
                 </div>
             </motion.div>
 
+            {/* Next Wallet Partner Promo Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-6 p-1 bg-white/5 border border-white/10 rounded-3xl relative overflow-hidden group hover:border-cyan-500/30 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.02)]"
+            >
+                <div className="bg-void-dark/80 backdrop-blur-md rounded-[calc(1.5rem-0.25rem)] p-5 relative overflow-hidden flex flex-col gap-4">
+                    {/* Background glows */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all duration-500 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
+                    
+                    <div className="flex items-start justify-between gap-4 relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+                                <Image
+                                    src="/next-wallet-icon.jpg"
+                                    alt="Next Wallet"
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                            <div>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                    Recommended Wallet
+                                </span>
+                                <h3 className="text-lg font-black tracking-wide text-white mt-1">
+                                    Next Wallet
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-gray-300 leading-relaxed relative z-10">
+                        Zalecany portfel w ekosystemie Cosmic Clicker. Bezpieczne i natychmiastowe transfery tokenów WLD bez dodatkowych opłat za gaz.
+                    </p>
+
+                    <button
+                        onClick={() => window.open('https://world.org/mini-app?app_id=app_fc0b450998cdd2fbf6efb90d491f7cce&path=&draft_id=meta_16d33ebc3b71dc5cf29380f6e6306f68', '_blank')}
+                        className="relative z-10 w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50 flex items-center justify-between group/btn transition-all duration-300 active:scale-[0.98]"
+                    >
+                        <span>Pobierz / Otwórz Next Wallet</span>
+                        <span className="w-5 h-5 rounded-full bg-cyan-500/10 flex items-center justify-center group-hover/btn:translate-x-1 group-hover/btn:-translate-y-[1px] transition-transform">
+                            ↗
+                        </span>
+                    </button>
+                </div>
+            </motion.div>
+
             {/* My Withdrawals */}
             {
                 withdrawals.length > 0 && (

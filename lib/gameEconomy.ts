@@ -197,6 +197,7 @@ export const SHOP_CATALOG: ShopItem[] = [
 ]
 
 // Daily streak rewards - escalating
+// milestone = special animation, shieldReward = grants 1 free skip, legendary = mega chest
 export const STREAK_REWARDS = [
     { day: 1, credits: 10 },
     { day: 2, credits: 15 },
@@ -204,14 +205,14 @@ export const STREAK_REWARDS = [
     { day: 4, credits: 20 },
     { day: 5, credits: 25 },
     { day: 6, credits: 25 },
-    { day: 7, credits: 35 },
+    { day: 7, credits: 50, special: true, milestone: true, shieldReward: true },
     { day: 8, credits: 30 },
     { day: 9, credits: 30 },
     { day: 10, credits: 35 },
     { day: 11, credits: 40 },
     { day: 12, credits: 45 },
     { day: 13, credits: 50 },
-    { day: 14, credits: 75, special: true },
+    { day: 14, credits: 100, special: true, milestone: true, legendary: true },
 ]
 
 // Difficulty multipliers

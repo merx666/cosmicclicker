@@ -1,5 +1,7 @@
 'use client'
 
+import { motion } from 'framer-motion'
+
 import { useState, useEffect } from 'react'
 import { MiniKit, Tokens, tokenToDecimals, Network } from '@worldcoin/minikit-js'
 import { useTranslation } from '@/lib/i18n'
@@ -399,140 +401,47 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
     const currentItems = catalog.categories[selectedCategory] || []
 
     return (
-        <div style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(5,5,16,0.95)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '12px',
-        }}>
-            <div style={{
-                width: '100%',
-                maxWidth: '430px',
-                maxHeight: '90vh',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                border: '1px solid rgba(139,92,246,0.2)',
-                background: 'linear-gradient(180deg, rgba(10,4,21,0.98) 0%, rgba(15,8,30,0.98) 100%)',
-            }}>
+        <div className="fixed inset-0 bg-[#05030f]/95 backdrop-blur-lg z-[100] flex items-center justify-center p-3">
+            <div className="w-full max-w-[430px] max-h-[90vh] flex flex-col rounded-3xl overflow-hidden border border-purple-500/20 bg-gradient-to-b from-[#0a0415]/98 to-[#0f081e]/98 shadow-2xl">
                 {/* Header */}
-                <div style={{
-                    padding: '18px 20px 14px',
-                    background: 'rgba(0,0,0,0.4)',
-                    borderBottom: '1px solid rgba(255,255,255,0.08)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
+                <div className="px-5 py-4.5 bg-black/40 border-b border-white/5 flex justify-between items-center">
                     <div>
-                        <h2 style={{
-                            fontSize: '20px',
-                            fontWeight: 800,
-                            letterSpacing: '2px',
-                            background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                        }}>
+                        <h2 className="text-xl font-black tracking-widest bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent uppercase">
                             {t('shop.title')}
                         </h2>
-                        <div style={{
-                            fontSize: '10px',
-                            color: '#06b6d4',
-                            letterSpacing: '3px',
-                            marginTop: '2px',
-                            fontWeight: 600,
-                        }}>
+                        <div className="text-[9px] text-cyan-400 font-bold tracking-[0.25em] mt-0.5">
                             AUTHORIZED ACCESS ONLY
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '10px',
-                            border: '1px solid rgba(255,255,255,0.15)',
-                            background: 'rgba(255,255,255,0.05)',
-                            color: 'rgba(255,255,255,0.6)',
-                            fontSize: '18px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
+                        className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-white/60 text-lg flex items-center justify-center cursor-pointer hover:bg-white/10 hover:text-white transition-colors"
                     >
                         ✕
                     </button>
                 </div>
 
                 {/* Flash Sale Banner */}
-                <div style={{
-                    background: 'rgba(188,19,254,0.12)',
-                    borderBottom: '1px solid rgba(188,19,254,0.3)',
-                    padding: '8px 16px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
-                    <span style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: '#e879f9',
-                        letterSpacing: '1px',
-                    }}>
+                <div className="bg-purple-600/10 border-b border-purple-500/20 px-4 py-2 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-fuchsia-400 tracking-wider uppercase">
                         {t('shop.flash_sale')}
                     </span>
-                    <span style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: '#f472b6',
-                        letterSpacing: '1px',
-                    }}>
+                    <span className="text-[10px] font-bold text-pink-400 tracking-wider uppercase">
                         {t('shop.limited')}
                     </span>
                 </div>
 
                 {/* Category Tabs */}
-                <div style={{
-                    display: 'flex',
-                    gap: '6px',
-                    padding: '12px 16px',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                    overflowX: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                }}>
+                <div className="flex gap-1.5 px-4 py-3 border-b border-white/5 overflow-x-auto no-scrollbar">
                     {categoryKeys.map(key => (
                         <button
                             key={key}
                             onClick={() => setSelectedCategory(key)}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '8px',
-                                fontWeight: 700,
-                                fontSize: '12px',
-                                letterSpacing: '1px',
-                                whiteSpace: 'nowrap',
-                                border: selectedCategory === key
-                                    ? '1px solid #06b6d4'
-                                    : '1px solid rgba(255,255,255,0.1)',
-                                background: selectedCategory === key
-                                    ? 'rgba(6,182,212,0.15)'
-                                    : 'transparent',
-                                color: selectedCategory === key
-                                    ? '#06b6d4'
-                                    : '#6b7280',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                flexShrink: 0,
-                                textTransform: 'uppercase',
-                            }}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-wider uppercase whitespace-nowrap cursor-pointer transition-colors flex-shrink-0 ${
+                                selectedCategory === key
+                                    ? 'border border-cyan-500/30 bg-cyan-500/15 text-cyan-400'
+                                    : 'border border-white/10 bg-transparent text-gray-500 hover:text-gray-300'
+                            }`}
                         >
                             {categoryLabels[key]}
                         </button>
@@ -540,12 +449,7 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                 </div>
 
                 {/* Items List */}
-                <div style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: '16px',
-                    WebkitOverflowScrolling: 'touch',
-                }}>
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {currentItems.map((item: ShopItem) => {
                         const owned = isOwned(item.id, item.type)
                         const isHighlight = highlightItem === item.id
@@ -554,100 +458,52 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                         return (
                             <div
                                 key={item.id}
-                                style={{
-                                    background: isHighlight
-                                        ? 'rgba(234,179,8,0.08)'
+                                className={`relative overflow-hidden rounded-2xl p-4 transition-colors ${
+                                    isHighlight
+                                        ? 'bg-amber-500/5 border border-amber-500/30 shadow-[0_0_15px_rgba(234,179,8,0.05)]'
                                         : owned
-                                            ? 'rgba(34,197,94,0.06)'
-                                            : 'rgba(139,92,246,0.04)',
-                                    border: isHighlight
-                                        ? '1px solid rgba(234,179,8,0.4)'
-                                        : owned
-                                            ? '1px solid rgba(34,197,94,0.2)'
-                                            : '1px solid rgba(139,92,246,0.12)',
-                                    borderRadius: '14px',
-                                    padding: '16px',
-                                    marginBottom: '12px',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                }}
+                                            ? 'bg-emerald-500/5 border border-emerald-500/25'
+                                            : 'bg-purple-500/5 border border-purple-500/15 hover:border-purple-500/30'
+                                }`}
                             >
                                 {/* Discount badge */}
                                 {item.discountText && !owned && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        right: 0,
-                                        background: '#dc2626',
-                                        color: 'white',
-                                        fontSize: '10px',
-                                        fontWeight: 700,
-                                        padding: '4px 10px',
-                                        borderBottomLeftRadius: '10px',
-                                    }}>
+                                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-bl-xl uppercase tracking-wider">
                                         {item.discountText}
                                     </div>
                                 )}
 
                                 {/* Owned badge */}
                                 {owned && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        background: '#22c55e',
-                                        color: '#000',
-                                        fontSize: '10px',
-                                        fontWeight: 700,
-                                        padding: '4px 10px',
-                                        borderBottomRightRadius: '10px',
-                                    }}>
+                                    <div className="absolute top-0 left-0 bg-emerald-500 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-br-xl uppercase tracking-wider">
                                         ✓ {t('shop.owned')}
                                     </div>
                                 )}
 
                                 {/* Title + Price row */}
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'flex-start',
-                                    marginBottom: '8px',
-                                }}>
-                                    <h3 style={{
-                                        fontSize: '16px',
-                                        fontWeight: 700,
-                                        color: isHighlight ? '#fbbf24' : '#e0e0ff',
-                                        paddingRight: '12px',
-                                    }}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className={`text-base font-black tracking-wide ${isHighlight ? 'text-amber-400' : 'text-purple-100'} pr-3`}>
                                         {item.name}
                                     </h3>
-                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                    <div className="text-right flex-shrink-0">
                                         {item.originalPrice && (
-                                            <div style={{
-                                                fontSize: '10px',
-                                                color: '#6b7280',
-                                                textDecoration: 'line-through',
-                                            }}>
+                                            <div className="text-[10px] text-gray-500 line-through">
                                                 {isTelegram ? `${Math.round(item.originalPrice * 50)} Stars` : `${item.originalPrice} WLD`}
                                             </div>
                                         )}
-                                        <div style={{
-                                            fontSize: '18px',
-                                            fontWeight: 800,
-                                            color: '#fbbf24',
-                                        }}>
+                                        <div className="text-lg font-black text-amber-400">
                                             {isTelegram ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                                    <div style={{ fontSize: '15px', color: '#fbbf24', fontWeight: 800 }}>
+                                                <div className="flex flex-col items-end gap-0.5">
+                                                    <div className="text-[14px] text-amber-400 font-extrabold">
                                                         {Math.round(item.price * 50)} ⭐️
                                                     </div>
-                                                    <div style={{ fontSize: '11px', color: '#60a5fa', fontWeight: 'bold' }}>
+                                                    <div className="text-[10px] text-blue-400 font-bold">
                                                         {(item.price / tonPrice).toFixed(3)} TON
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {item.price} <span style={{ fontSize: '11px', color: '#d97706' }}>WLD</span>
+                                                    {item.price} <span className="text-[10px] text-amber-600 font-bold">WLD</span>
                                                 </>
                                             )}
                                         </div>
@@ -655,56 +511,25 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                                 </div>
 
                                 {/* Description */}
-                                <p style={{
-                                    fontSize: '12px',
-                                    color: '#9ca3af',
-                                    marginBottom: '10px',
-                                    lineHeight: 1.5,
-                                }}>
+                                <p className="text-xs text-gray-400 mb-3 leading-relaxed">
                                     {item.description}
                                 </p>
 
                                 {/* Stats */}
                                 {item.stats && (
-                                    <div style={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: '6px',
-                                        marginBottom: '12px',
-                                    }}>
+                                    <div className="flex flex-wrap gap-1.5 mb-3">
                                         {item.stats.damage && (
-                                            <span style={{
-                                                fontSize: '11px',
-                                                background: 'rgba(239,68,68,0.12)',
-                                                color: '#fca5a5',
-                                                padding: '3px 8px',
-                                                borderRadius: '6px',
-                                                border: '1px solid rgba(239,68,68,0.2)',
-                                            }}>
+                                            <span className="text-[10px] font-bold bg-red-500/10 text-red-300 px-2.5 py-1 rounded-lg border border-red-500/20 flex items-center gap-1">
                                                 ⚔️ {item.stats.damage} DMG
                                             </span>
                                         )}
                                         {item.stats.range && (
-                                            <span style={{
-                                                fontSize: '11px',
-                                                background: 'rgba(59,130,246,0.12)',
-                                                color: '#93c5fd',
-                                                padding: '3px 8px',
-                                                borderRadius: '6px',
-                                                border: '1px solid rgba(59,130,246,0.2)',
-                                            }}>
+                                            <span className="text-[10px] font-bold bg-blue-500/10 text-blue-300 px-2.5 py-1 rounded-lg border border-blue-500/20 flex items-center gap-1">
                                                 🎯 {item.stats.range} RNG
                                             </span>
                                         )}
                                         {item.stats.special && (
-                                            <span style={{
-                                                fontSize: '11px',
-                                                background: 'rgba(139,92,246,0.12)',
-                                                color: '#c4b5fd',
-                                                padding: '3px 8px',
-                                                borderRadius: '6px',
-                                                border: '1px solid rgba(139,92,246,0.2)',
-                                            }}>
+                                            <span className="text-[10px] font-bold bg-purple-500/10 text-purple-300 px-2.5 py-1 rounded-lg border border-purple-500/20 flex items-center gap-1">
                                                 ✦ {item.stats.special}
                                             </span>
                                         )}
@@ -712,31 +537,17 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                                 )}
 
                                 {/* Buy Button */}
-                                <button
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => handlePurchase(item)}
                                     disabled={(owned && !isConsumable) || purchasing === item.id}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: 'none',
-                                        fontWeight: 700,
-                                        fontSize: '14px',
-                                        cursor: (owned && !isConsumable) ? 'not-allowed' : 'pointer',
-                                        background: (owned && !isConsumable)
-                                            ? 'rgba(107,114,128,0.2)'
+                                    className={`w-full py-3.5 rounded-xl border-none font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center cursor-pointer ${
+                                        owned && !isConsumable
+                                            ? 'bg-gray-800/40 text-gray-500 pointer-events-none'
                                             : purchasing === item.id
-                                                ? 'rgba(107,114,128,0.3)'
-                                                : 'linear-gradient(135deg, #22c55e 0%, #059669 100%)',
-                                        color: (owned && !isConsumable)
-                                            ? '#6b7280'
-                                            : 'white',
-                                        boxShadow: (owned && !isConsumable) || purchasing === item.id
-                                            ? 'none'
-                                            : '0 4px 15px rgba(34,197,94,0.3)',
-                                        transition: 'all 0.15s',
-                                        letterSpacing: '1px',
-                                    }}
+                                                ? 'bg-gray-700/50 text-gray-400 pointer-events-none'
+                                                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_4px_15px_rgba(16,185,129,0.25)]'
+                                    }`}
                                 >
                                     {owned && !isConsumable
                                         ? t('shop.owned')
@@ -746,41 +557,26 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                                                 ? `Kup za Stars/TON — $${item.price.toFixed(2)}`
                                                 : `Kup za WLD — ${item.price} WLD`
                                     }
-                                </button>
+                                </motion.button>
 
                                 {item.priceParticles && (
-                                    <button
+                                    <motion.button
+                                        whileTap={{ scale: 0.98 }}
                                         onClick={() => handlePurchaseParticles(item)}
                                         disabled={purchasing === item.id || useGameStore.getState().particles < item.priceParticles}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            borderRadius: '10px',
-                                            border: '1px solid rgba(139,92,246,0.3)',
-                                            fontWeight: 700,
-                                            fontSize: '14px',
-                                            cursor: (useGameStore.getState().particles < item.priceParticles) ? 'not-allowed' : 'pointer',
-                                            background: (useGameStore.getState().particles < item.priceParticles)
-                                                ? 'rgba(107,114,128,0.1)'
+                                        className={`w-full py-3.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center cursor-pointer mt-2 ${
+                                            (useGameStore.getState().particles < item.priceParticles)
+                                                ? 'bg-gray-800/30 text-gray-600 border border-white/5 pointer-events-none'
                                                 : purchasing === item.id
-                                                    ? 'rgba(107,114,128,0.3)'
-                                                    : 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
-                                            color: (useGameStore.getState().particles < item.priceParticles)
-                                                ? '#6b7280'
-                                                : 'white',
-                                            boxShadow: (useGameStore.getState().particles < item.priceParticles) || purchasing === item.id
-                                                ? 'none'
-                                                : '0 4px 15px rgba(139,92,246,0.3)',
-                                            transition: 'all 0.15s',
-                                            letterSpacing: '1px',
-                                            marginTop: '8px'
-                                        }}
+                                                    ? 'bg-gray-700/50 text-gray-400 pointer-events-none'
+                                                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_4px_15px_rgba(139,92,246,0.25)] border border-purple-500/20'
+                                        }`}
                                     >
                                         {purchasing === item.id
                                             ? t('shop.processing')
                                             : `Kup za ${item.priceParticles.toLocaleString()} Cząsteczek`
                                         }
-                                    </button>
+                                    </motion.button>
                                 )}
                             </div>
                         )
@@ -788,114 +584,40 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                 </div>
 
                 {/* Footer */}
-                <div style={{
-                    padding: '12px 16px',
-                    borderTop: '1px solid rgba(255,255,255,0.05)',
-                    background: 'rgba(0,0,0,0.3)',
-                    textAlign: 'center',
-                }}>
-                    <p style={{ fontSize: '10px', color: '#6b7280' }}>{t('shop.footer1')}</p>
-                    <p style={{ fontSize: '10px', color: '#4b5563', marginTop: '2px' }}>{t('shop.footer2')}</p>
+                <div className="px-4 py-3 border-t border-white/5 bg-black/20 text-center">
+                    <p className="text-[10px] text-gray-500 leading-normal">{t('shop.footer1')}</p>
+                    <p className="text-[10px] text-gray-600 mt-1 leading-normal">{t('shop.footer2')}</p>
                 </div>
             </div>
 
             {/* Telegram Payment Method Selection Modal */}
             {paymentMethodItem && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    background: 'rgba(5, 3, 15, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    zIndex: 200,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '16px',
-                }}>
-                    <div style={{
-                        width: '100%',
-                        maxWidth: '380px',
-                        background: 'radial-gradient(circle at top left, #1c0e35 0%, #0a0518 100%)',
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
-                        borderRadius: '24px',
-                        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.15)',
-                        padding: '24px',
-                        position: 'relative',
-                    }}>
+                <div className="fixed inset-0 bg-[#05030f]/85 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+                    <div className="w-full max-w-[380px] bg-gradient-to-br from-[#1c0e35] to-[#0a0518] border border-purple-500/25 rounded-3xl p-6 shadow-2xl relative">
                         {/* Title */}
-                        <h3 style={{
-                            fontSize: '20px',
-                            fontWeight: 800,
-                            color: '#e0e0ff',
-                            textAlign: 'center',
-                            marginBottom: '6px',
-                            letterSpacing: '0.5px'
-                        }}>
+                        <h3 className="text-lg font-black text-purple-100 text-center mb-1 uppercase tracking-wider">
                             Select Payment Method
                         </h3>
-                        <p style={{
-                            fontSize: '12px',
-                            color: '#9ca3af',
-                            textAlign: 'center',
-                            marginBottom: '20px'
-                        }}>
-                            Choose how you want to purchase <span style={{ color: '#fbbf24', fontWeight: 600 }}>{paymentMethodItem.name}</span>
+                        <p className="text-[11px] text-gray-400 text-center mb-5 leading-normal">
+                            Choose how you want to purchase <span className="text-amber-400 font-bold">{paymentMethodItem.name}</span>
                         </p>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div className="flex flex-col gap-3">
                             {/* Stars Payment Card */}
                             <div 
                                 onClick={() => payWithStars(paymentMethodItem)}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.03)',
-                                    border: '1px solid rgba(251, 191, 36, 0.2)',
-                                    borderRadius: '16px',
-                                    padding: '16px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    transition: 'all 0.2s',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = 'rgba(251, 191, 36, 0.05)'
-                                    e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)'
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
-                                    e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.2)'
-                                }}
+                                className="bg-white/5 border border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/5 rounded-2xl p-4 cursor-pointer flex items-center justify-between transition-all shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{
-                                        fontSize: '24px',
-                                        background: 'rgba(251, 191, 36, 0.1)',
-                                        width: '44px',
-                                        height: '44px',
-                                        borderRadius: '12px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        boxShadow: '0 0 10px rgba(251, 191, 36, 0.15)'
-                                    }}>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-2xl bg-amber-500/10 w-11 h-11 rounded-xl flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.15)]">
                                         🌟
                                     </div>
-                                    <div style={{ textAlign: 'left' }}>
-                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#f3f4f6' }}>Telegram Stars</div>
-                                        <div style={{ fontSize: '11px', color: '#9ca3af' }}>Instant delivery</div>
+                                    <div className="text-left">
+                                        <div className="text-sm font-black text-gray-100">Telegram Stars</div>
+                                        <div className="text-[10px] text-gray-400">Instant delivery</div>
                                     </div>
                                 </div>
-                                <div style={{
-                                    fontSize: '16px',
-                                    fontWeight: 800,
-                                    color: '#fbbf24',
-                                    background: 'rgba(251, 191, 36, 0.1)',
-                                    padding: '6px 12px',
-                                    borderRadius: '10px',
-                                    border: '1px solid rgba(251, 191, 36, 0.2)'
-                                }}>
+                                <div className="text-sm font-black text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20">
                                     {Math.round(paymentMethodItem.price * 50)} ⭐️
                                 </div>
                             </div>
@@ -903,57 +625,20 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                             {/* TON Connect Payment Card */}
                             <div 
                                 onClick={() => payWithTon(paymentMethodItem)}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.03)',
-                                    border: '1px solid rgba(0, 136, 204, 0.2)',
-                                    borderRadius: '16px',
-                                    padding: '16px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    transition: 'all 0.2s',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = 'rgba(0, 136, 204, 0.05)'
-                                    e.currentTarget.style.borderColor = 'rgba(0, 136, 204, 0.4)'
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
-                                    e.currentTarget.style.borderColor = 'rgba(0, 136, 204, 0.2)'
-                                }}
+                                className="bg-white/5 border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5 rounded-2xl p-4 cursor-pointer flex items-center justify-between transition-all shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{
-                                        fontSize: '24px',
-                                        background: 'rgba(0, 136, 204, 0.1)',
-                                        width: '44px',
-                                        height: '44px',
-                                        borderRadius: '12px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        boxShadow: '0 0 10px rgba(0, 136, 204, 0.15)'
-                                    }}>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-2xl bg-cyan-500/10 w-11 h-11 rounded-xl flex items-center justify-center shadow-[0_0_10px_rgba(0,136,204,0.15)]">
                                         💎
                                     </div>
-                                    <div style={{ textAlign: 'left' }}>
-                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#f3f4f6' }}>TON Connect</div>
-                                        <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                                    <div className="text-left">
+                                        <div className="text-sm font-black text-gray-100">TON Connect</div>
+                                        <div className="text-[10px] text-gray-400">
                                             {tonWalletConnected ? 'Wallet connected' : 'Connect wallet'}
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{
-                                    fontSize: '15px',
-                                    fontWeight: 800,
-                                    color: '#0088cc',
-                                    background: 'rgba(0, 136, 204, 0.1)',
-                                    padding: '6px 12px',
-                                    borderRadius: '10px',
-                                    border: '1px solid rgba(0, 136, 204, 0.2)'
-                                }}>
+                                <div className="text-sm font-black text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-cyan-500/20">
                                     {(paymentMethodItem.price / tonPrice).toFixed(3)} TON
                                 </div>
                             </div>
@@ -962,27 +647,7 @@ export default function ShopModal({ isOpen, onClose, userInventory = [], highlig
                         {/* Cancel Button */}
                         <button
                             onClick={() => setPaymentMethodItem(null)}
-                            style={{
-                                width: '100%',
-                                marginTop: '20px',
-                                padding: '12px',
-                                borderRadius: '12px',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
-                                background: 'transparent',
-                                color: '#9ca3af',
-                                fontWeight: 600,
-                                fontSize: '13px',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.color = 'white'
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.color = '#9ca3af'
-                                e.currentTarget.style.background = 'transparent'
-                            }}
+                            className="w-full mt-5 py-3 rounded-xl border border-white/5 bg-transparent text-gray-400 hover:text-white hover:bg-white/5 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                         >
                             Cancel
                         </button>

@@ -24,7 +24,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Wygeneruj chwytliwy, perswazyjny post marketingowy promujący naszą grę \"Cosmic Clicker & Void Bastion\" zintegrowaną z ekosystemem World App (World ID). \n\nWykorzystaj najnowsze dane z gry (użyj narzędzia fetch_game_leaderboard) oraz wyszukaj aktualne trendy lub hashtagi związane z Worldcoin, Web3, L2 lub klikerami (użyj narzędzia web_search), aby post był jak najbardziej dopasowany do bieżących trendów.\n\nPost powinien być krótki, dostosowany do X (Twittera) - maksymalnie 280 znaków, zawierać hashtagi takie jak #Worldcoin #Web3 #VoidBastion #CosmicClicker #WorldApp, bezpośredni link do aplikacji: https://void.skyreel.art oraz zachęcać do zweryfikowania swojego człowieczeństwa przez World ID w celu odebrania bonusów.",
+        "text": "=Wygeneruj chwytliwy, perswazyjny post marketingowy promujący naszą grę \"Cosmic Clicker & Void Bastion\" zintegrowaną z ekosystemem World App (World ID). \n\nWykorzystaj najnowsze dane z gry (użyj narzędzi fetch_game_leaderboard oraz fetch_game_marketing_data) oraz wyszukaj aktualne trendy lub hashtagi związane z Worldcoin, Web3, L2 lub klikerami (użyj narzędzia web_search), aby post był jak najbardziej dopasowany do bieżących trendów. Zwróć szczególną uwagę na aktywne wyzwania tygodniowe (weekly challenges), status gry Void Block oraz korzyści z programu poleceń (referrals).\n\nPost powinien być krótki, dostosowany do X (Twittera) - maksymalnie 280 znaków, zawierać hashtagi takie jak #Worldcoin #Web3 #VoidBastion #CosmicClicker #WorldApp, bezpośredni link do aplikacji: https://void.skyreel.art oraz zachęcać do zweryfikowania swojego człowieczeństwa przez World ID w celu odebrania bonusów.",
         "systemPrompt": "Jesteś ekspertem ds. marketingu Web3 i wzrostu (Growth Hacking) dla gry Cosmic Clicker & Void Bastion zintegrowanej z World App. Twoim celem jest tworzenie angażujących postów społecznościowych, które przyciągają graczy i zachęcają do weryfikacji World ID. \n\nZasady tworzenia treści:\n1. Bądź entuzjastyczny, profesjonalny i lekko tajemniczy (motywy kosmiczne, Void, walka z pustką).\n2. Zawsze podawaj link do aplikacji: https://void.skyreel.art\n3. Wspominaj o integracji z World App i korzyściach z weryfikacji World ID (np. unikalne jednostki, tokeny, nagrody).\n4. Używaj maksymalnie 3-5 trafnych hashtagów.\n5. Post musi mieścić się w limitach znaków dla X (Twitter) - max 280 znaków.\n6. Odpowiadaj wyłącznie wygenerowanym tekstem posta, bez dodatkowych komentarzy.",
         "options": {}
       },
@@ -164,6 +164,22 @@
           "name": "Telegram Bot"
         }
       }
+    },
+    {
+      "parameters": {
+        "name": "fetch_game_marketing_data",
+        "description": "Pobiera aktualne dane marketingowe gry. Zwraca informacje o aktywnej rundzie Void Block (pula nagród, czas do końca, liczba zakładów) oraz o wyzwaniach tygodniowych (weekly challenges) i statystykach poleceń (referrals).",
+        "url": "https://void.skyreel.art/api/agent-tools/marketing-data",
+        "toolDescription": "Pobiera aktualne dane marketingowe gry. Zwraca informacje o aktywnej rundzie Void Block (pula nagród, czas do końca, liczba zakładów) oraz o wyzwaniach tygodniowych (weekly challenges) i statystykach poleceń (referrals)."
+      },
+      "id": "dae86a51-e110-4ff6-98cc-4d371ba5256e",
+      "name": "Marketing Data Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        980,
+        440
+      ]
     }
   ],
   "connections": {
@@ -233,6 +249,17 @@
           {
             "node": "Post to Telegram",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Data Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_tool",
             "index": 0
           }
         ]

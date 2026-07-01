@@ -49,15 +49,15 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
 
     return (
         <nav
-            className="fixed top-0 bottom-0 left-0 w-[72px] bg-void-dark/95 backdrop-blur-lg border-r border-void-purple/20 z-50 flex flex-col items-center py-4 overflow-y-auto no-scrollbar"
+            className="fixed bottom-0 left-0 right-0 h-[72px] bg-void-dark/95 backdrop-blur-lg border-t border-void-purple/20 z-50 flex items-center px-4 overflow-x-auto no-scrollbar"
         >
-            <div className="flex flex-col gap-2 w-full px-1.5 pb-6">
+            <div className="flex gap-2 h-full items-center min-w-max">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => onTabChange(tab.id)}
                         className={`
-                            flex flex-col items-center justify-center gap-1.5 py-2 px-1 rounded-xl transition-all duration-200 w-full relative
+                            flex flex-col items-center justify-center gap-1.5 py-1 px-3 rounded-xl transition-all duration-200 min-w-[64px] relative
                             ${activeTab === tab.id
                                 ? 'text-particle-glow bg-particle-glow/10'
                                 : 'text-text-secondary hover:text-text-primary'

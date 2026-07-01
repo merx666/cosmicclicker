@@ -29,6 +29,15 @@ export interface GameState {
     // Season 2: Achievements
     achievements: Record<string, any>
 
+    // Weekly challenges
+    weeklyParticlesCollected: number
+    weeklyClicks: number
+    weeklyRouletteWins: number
+    weeklyLoginDays: number
+    weeklyPassiveParticles: number
+    lastWeeklyReset: number | null
+    claimedWeeklyChallenges: string[]
+
     // Upgrade levels
     upgradeClickPower: number
     upgradeAutoCollector: number
@@ -62,6 +71,7 @@ export interface GameState {
     // User info
     nullifierHash: string | null
     lastSaveTime: number
+    referralCode: string | null
 
     // Actions
     setNullifierHash: (hash: string) => void
@@ -78,7 +88,10 @@ export interface GameState {
     equipTheme: (themeId: string) => void
     claimDailyBonus: () => boolean
     checkAndResetDailyStats: () => void
+    checkAndResetWeeklyStats: () => void
     claimMissionReward: (missionId: string, reward: number) => boolean
+    claimWeeklyReward: (challengeId: string, reward: number) => boolean
+    incrementWeeklyRouletteWins: () => void
     loadGameState: (userHash: string) => Promise<void>
     saveGameState: () => Promise<void>
     debouncedSave: () => void
@@ -113,6 +126,15 @@ export const useGameStore = create<GameState>()(
 
             // Season 2: Achievements
             achievements: {},
+
+            // Weekly challenges
+            weeklyParticlesCollected: 0,
+            weeklyClicks: 0,
+            weeklyRouletteWins: 0,
+            weeklyLoginDays: 0,
+            weeklyPassiveParticles: 0,
+            lastWeeklyReset: null,
+            claimedWeeklyChallenges: [],
 
             checkAchievements: (key: string, amount: number) => {
                 const state = get()
@@ -173,6 +195,7 @@ export const useGameStore = create<GameState>()(
             totalWldClaimed: 0,
 
             nullifierHash: null,
+            referralCode: null,
             lastSaveTime: Date.now(),
 
             // Set user's nullifier hash
@@ -182,7 +205,8 @@ export const useGameStore = create<GameState>()(
             addParticles: (amount) => set((state) => ({
                 particles: state.particles + amount,
                 totalParticlesCollected: state.totalParticlesCollected + amount,
-                dailyParticlesCollected: state.dailyParticlesCollected + amount
+                dailyParticlesCollected: state.dailyParticlesCollected + amount,
+                weeklyParticlesCollected: state.weeklyParticlesCollected + amount
             })),
 
             // Add passive particles (from auto-collector)
@@ -191,7 +215,9 @@ export const useGameStore = create<GameState>()(
                 totalParticlesCollected: state.totalParticlesCollected + amount,
                 totalPassiveParticles: state.totalPassiveParticles + amount,
                 dailyPassiveParticles: state.dailyPassiveParticles + amount,
-                dailyParticlesCollected: state.dailyParticlesCollected + amount
+                dailyParticlesCollected: state.dailyParticlesCollected + amount,
+                weeklyPassiveParticles: state.weeklyPassiveParticles + amount,
+                weeklyParticlesCollected: state.weeklyParticlesCollected + amount
             })),
 
             // Handle click
@@ -219,7 +245,9 @@ export const useGameStore = create<GameState>()(
                     totalClicks: state.totalClicks + 1,
                     totalParticlesCollected: state.totalParticlesCollected + earned,
                     dailyClicks: state.dailyClicks + 1,
-                    dailyParticlesCollected: state.dailyParticlesCollected + earned
+                    dailyParticlesCollected: state.dailyParticlesCollected + earned,
+                    weeklyClicks: state.weeklyClicks + 1,
+                    weeklyParticlesCollected: state.weeklyParticlesCollected + earned
                 })
 
                 // Add BP XP for clicking (e.g. 1 click = 1 XP)
@@ -467,6 +495,35 @@ export const useGameStore = create<GameState>()(
                         lastDailyReset: now
                     })
                 }
+
+                // Also check weekly reset
+                get().checkAndResetWeeklyStats()
+            },
+
+            // Check and reset weekly stats at Monday 00:00 UTC
+            checkAndResetWeeklyStats: () => {
+                const now = Date.now()
+                const d = new Date(now)
+                // Find this week's Monday 00:00 UTC
+                const dayOfWeek = d.getUTCDay() // 0=Sun, 1=Mon
+                const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // days since Monday
+                const monday = new Date(d)
+                monday.setUTCDate(d.getUTCDate() - diff)
+                monday.setUTCHours(0, 0, 0, 0)
+                const mondayStart = monday.getTime()
+
+                const state = get()
+                if (!state.lastWeeklyReset || state.lastWeeklyReset < mondayStart) {
+                    set({
+                        weeklyParticlesCollected: 0,
+                        weeklyClicks: 0,
+                        weeklyRouletteWins: 0,
+                        weeklyLoginDays: 0,
+                        weeklyPassiveParticles: 0,
+                        claimedWeeklyChallenges: [],
+                        lastWeeklyReset: now
+                    })
+                }
             },
 
             // Claim mission reward
@@ -485,6 +542,30 @@ export const useGameStore = create<GameState>()(
 
                 get().saveGameState()
                 return true
+            },
+
+            // Claim weekly challenge reward
+            claimWeeklyReward: (challengeId, reward) => {
+                const state = get()
+                if (state.claimedWeeklyChallenges.includes(challengeId)) {
+                    return false
+                }
+
+                set({
+                    particles: state.particles + reward,
+                    totalParticlesCollected: state.totalParticlesCollected + reward,
+                    weeklyParticlesCollected: state.weeklyParticlesCollected + reward,
+                    claimedWeeklyChallenges: [...state.claimedWeeklyChallenges, challengeId]
+                })
+
+                get().addBpXp(50) // ponytail: flat XP, scale when BP system evolves
+                get().saveGameState()
+                return true
+            },
+
+            // Increment weekly roulette wins (called from RouletteTab)
+            incrementWeeklyRouletteWins: () => {
+                set((state) => ({ weeklyRouletteWins: state.weeklyRouletteWins + 1 }))
             },
 
             // Claim daily bonus
@@ -585,8 +666,18 @@ export const useGameStore = create<GameState>()(
 
                             achievements: data.achievements && typeof data.achievements === 'object' ? data.achievements : {},
 
+                            // Weekly challenges
+                            weeklyParticlesCollected: Number(data.weekly_particles_collected || 0),
+                            weeklyClicks: Number(data.weekly_clicks || 0),
+                            weeklyRouletteWins: Number(data.weekly_roulette_wins || 0),
+                            weeklyLoginDays: Number(data.weekly_login_days || 0),
+                            weeklyPassiveParticles: Number(data.weekly_passive_particles || 0),
+                            lastWeeklyReset: data.last_weekly_reset ? new Date(data.last_weekly_reset).getTime() : null,
+                            claimedWeeklyChallenges: data.claimed_weekly_challenges || [],
+
                             lastSaveTime: data.updated_at ? new Date(data.updated_at).getTime() : Date.now(),
-                            nullifierHash: userHash
+                            nullifierHash: userHash,
+                            referralCode: data.referral_code || null
                         })
 
                         // Check and reset daily stats if needed
@@ -659,7 +750,16 @@ export const useGameStore = create<GameState>()(
                             bp_premium: state.bpPremium,
                             bp_claimed_free: state.bpClaimedFree,
                             bp_claimed_premium: state.bpClaimedPremium,
-                            achievements: state.achievements
+                            achievements: state.achievements,
+
+                            // Weekly challenges
+                            weekly_particles_collected: state.weeklyParticlesCollected,
+                            weekly_clicks: state.weeklyClicks,
+                            weekly_roulette_wins: state.weeklyRouletteWins,
+                            weekly_login_days: state.weeklyLoginDays,
+                            weekly_passive_particles: state.weeklyPassiveParticles,
+                            last_weekly_reset: state.lastWeeklyReset ? new Date(state.lastWeeklyReset).toISOString() : null,
+                            claimed_weekly_challenges: state.claimedWeeklyChallenges
                         })
                     })
 
@@ -723,7 +823,16 @@ export const useGameStore = create<GameState>()(
                 bpClaimedFree: state.bpClaimedFree,
                 bpClaimedPremium: state.bpClaimedPremium,
 
-                achievements: state.achievements
+                achievements: state.achievements,
+
+                // Weekly challenges
+                weeklyParticlesCollected: state.weeklyParticlesCollected,
+                weeklyClicks: state.weeklyClicks,
+                weeklyRouletteWins: state.weeklyRouletteWins,
+                weeklyLoginDays: state.weeklyLoginDays,
+                weeklyPassiveParticles: state.weeklyPassiveParticles,
+                lastWeeklyReset: state.lastWeeklyReset,
+                claimedWeeklyChallenges: state.claimedWeeklyChallenges
             })
         }
     )

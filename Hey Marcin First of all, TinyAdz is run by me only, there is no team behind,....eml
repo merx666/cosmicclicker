@@ -1,0 +1,392 @@
+Delivered-To: fishexo@gmail.com
+Received: by 2002:ab4:aac9:0:b0:2d3:cbae:8ce7 with SMTP id gg9csp1340627ecb;
+        Sun, 7 Jun 2026 11:50:24 -0700 (PDT)
+X-Received: by 2002:a17:907:c398:b0:beb:5b37:751b with SMTP id a640c23a62f3a-bf372e22c07mr567080166b.37.1780858224091;
+        Sun, 07 Jun 2026 11:50:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780858224; cv=none;
+        d=google.com; s=arc-20240605;
+        b=cm6zLf39hbCHgtCO7Jci2y8zAL+jun4poGKYKMMfThfm2rf1ewv1LhV0fUgnjEtX3e
+         6ketlH93yDzfwRtjgejsWcES81aFb09LiFWIzdoAmkS5dm4H7qHDGxbUVGhPpnkFqPB3
+         gdcFZU/y7XP6NiWYoyKw6h6b12GhLwbJM8BZhbariX0Ebt7DtxawiRNDehXsYWjGTAIK
+         irUcDIrhGVXU46LDYlzCwTeqJV0PIUUI+NAbpA6zuDZjN0oTjX0HENbTHrl73ieaXPYj
+         lh7HP0iCoCIXmxSJdpoWjsQsMwixtSf9z89SjP8eLfNwnaO3Tw+hcbEytzWnp2KVP3qr
+         X3gw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=date:message-id:subject:reply-to:to:from:feedback-id:references
+         :mime-version:dkim-signature:dkim-signature;
+        bh=i3oSU+MCdDX0oBNSrIeM5q+5r6PoOhoi6XtLNTBAjkk=;
+        fh=U34VUO8iRpe6vs+SDivVWR9ah4p6/O7EvoUhh51p+T0=;
+        b=NYO7DDLFJlDejpwuP3TWaBBkQO0HdLNci+x3C2/mGSWeqg1zRQC2PepU/AvpMwVNiq
+         d91n0fHIq2g3Shlktvq2ygF8H9QxELf8+2WM0ziFsc/BmtwqWsEo5QgexvDV/lpOpVjP
+         lNEPQRwHkGSr38HLRURehEYzmNPGnmxjafzgAyhYYunibKRc99zLde/Ji+ROaxLo4awa
+         mIPxVVsfbOhKdEIrJ9u0yeJJWzaROlXfYzIq0is6JOWdeHcikTHhJfC5qVRKGIeiCWeu
+         1X9uYod7vpjQYqJrZ7KKmZmqQRcsxHgFYZhyr8/J8amRisHu8M96C4eLWIb/sAWvVpcf
+         DfBA==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@tinyadz.on.crisp.email header.s=crisp header.b=ehaegCzi;
+       dkim=pass header.i=@crisp.email header.s=platform header.b=A97EKe8A;
+       spf=pass (google.com: domain of bounces+1b042ba7ef1cc200@tinyadz.on.crisp.email designates 93.177.84.44 as permitted sender) smtp.mailfrom=bounces+1b042ba7ef1cc200@tinyadz.on.crisp.email;
+       dmarc=pass (p=QUARANTINE sp=QUARANTINE dis=NONE) header.from=tinyadz.on.crisp.email
+Return-Path: <bounces+1b042ba7ef1cc200@tinyadz.on.crisp.email>
+Received: from mailer-15.outbound.crisp.email (mailer-15.outbound.crisp.email. [93.177.84.44])
+        by mx.google.com with ESMTPS id a640c23a62f3a-bf0552fd112si902780966b.130.2026.06.07.11.50.24
+        for <fishexo@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 07 Jun 2026 11:50:24 -0700 (PDT)
+Received-SPF: pass (google.com: domain of bounces+1b042ba7ef1cc200@tinyadz.on.crisp.email designates 93.177.84.44 as permitted sender) client-ip=93.177.84.44;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@tinyadz.on.crisp.email header.s=crisp header.b=ehaegCzi;
+       dkim=pass header.i=@crisp.email header.s=platform header.b=A97EKe8A;
+       spf=pass (google.com: domain of bounces+1b042ba7ef1cc200@tinyadz.on.crisp.email designates 93.177.84.44 as permitted sender) smtp.mailfrom=bounces+1b042ba7ef1cc200@tinyadz.on.crisp.email;
+       dmarc=pass (p=QUARANTINE sp=QUARANTINE dis=NONE) header.from=tinyadz.on.crisp.email
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=tinyadz.on.crisp.email; s=crisp; t=1780858223;
+	bh=eUb64RGWKSQVhIUJdR/MIcoCaiUQ2sFJbzR2DaGUUDM=;
+	h=References:From:To:Reply-To:Subject:Date:From;
+	b=ehaegCzi5MvRSfWg+hYw7LZjPr5XnB3KUxyEadh97lEJb8I3iO9lHJwA/pHGahRKD
+	 Em5hUKnmERPdfhPmmASw9z25jbz84riS2C21znhuZ8K2e+niOLPZAdDPBYCLAqwOWh
+	 QZaqcO0QuS1rkmdR0+JKG6Fifp+WZvZwy2CFJGNMtPmxukURVDrYgfzVkGgRuSOf8y
+	 g0C0goRqO9Qm07ftpnYiRRs34N0oZ+u5Qh+NPut4JBGwdub2O/OJvMS7lywG/v4KIG
+	 8x+wdtOWmwzOQZQ5H3LmSbdelXrqPqwLu4GgRVNehlK6o566hcMpqtXZGl/k6AUdlN
+	 SuZ7Dp4HKDEFw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1780858223;
+	bh=eUb64RGWKSQVhIUJdR/MIcoCaiUQ2sFJbzR2DaGUUDM=;
+	h=References:From:To:Reply-To:Subject:Date:From;
+	b=A97EKe8Af1fWqcGItlRb+Qs8xVz6FvKBMfBB4wXuSL0Ruygpfucy2CwDpzj/yLPpV
+	 87ssKGhAp+FVQ66zbdbfb/dFVCRHjbv4mteluO3Yr17XPtxkbD5yWkKQ/+lA7+Qudm
+	 ljXWy5mbHUDId5aY3Txz3bavGukz21do6Eu07ebcDUd8aNH3yCEi4xiJWNAa3z3aWF
+	 4m7aRS2iycWE5GwxmrMJksJBy/sijHb1nmBN2LzG7o5r8eI/2Q5mq99ytWkAIdQzDF
+	 HYoqwHaCxXUZTuGFYJ1y1AK/5p8GLWYeQBp20VOUOL7iYQ58cIGffFUNmbeeK6TJzO
+	 gD4V5oIPYTTZQ==
+X-Universally-Unique-Identifier: e5368f23-2a2b-4196-bb6e-60c5e4a4de76
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+References:
+ <CABS6NW5XgFm_7fW0cj26KDth=-uqLZxr9tUA7dT7=cUOMh2Dxw@mail.gmail.com>
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: 6fefc254-ee29-4097-906f-94b57d5b1d8f
+Feedback-ID:
+ session:6fefc254-ee29-4097-906f-94b57d5b1d8f:message_replies:CrispIM
+From: "Igor - TinyAdz" <igor@tinyadz.on.crisp.email>
+To: fishexo@gmail.com
+Reply-To: TinyAdz <s.654ca75f70d05400.i@tinyadz.on.crisp.email>
+Subject: Re: Hey Marcin  First of all, TinyAdz is run by me only, there is
+ no team behind,...
+Message-ID: <0927beb1-3e75-eadb-2b0d-a44f5eddc579@tinyadz.on.crisp.email>
+Date: Sun, 07 Jun 2026 18:50:23 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-0632219242675e46-Part_1"
+
+----_NmP-0632219242675e46-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Thanks for sharing
+
+Before I get into numbers, could you formulate the idea=
+ you follow here?
+Thanks for sharing
+
+We are happy to have highly engaged =
+audience
+
+At the same time we expect payable audience and we don=E2=80=99t =
+have that many web3
+advertisers
+
+Could you help me to understand the idea =
+behind the gap you noticed?=20
+
+What is the basement for your calculation, =
+how do you count the number of ad
+placements?
+
+On Sun, 07 Jun 2026 12:50:33=
+ GMT Marcin Mermela wrote:
+> Hi Igor,
+
+Fair point. Let's look at the bigger=
+ picture behind the project.
+
+The core idea I am following with the Void =
+Collector Mini App is
+*Attention-Based
+Monetization tailored for web3 =
+users*.
+
+Here is the strategic framework I am operating on:
+
+1. High Engagement over Ad Spam: My users aren't just bouncing; they
+spend an average of 14+ minutes per session in the app. My philosophy is
+to keep the user experience clean without intrusive pop-ups. I want to
+monetize this deep user attention efficiently using non-disruptive ad slots
+that rotate intelligently.
+2. Unlocking the Value of web3 Geographies: Due =
+to the nature of the
+WorldApp ecosystem, my traffic is highly concentrated =
+in tech-forward
+emerging markets like Southeast Asia and LATAM. These users=
+ are highly
+active in web3, meaning their attention is highly valuable to =
+specific
+advertisers. The idea behind my testing is to find which ad =
+network's
+demand engine can actually recognize and properly value this =
+specific niche.
+3. Data-Driven Partnership: I prefer working with agile, =
+indie networks
+like TinyAdz rather than giant faceless corporations. =
+However, as the app
+scales, the gap in efficiency becomes a business =
+bottleneck. My goal here
+is to figure out if we can optimize how TinyAdz =
+fills or values these
+specific regions to match market standards, or if the=
+ current algorithm
+simply isn't geared for this type of demographic yet.
+
+Ultimately, the idea is to maximize the value of every minute a web3 user
+spends in my app, without ruining the product itself.
+
+Let me know how this aligns with how TinyAdz handles ad delivery on your
+end!
+
+Best,
+
+Marcin
+
+niedz., 7 cze 2026 o 14:24 Igor - TinyAdz =
+<igor@tinyadz.on.crisp.email>
+napisa=C5=82(a):
+
+On Sun, 07 Jun 2026 =
+08:22:31 GMT Marcin Mermela wrote:
+> https://tinyadz.on.crisp.=
+email/file/upload-1/session/-/6/5/4/c/654ca75f70d05400/861b639b63a4465bad77=
+65d462d717ce1394c57b.csv
+[https://tinyadz.on.crisp.email/file/upload-1/sess=
+ion/-/6/5/4/c/654ca75f70d05400/861b639b63a4465bad7765d462d717ce1394c57b.=
+csv]
+
+On Sun, 07 Jun 2026 08:22:31 GMT Marcin Mermela wrote:
+> https://tinyadz.on.crisp.email/file/upload-1/session/-/6/5/4/c/654ca75f70=
+d05400/34eda109e660a338d0a8d3a482256f2e9cd03100.csv
+[https://tinyadz.on.crisp.email/file/upload-1/session/-/6/5/4/c/654ca75f70d=
+05400/34eda109e660a338d0a8d3a482256f2e9cd03100.csv]
+
+On Sat, 06 Jun 2026 09:29:09 GMT Marcin Mermela wrote:
+> Dear TinyAdz Support & Compliance Team,
+I am writing to formally address =
+serious discrepancies in the reporting and
+payout metrics on my publisher =
+dashboard for the website void.skyreel.art.=20
+Upon auditing our internal =
+analytics and comparing your network=E2=80=99s performance
+with other tier-1 ad networks (such as Monetag), we have identified several
+highly concerning patterns that suggest potential violations of transparent
+advertising standards and fair business practices.
+1. Unexplained Data =
+Discrepancies:
+Your dashboard reports a total of 99,068 views and 5,009 =
+verified clicks,
+resulting in $47.47 in estimated earnings. However, the =
+sum of all individual
+banners listed on the same page (Custom Inlined Ad, =
+Corner Mini Pop-Up, and
+Full-screen Banner) accounts for only 26,825 views =
+and $12.74 in earnings. There
+is an unaccounted gap of 72,243 views and $34=
+.73 in earnings that is completely
+missing from the breakdown. Please =
+explain why this data is hidden and how these
+figures are calculated.
+2. Retroactive Click Deductions ("Shaving"):
+Your FAQ openly states: "Why =
+do clicks sometimes decrease when I refresh the
+page?" Retroactively =
+deducting already registered "verified" clicks is a highly
+questionable practice often associated with "click shaving". Under standard
+publisher transparency rules, we request a detailed, timestamped log of all
+deducted clicks, including the specific reasons and IP addresses classified=
+ as
+invalid.
+3. Extremely Low CPM/CPC Rates:
+Our current stats show an =
+average CPM of $0.48 and a CPC of $0.009 per verified
+click. In comparison, our alternative network (Monetag) yields a CPM of $3.=
+18
+for the same traffic=E2=80=94over 6.6x higher. A CPC under 1 cent for =
+verified user
+clicks is statistically anomalous and indicates either a =
+severe mispricing or a
+massive revenue-share imbalance.
+4. Arbitrary Earning Caps:
+We note that our account has an artificial limit=
+ of "capped at $432/month".
+Placing arbitrary caps on traffic monetization =
+without prior agreement is an
+unfair trade restriction.
+We request a formal audit report of our account=E2=80=99s traffic from your=
+ quality
+assurance department within 7 business days, including:
+- A complete breakdown of the unaccounted 72,243 views.
+- Full details on the "Tier 29" classification and how to remove it.
+- Traffic logs explaining any click deductions.
+Should we not receive a =
+transparent explanation, we will be forced to terminate
+our partnership, move all remaining slots to Monetag, and file official
+complaints with relevant advertising standards authorities and consumer
+protection bodies.
+We expect your prompt response.
+----_NmP-0632219242675e46-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns=3D"http://www.w3.=
+org/1999/xhtml" lang=3D"pl" dir=3D"ltr"><head><meta =
+http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8"><meta =
+name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D1"><titl=
+e>Crisp E-mail</title></head><body style=3D"font-weight: 400;"><div =
+dir=3D"auto" style=3D"font-size: 1em;">Thanks for sharing<span><br></span><=
+span><br></span>Before I get into numbers, could you formulate the idea you=
+ follow here?</div><br><div dir=3D"auto" style=3D"font-size: 1em;">Thanks =
+for sharing<span><br></span><span><br></span>We are happy to have highly =
+engaged audience<span><br></span><span><br></span>At the same time we =
+expect payable audience and we don=E2=80=99t have that many web3 =
+advertisers<span><br></span><span><br></span>Could you help me to =
+understand the idea behind the gap you noticed? <span><br></span><span><br>=
+</span>What is the basement for your calculation, how do you count the =
+number of ad placements?</div><br><div><!--[if !plain]-->
+--<br><br><div><!--[if !mso]><!-- --><img alt src=3D"https://tinyadz.on.=
+crisp.email/image/avatar/operator/07327c2d-618f-4976-9479-496df009cd44/92/?=
+1780560280645" style=3D"background-color: #ebebeb; background-size: =
+contain; background-repeat: no-repeat; background-position: center; width: =
+2em; height: 2em; max-width: 30px; max-height: 30px; margin-right: .5em; =
+vertical-align: middle; display: inline-block; border-radius: 2em;"><!--<!=
+[endif]--><strong>Igor</strong><span> </span>od<span> </span><a =
+href=3D"https://tinyadz.com/" target=3D"_blank">TinyAdz</a>.</div><br><div =
+style=3D"color: #7b7b7b; font-size: .9em; margin-top: .75em;"><div =
+style=3D"margin-top: .25em;">Wys=C5=82ane od<span> </span><a =
+href=3D"https://crisp.chat/" target=3D"_blank" style=3D"color: =
+#7b7b7b;"><strong>Crisp</strong></a>.</div></div></div><!--[endif]--><div =
+style=3D"font-size: .95em; margin-top: 1em;"><br><div style=3D"color: =
+#6b095d; border-left: 1px solid #d0d0d0; margin: 0 .5em; padding: 0 .=
+6em;"><div>On Sun, 07 Jun 2026 12:50:33 GMT Marcin Mermela =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">Hi Igor,<span><br></span><span><br></span>Fair =
+point. Let's look at the bigger picture behind the project.=
+<span><br></span><span><br></span>The core idea I am following with the =
+Void Collector Mini App is<span><br></span>*Attention-Based<span><br></span=
+>Monetization tailored for web3 users*.<span><br></span><span><br></span>He=
+re is the strategic framework I am operating on:<span><br></span><span><br>=
+</span>   <span style=3D"margin: 0 1px; display: block;">1.<span> =
+</span><span style=3D"font-style: italic;">High Engagement over Ad =
+Spam:</span> My users aren't just bouncing; they</span><span =
+style=3D"display: none;"><br></span>   spend an average of 14+ minutes per =
+session in the app. My philosophy is<span><br></span>   to keep the user =
+experience clean without intrusive pop-ups. I want to<span><br></span>   =
+monetize this deep user attention efficiently using non-disruptive ad =
+slots<span><br></span>   that rotate intelligently.<span><br></span>   =
+<span style=3D"margin: 0 1px; display: block;">2.<span> </span><span =
+style=3D"font-style: italic;">Unlocking the Value of web3 =
+Geographies:</span> Due to the nature of the</span><span style=3D"display: =
+none;"><br></span>   WorldApp ecosystem, my traffic is highly concentrated =
+in tech-forward<span><br></span>   emerging markets like Southeast Asia and=
+ LATAM. These users are highly<span><br></span>   active in web3, meaning =
+their attention is highly valuable to specific<span><br></span>   =
+advertisers. The idea behind my testing is to find which ad =
+network's<span><br></span>   demand engine can actually recognize and =
+properly value this specific niche.<span><br></span>   <span =
+style=3D"margin: 0 1px; display: block;">3.<span> </span><span =
+style=3D"font-style: italic;">Data-Driven Partnership:</span> I prefer =
+working with agile, indie networks</span><span style=3D"display: =
+none;"><br></span>   like TinyAdz rather than giant faceless corporations. =
+However, as the app<span><br></span>   scales, the gap in efficiency =
+becomes a business bottleneck. My goal here<span><br></span>   is to figure=
+ out if we can optimize how TinyAdz fills or values these<span><br></span> =
+  specific regions to match market standards, or if the current =
+algorithm<span><br></span>   simply isn't geared for this type of =
+demographic yet.<span><br></span><span><br></span>Ultimately, the idea is =
+to maximize the value of every minute a web3 user<span><br></span>spends in=
+ my app, without ruining the product itself.<span><br></span><span><br></sp=
+an>Let me know how this aligns with how TinyAdz handles ad delivery on =
+your<span><br></span>end!<span><br></span><span><br></span>Best,=
+<span><br></span><span><br></span>Marcin<span><br></span><span><br></span>n=
+iedz., 7 cze 2026 o 14:24 Igor - TinyAdz &lt;igor@tinyadz.on.crisp.=
+email&gt;<span><br></span>napisa=C5=82(a):</blockquote><br><div =
+style=3D"color: #6b095d; border-left: 1px solid #d0d0d0; margin: 0 .5em; =
+padding: 0 .6em;"><div>On Sun, 07 Jun 2026 08:22:31 GMT Marcin Mermela =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;"><a href=3D"https://tinyadz.on.crisp.=
+email/file/upload-1/session/-/6/5/4/c/654ca75f70d05400/861b639b63a4465bad77=
+65d462d717ce1394c57b.csv">https://tinyadz.on.crisp.email/file/upload-1/sess=
+ion/-/6/5/4/c/654ca75f70d05400/861b639b63a4465bad7765d462d717ce1394c57b.=
+csv</a></blockquote><br><div style=3D"color: #6b095d; border-left: 1px =
+solid #d0d0d0; margin: 0 .5em; padding: 0 .6em;"><div>On Sun, 07 Jun 2026 =
+08:22:31 GMT Marcin Mermela wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;"><a =
+href=3D"https://tinyadz.on.crisp.email/file/upload-1/session/-/6/5/4/c/654c=
+a75f70d05400/34eda109e660a338d0a8d3a482256f2e9cd03100.csv">https://tinyadz.=
+on.crisp.email/file/upload-1/session/-/6/5/4/c/654ca75f70d05400/34eda109e66=
+0a338d0a8d3a482256f2e9cd03100.csv</a></blockquote><br><div style=3D"color: =
+#6b095d; border-left: 1px solid #d0d0d0; margin: 0 .5em; padding: 0 .=
+6em;"><div>On Sat, 06 Jun 2026 09:29:09 GMT Marcin Mermela =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">Dear TinyAdz Support &amp; Compliance Team,=
+<span><br></span>I am writing to formally address serious discrepancies in =
+the reporting and payout metrics on my publisher dashboard for the website =
+void.skyreel.art. <span><br></span>Upon auditing our internal analytics and=
+ comparing your network=E2=80=99s performance with other tier-1 ad networks=
+ (such as Monetag), we have identified several highly concerning patterns =
+that suggest potential violations of transparent advertising standards and =
+fair business practices.<span><br></span><span style=3D"margin: 0 1px; =
+display: block;">1.<span> </span>Unexplained Data Discrepancies:</span><spa=
+n style=3D"display: none;"><br></span>Your dashboard reports a total of 99,=
+068 views and 5,009 verified clicks, resulting in $47.47 in estimated =
+earnings. However, the sum of all individual banners listed on the same =
+page (Custom Inlined Ad, Corner Mini Pop-Up, and Full-screen Banner) =
+accounts for only 26,825 views and $12.74 in earnings. There is an =
+unaccounted gap of 72,243 views and $34.73 in earnings that is completely =
+missing from the breakdown. Please explain why this data is hidden and how =
+these figures are calculated.<span><br></span><span style=3D"margin: 0 1px;=
+ display: block;">2.<span> </span>Retroactive Click Deductions =
+(&quot;Shaving&quot;):</span><span style=3D"display: none;"><br></span>Your=
+ FAQ openly states: &quot;Why do clicks sometimes decrease when I refresh =
+the page?&quot; Retroactively deducting already registered =
+&quot;verified&quot; clicks is a highly questionable practice often =
+associated with &quot;click shaving&quot;. Under standard publisher =
+transparency rules, we request a detailed, timestamped log of all deducted =
+clicks, including the specific reasons and IP addresses classified as =
+invalid.<span><br></span><span style=3D"margin: 0 1px; display: block;">3.=
+<span> </span>Extremely Low CPM/CPC Rates:</span><span style=3D"display: =
+none;"><br></span>Our current stats show an average CPM of $0.48 and a CPC =
+of $0.009 per verified click. In comparison, our alternative network =
+(Monetag) yields a CPM of $3.18 for the same traffic=E2=80=94over 6.6x =
+higher. A CPC under 1 cent for verified user clicks is statistically =
+anomalous and indicates either a severe mispricing or a massive =
+revenue-share imbalance.<span><br></span><span style=3D"margin: 0 1px; =
+display: block;">4.<span> </span>Arbitrary Earning Caps:</span><span =
+style=3D"display: none;"><br></span>We note that our account has an =
+artificial limit of &quot;capped at $432/month&quot;. Placing arbitrary =
+caps on traffic monetization without prior agreement is an unfair trade =
+restriction.<span><br></span>We request a formal audit report of our =
+account=E2=80=99s traffic from your quality assurance department within 7 =
+business days, including:<span><br></span>- A complete breakdown of the =
+unaccounted 72,243 views.<span><br></span>- Full details on the &quot;Tier =
+29&quot; classification and how to remove it.<span><br></span>- Traffic =
+logs explaining any click deductions.<span><br></span>Should we not receive=
+ a transparent explanation, we will be forced to terminate our partnership,=
+ move all remaining slots to Monetag, and file official complaints with =
+relevant advertising standards authorities and consumer protection bodies.=
+<span><br></span>We expect your prompt response.</blockquote></div></div></=
+div></div><br></div><!--[if !plain]--><img src=3D"https://tinyadz.on.crisp.=
+email/hooks/email/track/message/?session_id=3Dsession_9b940c34-2025-4d0a-b0=
+f7-00a71611467b&amp;user_id=3Dsession_9b940c34-2025-4d0a-b0f7-00a71611467b&=
+amp;website_id=3D6fefc254-ee29-4097-906f-94b57d5b1d8f&amp;direction=3Din&am=
+p;fingerprints=3D%5B178085816334300%5D&amp;signature=3Db4a743a8029dd800" =
+alt><!--[endif]--></body></html>
+----_NmP-0632219242675e46-Part_1--

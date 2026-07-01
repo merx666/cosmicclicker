@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { motion } from 'framer-motion';
 
 interface GameLobbyProps {
     highestWave: number;
@@ -18,242 +19,93 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ highestWave = 0, totalCred
     };
 
     return (
-        <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '32px 24px 140px 24px',
-            position: 'relative',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            WebkitOverflowScrolling: 'touch',
-        }}>
+        <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-32 relative overflow-y-auto no-scrollbar select-none">
             {/* Background glow */}
-            <div style={{
-                position: 'absolute',
-                top: '20%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '320px',
-                height: '320px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(93,0,255,0.18) 0%, rgba(188,19,254,0.06) 40%, transparent 70%)',
-                filter: 'blur(50px)',
-                pointerEvents: 'none',
-            }} />
+            <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-[radial-gradient(circle,rgba(93,0,255,0.15)_0%,rgba(188,19,254,0.05)_40%,transparent_70%)] filter blur-3xl pointer-events-none" />
 
             {/* Title */}
-            <h1 style={{
-                fontSize: '26px',
-                fontWeight: 900,
-                letterSpacing: '4px',
-                background: 'linear-gradient(135deg, #e0e0ff 0%, #a78bfa 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '28px',
-                textTransform: 'uppercase',
-                textAlign: 'center',
-                position: 'relative',
-                zIndex: 1,
-            }}>
-                VOID BASTION
-            </h1>
+            <h2 className="text-2xl font-black tracking-[0.2em] bg-gradient-to-r from-purple-300 via-fuchsia-100 to-indigo-300 bg-clip-text text-transparent mb-7 uppercase text-center relative z-10">
+                Void Bastion
+            </h2>
 
-            {/* Stats Row */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '14px',
-                width: '100%',
-                maxWidth: '340px',
-                marginBottom: '32px',
-                position: 'relative',
-                zIndex: 1,
-            }}>
-                <div style={{
-                    background: 'linear-gradient(135deg, rgba(93,0,255,0.10) 0%, rgba(139,92,246,0.05) 100%)',
-                    border: '1px solid rgba(139,92,246,0.22)',
-                    borderRadius: '16px',
-                    padding: '20px 16px',
-                    textAlign: 'center',
-                }}>
-                    <div style={{
-                        fontSize: '30px',
-                        fontWeight: 800,
-                        color: '#e0e0ff',
-                        marginBottom: '6px',
-                        lineHeight: 1,
-                    }}>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3.5 w-full max-w-[340px] mb-8 relative z-10">
+                <div className="bg-gradient-to-br from-purple-900/10 to-indigo-900/5 border border-purple-500/20 rounded-2xl p-5 text-center shadow-[0_8px_32px_0_rgba(139,92,246,0.03)] hover:border-purple-500/40 transition-colors duration-300">
+                    <div className="text-3xl font-black text-purple-100 mb-1.5 leading-none">
                         {highestWave}
                     </div>
-                    <div style={{
-                        fontSize: '10px',
-                        color: '#9ca3af',
-                        textTransform: 'uppercase',
-                        letterSpacing: '2px',
-                        fontWeight: 600,
-                    }}>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
                         {t('lobby.highest_wave')}
                     </div>
                 </div>
 
-                <div style={{
-                    background: 'linear-gradient(135deg, rgba(93,0,255,0.10) 0%, rgba(139,92,246,0.05) 100%)',
-                    border: '1px solid rgba(139,92,246,0.22)',
-                    borderRadius: '16px',
-                    padding: '20px 16px',
-                    textAlign: 'center',
-                }}>
-                    <div style={{
-                        fontSize: '30px',
-                        fontWeight: 800,
-                        color: '#e0e0ff',
-                        marginBottom: '6px',
-                        lineHeight: 1,
-                    }}>
+                <div className="bg-gradient-to-br from-purple-900/10 to-indigo-900/5 border border-purple-500/20 rounded-2xl p-5 text-center shadow-[0_8px_32px_0_rgba(139,92,246,0.03)] hover:border-purple-500/40 transition-colors duration-300">
+                    <div className="text-3xl font-black text-purple-100 mb-1.5 leading-none">
                         {formatNumber(totalCredits)}
                     </div>
-                    <div style={{
-                        fontSize: '10px',
-                        color: '#9ca3af',
-                        textTransform: 'uppercase',
-                        letterSpacing: '2px',
-                        fontWeight: 600,
-                    }}>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
                         {t('lobby.credits')}
                     </div>
                 </div>
             </div>
 
             {/* Central Play Button */}
-            <button
-                onClick={onPlay}
-                style={{
-                    position: 'relative',
-                    width: '130px',
-                    height: '130px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #5d00ff 0%, #bc13fe 100%)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 40px rgba(93,0,255,0.5), 0 0 80px rgba(188,19,254,0.2), inset 0 0 30px rgba(0,0,0,0.3)',
-                    marginBottom: '28px',
-                    transition: 'transform 0.15s, box-shadow 0.15s',
-                    flexShrink: 0,
-                    zIndex: 1,
-                }}
-            >
-                <div style={{
-                    position: 'absolute',
-                    inset: '3px',
-                    borderRadius: '50%',
-                    background: 'rgba(10,4,21,0.7)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
-                    <span style={{ fontSize: '36px', marginBottom: '4px', filter: 'drop-shadow(0 0 15px rgba(255,255,255,0.5))' }}>⚔️</span>
-                    <span style={{
-                        fontSize: '14px',
-                        fontWeight: 900,
-                        color: 'white',
-                        letterSpacing: '4px',
-                        textTransform: 'uppercase',
-                    }}>{t('lobby.play')}</span>
-                </div>
-
-                <div style={{
-                    position: 'absolute',
-                    inset: '-6px',
-                    borderRadius: '50%',
-                    border: '2px solid rgba(139,92,246,0.3)',
-                    animation: 'pulseRing 3s ease-in-out infinite',
-                }} />
-            </button>
+            <div className="relative mb-8 flex-shrink-0 z-10 flex items-center justify-center">
+                {/* Pulsing ring animation in background */}
+                <motion.div
+                    className="absolute w-[142px] h-[142px] rounded-full border border-purple-500/25 pointer-events-none"
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0.1, 0.6] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+                
+                <motion.button
+                    onClick={onPlay}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-[130px] h-[130px] rounded-full bg-gradient-to-br from-purple-600 via-indigo-600 to-fuchsia-600 p-[1.5px] cursor-pointer shadow-[0_0_40px_rgba(93,0,255,0.4),0_0_80px_rgba(188,19,254,0.15),inset_0_0_30px_rgba(0,0,0,0.3)] relative flex items-center justify-center"
+                >
+                    <div className="absolute inset-[3px] rounded-full bg-[#0a0415]/80 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center hover:bg-black/40 transition-colors">
+                        <span className="text-[38px] mb-1 filter drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">⚔️</span>
+                        <span className="text-sm font-black text-white tracking-[0.2em] uppercase">{t('lobby.play')}</span>
+                    </div>
+                </motion.button>
+            </div>
 
             {/* Quick Actions Row */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '10px',
-                width: '100%',
-                maxWidth: '340px',
-                marginBottom: '24px',
-                position: 'relative',
-                zIndex: 1,
-            }}>
-                <div style={{
-                    background: 'rgba(139,92,246,0.06)',
-                    border: '1px solid rgba(139,92,246,0.15)',
-                    borderRadius: '14px',
-                    padding: '14px 8px',
-                    textAlign: 'center',
-                }}>
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>🏆</div>
-                    <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px' }}>Season 1</div>
+            <div className="grid grid-cols-3 gap-2.5 w-full max-w-[340px] mb-8 relative z-10">
+                <div className="bg-purple-900/10 border border-purple-500/15 rounded-2xl py-3.5 px-2 text-center shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+                    <div className="text-xl mb-1">🏆</div>
+                    <div className="text-[10px] text-purple-300 font-bold tracking-wider">Season 1</div>
                 </div>
-                <div
+                
+                <motion.div
                     onClick={onDailyClick}
-                    style={{
-                        background: 'rgba(234,179,8,0.06)',
-                        border: '1px solid rgba(234,179,8,0.15)',
-                        borderRadius: '14px',
-                        padding: '14px 8px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                    }}>
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>🎁</div>
-                    <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px' }}>Daily</div>
-                </div>
-                <div
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-amber-500/5 border border-amber-500/15 hover:border-amber-500/30 rounded-2xl py-3.5 px-2 text-center cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-colors duration-200"
+                >
+                    <div className="text-xl mb-1">🎁</div>
+                    <div className="text-[10px] text-amber-300 font-bold tracking-wider">Daily</div>
+                </motion.div>
+                
+                <motion.div
                     onClick={() => window.open('https://x.com/Void_WorldApp', '_blank')}
-                    style={{
-                        background: 'rgba(34,197,94,0.06)',
-                        border: '1px solid rgba(34,197,94,0.15)',
-                        borderRadius: '14px',
-                        padding: '14px 8px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                    }}>
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>𝕏</div>
-                    <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px' }}>Follow</div>
-                </div>
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-emerald-500/5 border border-emerald-500/15 hover:border-emerald-500/30 rounded-2xl py-3.5 px-2 text-center cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-colors duration-200"
+                >
+                    <div className="text-xl mb-1">𝕏</div>
+                    <div className="text-[10px] text-emerald-300 font-bold tracking-wider">Follow</div>
+                </motion.div>
             </div>
 
             {/* Game mode info */}
-            <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                <p style={{
-                    fontSize: '13px',
-                    color: '#a78bfa',
-                    fontWeight: 600,
-                    marginBottom: '6px',
-                }}>
+            <div className="text-center max-w-[280px] relative z-10">
+                <p className="text-xs font-bold text-purple-300 uppercase tracking-widest mb-1.5">
                     {t('lobby.mode')}
                 </p>
-                <p style={{
-                    fontSize: '12px',
-                    color: '#6b7280',
-                    lineHeight: 1.5,
-                    maxWidth: '280px',
-                }}>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
                     {t('lobby.mode_desc')}
                 </p>
             </div>
-
-            <style>{`
-                @keyframes pulseRing {
-                    0%, 100% { transform: scale(1); opacity: 0.4; }
-                    50% { transform: scale(1.12); opacity: 0; }
-                }
-            `}</style>
         </div>
     );
 };

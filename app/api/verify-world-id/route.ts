@@ -91,24 +91,43 @@ export async function POST(req: NextRequest) {
             if (existingUserRes.rows.length === 0) {
                 // New user!
                 let referrerRecord = null
-                if (referrerAddress && typeof referrerAddress === 'string' && referrerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-                    const referrerRes = await client.query(
-                        'SELECT id, wallet_address, username FROM users WHERE LOWER(wallet_address) = LOWER($1)',
+                if (referrerAddress && typeof referrerAddress === 'string') {
+                    // Try to find by referral code first
+                    let referrerRes = await client.query(
+                        'SELECT id, wallet_address, world_id_nullifier, username FROM users WHERE UPPER(referral_code) = UPPER($1)',
                         [referrerAddress]
                     )
-                    if (referrerRes.rows.length > 0) {
+                    
+                    // If not found, try to find by wallet address
+                    if (referrerRes.rows.length === 0) {
+                        referrerRes = await client.query(
+                            'SELECT id, wallet_address, world_id_nullifier, username FROM users WHERE LOWER(wallet_address) = LOWER($1)',
+                            [referrerAddress]
+                        )
+                    }
+
+                    if (referrerRes.rows.length > 0 && referrerRes.rows[0].world_id_nullifier !== walletAddress) {
                         referrerRecord = referrerRes.rows[0]
                     }
                 }
 
-                const startParticles = referrerRecord ? 25000 : 0
+                // Generate new user referral code
+                let referralCode = ''
+                let isUnique = false
+                while (!isUnique) {
+                    referralCode = `void-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+                    const check = await client.query("SELECT id FROM users WHERE referral_code = $1", [referralCode])
+                    if (check.rows.length === 0) {
+                        isUnique = true
+                    }
+                }
 
-                // Create new user with starting particles
+                // Create new user (starting particles: 0, referred_by set, referral_reward_claimed = FALSE)
                 const insertRes = await client.query(
-                    `INSERT INTO users (world_id_nullifier, wallet_address, particles, total_particles_collected, last_login)
-                     VALUES ($1, $1, $2, $2, NOW())
+                    `INSERT INTO users (world_id_nullifier, wallet_address, particles, total_particles_collected, last_login, referral_code, referred_by, referral_reward_claimed)
+                     VALUES ($1, $1, 0, 0, NOW(), $2, $3, FALSE)
                      RETURNING id`,
-                    [walletAddress, startParticles]
+                    [walletAddress, referralCode, referrerRecord ? referrerRecord.world_id_nullifier : null]
                 )
                 userId = insertRes.rows[0].id
 
@@ -118,16 +137,7 @@ export async function POST(req: NextRequest) {
                     [userId]
                 )
 
-                // Award particles to the referrer
                 if (referrerRecord) {
-                    await client.query(
-                        `UPDATE users 
-                         SET particles = particles + 50000, 
-                             total_particles_collected = total_particles_collected + 50000,
-                             updated_at = NOW() 
-                         WHERE id = $1`,
-                        [referrerRecord.id]
-                    )
                     referralClaimed = true
                     referrerUsername = referrerRecord.username || 'znajomy'
                 }

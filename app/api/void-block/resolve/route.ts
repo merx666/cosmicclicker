@@ -43,17 +43,23 @@ export async function POST(request: NextRequest) {
 
         const totalPool = parseFloat(round.total_pool || '0')
 
-        // 3. Case A: Pula jest zerowa (nikt nie postawił)
-        // Przedłużamy rundę o kolejne 60 sekund
-        if (totalPool === 0) {
-            const nextEndTime = new Date(Date.now() + 60 * 1000)
+        // 3. Case A: Pula jest zerowa lub mniej niż 3 zakłady (gra wymaga min. 3 zakładów)
+        // Pobieramy liczbę zakładów z danej rundy
+        const betsCountRes = await query(
+            "SELECT COUNT(*)::int as count FROM void_block_bets WHERE round_id = $1",
+            [round.id]
+        )
+        const betsCount = betsCountRes.rows[0]?.count || 0
+
+        if (totalPool === 0 || betsCount < 3) {
+            const nextEndTime = new Date(Date.now() + 300 * 1000)
             await query(
                 "UPDATE void_block_rounds SET end_time = $1 WHERE id = $2",
                 [nextEndTime, round.id]
             )
             return NextResponse.json({
                 success: true,
-                message: 'Round extended (empty pool)',
+                message: betsCount < 3 ? 'Round extended (waiting for min. 3 bets)' : 'Round extended (empty pool)',
                 round: {
                     id: round.id,
                     end_time: nextEndTime.getTime()
@@ -71,7 +77,7 @@ export async function POST(request: NextRequest) {
 
         if (bets.length === 0) {
             // Failsafe: if totalPool > 0 but no bets (should not happen due to DB constraint/integrity)
-            const nextEndTime = new Date(Date.now() + 60 * 1000)
+            const nextEndTime = new Date(Date.now() + 300 * 1000)
             await query(
                 "UPDATE void_block_rounds SET end_time = $1, total_pool = 0, fee_amount = 0, net_pool = 0 WHERE id = $2",
                 [nextEndTime, round.id]
@@ -112,7 +118,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 6. DB Transaction to close current round and open a new one
-        const nextEndTime = new Date(Date.now() + 60 * 1000)
+        const nextEndTime = new Date(Date.now() + 300 * 1000)
 
         const resolution = await transaction(async (client) => {
             // Close active round

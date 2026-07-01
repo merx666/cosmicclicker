@@ -1,5 +1,3 @@
-'use client'
-
 import { useTranslation } from '@/lib/i18n'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -44,12 +42,12 @@ export default function LeaderboardModal({
         return ''
     }
 
-    const getColor = () => {
-        if (type === 'wave') return '#06b6d4'
-        if (type === 'spending') return '#fbbf24'
-        if (type === 'streak') return '#f97316'
-        if (type === 'voidbastion') return '#8b5cf6'
-        return '#a78bfa'
+    const getTextColorClass = () => {
+        if (type === 'wave') return 'text-cyan-400'
+        if (type === 'spending') return 'text-amber-400'
+        if (type === 'streak') return 'text-orange-400'
+        if (type === 'voidbastion') return 'text-purple-400'
+        return 'text-purple-300'
     }
 
     const leaderboardData = data?.leaderboard || data || []
@@ -62,109 +60,40 @@ export default function LeaderboardModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(5,5,16,0.95)',
-                        backdropFilter: 'blur(16px)',
-                        WebkitBackdropFilter: 'blur(16px)',
-                        zIndex: 100,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '12px',
-                    }}
+                    className="fixed inset-0 bg-[#05030f]/95 backdrop-blur-lg z-[100] flex items-center justify-center p-3"
                 >
                     <motion.div
                         initial={{ scale: 0.95, y: 15 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.95, y: 15 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                        style={{
-                            width: '100%',
-                            maxWidth: '430px',
-                            maxHeight: '90vh',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            borderRadius: '20px',
-                            overflow: 'hidden',
-                            border: '1px solid rgba(234,179,8,0.2)',
-                            background: 'linear-gradient(180deg, rgba(10,4,21,0.98) 0%, rgba(15,8,30,0.98) 100%)',
-                        }}
+                        className="w-full max-w-[430px] max-h-[90vh] flex flex-col rounded-3xl overflow-hidden border border-amber-500/20 bg-gradient-to-b from-[#0a0415]/98 to-[#0f081e]/98 shadow-2xl"
                     >
                         {/* Header */}
-                        <div style={{
-                            padding: '20px 20px 16px',
-                            background: 'linear-gradient(135deg, rgba(234,179,8,0.06) 0%, rgba(249,115,22,0.04) 100%)',
-                            borderBottom: '1px solid rgba(234,179,8,0.15)',
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '16px',
-                            }}>
-                                <h2 style={{
-                                    fontSize: '20px',
-                                    fontWeight: 800,
-                                    letterSpacing: '2px',
-                                    background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                }}>
-                                    🏆 RANKING
+                        <div className="px-5 py-4 bg-gradient-to-r from-amber-500/10 to-orange-500/5 border-b border-amber-500/15 flex flex-col gap-4">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-black tracking-widest bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent uppercase">
+                                    🏆 Ranking
                                 </h2>
                                 <button
                                     onClick={onClose}
-                                    style={{
-                                        width: '36px',
-                                        height: '36px',
-                                        borderRadius: '10px',
-                                        border: '1px solid rgba(255,255,255,0.15)',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        color: 'rgba(255,255,255,0.6)',
-                                        fontSize: '18px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                    }}
+                                    className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-white/60 text-lg flex items-center justify-center cursor-pointer hover:bg-white/10 hover:text-white transition-colors"
                                 >
                                     ✕
                                 </button>
                             </div>
 
                             {/* Tabs */}
-                            <div style={{
-                                display: 'flex',
-                                gap: '6px',
-                                overflowX: 'auto',
-                                WebkitOverflowScrolling: 'touch',
-                            }}>
+                            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                                 {tabs.map(tab => (
                                     <button
                                         key={tab.id}
                                         onClick={() => onChangeType(tab.id as any)}
-                                        style={{
-                                            padding: '8px 14px',
-                                            borderRadius: '8px',
-                                            fontWeight: 700,
-                                            fontSize: '12px',
-                                            letterSpacing: '0.5px',
-                                            whiteSpace: 'nowrap',
-                                            border: type === tab.id
-                                                ? '1px solid #fbbf24'
-                                                : '1px solid rgba(255,255,255,0.1)',
-                                            background: type === tab.id
-                                                ? 'rgba(234,179,8,0.15)'
-                                                : 'transparent',
-                                            color: type === tab.id
-                                                ? '#fbbf24'
-                                                : '#6b7280',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            flexShrink: 0,
-                                        }}
+                                        className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider uppercase whitespace-nowrap cursor-pointer transition-colors flex-shrink-0 ${
+                                            type === tab.id
+                                                ? 'border border-amber-500/30 bg-amber-500/15 text-amber-400'
+                                                : 'border border-white/10 bg-transparent text-gray-500 hover:text-gray-300'
+                                        }`}
                                     >
                                         {tab.icon} {tab.label}
                                     </button>
@@ -173,22 +102,14 @@ export default function LeaderboardModal({
                         </div>
 
                         {/* Leaderboard List */}
-                        <div style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            padding: '16px',
-                            WebkitOverflowScrolling: 'touch',
-                        }}>
+                        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
                             {!leaderboardData || leaderboardData.length === 0 ? (
-                                <div style={{
-                                    textAlign: 'center',
-                                    padding: '48px 20px',
-                                }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-                                    <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '8px' }}>
+                                <div className="text-center py-12 px-5">
+                                    <div className="text-5xl mb-4">📊</div>
+                                    <p className="text-base font-bold text-gray-500 mb-1.5">
                                         No data yet
                                     </p>
-                                    <p style={{ fontSize: '13px', color: '#4b5563' }}>
+                                    <p className="text-xs text-gray-600">
                                         Be the first to climb the ranks!
                                     </p>
                                 </div>
@@ -199,49 +120,24 @@ export default function LeaderboardModal({
                                     return (
                                         <div
                                             key={index}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '14px 16px',
-                                                marginBottom: '8px',
-                                                borderRadius: '12px',
-                                                background: isTop3
-                                                    ? 'rgba(234,179,8,0.06)'
-                                                    : 'rgba(139,92,246,0.04)',
-                                                border: isTop3
-                                                    ? '1px solid rgba(234,179,8,0.2)'
-                                                    : '1px solid rgba(139,92,246,0.1)',
-                                            }}
+                                            className={`flex items-center justify-between p-3.5 rounded-2xl border transition-colors ${
+                                                isTop3
+                                                    ? 'bg-amber-500/5 border-amber-500/25 shadow-[0_0_12px_rgba(245,158,11,0.03)]'
+                                                    : 'bg-purple-500/5 border-purple-500/10'
+                                            }`}
                                         >
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                            }}>
-                                                <div style={{
-                                                    fontSize: isTop3 ? '22px' : '14px',
-                                                    fontWeight: 800,
-                                                    minWidth: '36px',
-                                                    textAlign: 'center',
-                                                    color: isTop3 ? undefined : '#6b7280',
-                                                }}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`text-center font-black ${
+                                                    isTop3 ? 'text-xl' : 'text-xs text-gray-500'
+                                                } min-w-[32px]`}>
                                                     {isTop3 ? medals[index] : `#${index + 1}`}
                                                 </div>
                                                 <div>
-                                                    <div style={{
-                                                        fontSize: '13px',
-                                                        fontWeight: 600,
-                                                        color: '#e0e0ff',
-                                                    }}>
+                                                    <div className="text-xs font-bold text-purple-100 font-mono">
                                                         {entry.wallet_address || '0x...'}
                                                     </div>
                                                     {(entry.total_games_played || entry.games_played) && (
-                                                        <div style={{
-                                                            fontSize: '10px',
-                                                            color: '#6b7280',
-                                                            marginTop: '2px',
-                                                        }}>
+                                                        <div className="text-[10px] text-gray-500 mt-0.5 font-bold uppercase tracking-wider">
                                                             {entry.total_games_played || entry.games_played} games
                                                             {type === 'voidbastion' && entry.total_score ? ` · ${entry.total_score} pts` : ''}
                                                         </div>
@@ -249,18 +145,9 @@ export default function LeaderboardModal({
                                                 </div>
                                             </div>
 
-                                            <div style={{
-                                                fontSize: '18px',
-                                                fontWeight: 800,
-                                                color: getColor(),
-                                                textAlign: 'right',
-                                            }}>
+                                            <div className={`text-lg font-black ${getTextColorClass()} text-right`}>
                                                 {getValue(entry)}
-                                                <span style={{
-                                                    fontSize: '10px',
-                                                    color: '#9ca3af',
-                                                    marginLeft: '2px',
-                                                }}>
+                                                <span className="text-[10px] text-gray-500 font-bold ml-0.5 lowercase">
                                                     {getUnit()}
                                                 </span>
                                             </div>
@@ -271,13 +158,8 @@ export default function LeaderboardModal({
                         </div>
 
                         {/* Footer */}
-                        <div style={{
-                            padding: '12px 16px',
-                            borderTop: '1px solid rgba(255,255,255,0.05)',
-                            background: 'rgba(0,0,0,0.3)',
-                            textAlign: 'center',
-                        }}>
-                            <p style={{ fontSize: '10px', color: '#6b7280' }}>
+                        <div className="px-4 py-3 border-t border-white/5 bg-black/20 text-center">
+                            <p className="text-[10px] text-gray-500">
                                 Season 3 Rankings
                             </p>
                         </div>

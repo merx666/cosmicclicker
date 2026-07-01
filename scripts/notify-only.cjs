@@ -21,8 +21,8 @@ const API_KEY = process.env.WORLDCOIN_API_KEY;
 const APP_ID = process.env.WORLDCOIN_APP_ID || process.env.NEXT_PUBLIC_MINIKIT_APP_ID || 'app_e3c317455f168a14ab972dbe4f34ab9a';
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:VoidCollectorDB2024!@localhost:5432/void_collector';
 
-const NOTIFICATION_TITLE = '⚡ We are back online!';
-const NOTIFICATION_MESSAGE = 'Server connection restored! Following recent DDoS attacks, we are fully back online. To thank you for your patience, we have credited +150,000 Particles to your balance! 🚀';
+const NOTIFICATION_TITLE = '💰 WLD Payouts Unlocked!';
+const NOTIFICATION_MESSAGE = 'Our reward pools have just been refueled! Play Void Collector now, convert your hard-earned Particles, and claim your WLD rewards instantly. Get spinning! 🚀';
 
 if (!API_KEY) {
     console.error('[NotifyOnly] ERROR: WORLDCOIN_API_KEY environment variable is required');

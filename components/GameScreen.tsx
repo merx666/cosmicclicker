@@ -133,8 +133,7 @@ export default function GameScreen({ userHash, onBackToMenu }: GameScreenProps) 
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 
     return (
-        <div className="min-h-screen bg-void-dark text-white pl-[72px] pb-8">
-            {/* Premium background effects */}
+        <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col noise-bg pb-[72px]">
             <BackgroundEffects theme={premiumBackgroundTheme as any} />
             {/* Header */}
             <header className="sticky top-0 z-40 bg-void-dark/80 backdrop-blur-lg border-b border-void-purple/20">

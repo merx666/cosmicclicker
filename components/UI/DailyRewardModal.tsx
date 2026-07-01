@@ -1,6 +1,4 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface DailyRewardModalProps {
@@ -8,7 +6,8 @@ interface DailyRewardModalProps {
     onClose: () => void
 }
 
-const DAILY_CREDITS = [10, 15, 20, 20, 25, 25, 35, 30, 30, 35, 40, 45, 50, 75]
+const DAILY_CREDITS = [10, 15, 20, 20, 25, 25, 50, 30, 30, 35, 40, 45, 50, 100]
+const MILESTONE_DAYS = [7, 14]
 
 export default function DailyRewardModal({ isOpen, onClose }: DailyRewardModalProps) {
     const [streak, setStreak] = useState<any>(null)
@@ -47,7 +46,8 @@ export default function DailyRewardModal({ isOpen, onClose }: DailyRewardModalPr
                 setStreak({
                     ...streak,
                     currentStreak: data.newStreak,
-                    canClaim: false
+                    canClaim: false,
+                    shieldAvailable: data.shieldAwarded || streak?.shieldAvailable
                 })
             }
         } catch (error) {
@@ -58,6 +58,8 @@ export default function DailyRewardModal({ isOpen, onClose }: DailyRewardModalPr
     }
 
     const currentDay = streak?.currentStreak || 0
+    const hasShield = streak?.shieldAvailable || false
+    const isFireStreak = currentDay >= 7
 
     return (
         <AnimatePresence>
@@ -67,225 +69,156 @@ export default function DailyRewardModal({ isOpen, onClose }: DailyRewardModalPr
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(5,5,16,0.95)',
-                        backdropFilter: 'blur(16px)',
-                        WebkitBackdropFilter: 'blur(16px)',
-                        zIndex: 200,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '12px',
-                    }}
+                    className="fixed inset-0 bg-[#05030f]/95 backdrop-blur-lg z-[200] flex items-center justify-center p-3"
                 >
                     <motion.div
                         initial={{ scale: 0.95, y: 15 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.95, y: 15 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                        style={{
-                            width: '100%',
-                            maxWidth: '380px',
-                            maxHeight: '85vh',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            borderRadius: '20px',
-                            overflow: 'hidden',
-                            border: '1px solid rgba(234,179,8,0.2)',
-                            background: 'linear-gradient(180deg, rgba(10,4,21,0.98) 0%, rgba(15,8,30,0.98) 100%)',
-                        }}
+                        className={`w-full max-w-[380px] max-h-[85vh] flex flex-col rounded-3xl overflow-hidden border bg-gradient-to-b from-[#0a0415]/98 to-[#0f081e]/98 shadow-2xl ${
+                            isFireStreak ? 'border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.15)]' : 'border-purple-500/20'
+                        }`}
                     >
                         {/* Header */}
-                        <div style={{
-                            padding: '20px 20px 16px',
-                            background: 'linear-gradient(135deg, rgba(234,179,8,0.06) 0%, rgba(249,115,22,0.04) 100%)',
-                            borderBottom: '1px solid rgba(234,179,8,0.15)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}>
-                            <h2 style={{
-                                fontSize: '18px',
-                                fontWeight: 800,
-                                letterSpacing: '2px',
-                                background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                            }}>
-                                🎁 DAILY CREDITS
-                            </h2>
+                        <div className={`px-5 py-4 flex justify-between items-center border-b border-orange-500/15 ${
+                            isFireStreak 
+                                ? 'bg-gradient-to-r from-orange-500/10 to-amber-500/5' 
+                                : 'bg-gradient-to-r from-amber-500/5 to-orange-500/3'
+                        }`}>
+                            <div className="flex items-center gap-2">
+                                <h2 className={`text-base font-black tracking-widest bg-clip-text text-transparent uppercase bg-gradient-to-r ${
+                                    isFireStreak ? 'from-orange-500 to-amber-400' : 'from-amber-400 to-orange-500'
+                                }`}>
+                                    {isFireStreak ? '🔥' : '🎁'} Daily Credits
+                                </h2>
+                                {hasShield && (
+                                    <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-extrabold uppercase tracking-wide">
+                                        🛡️ Shield
+                                    </span>
+                                )}
+                            </div>
                             <button
                                 onClick={onClose}
-                                style={{
-                                    width: '36px',
-                                    height: '36px',
-                                    borderRadius: '10px',
-                                    border: '1px solid rgba(255,255,255,0.15)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: 'rgba(255,255,255,0.6)',
-                                    fontSize: '18px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
+                                className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-white/60 text-lg flex items-center justify-center cursor-pointer hover:bg-white/10 hover:text-white transition-colors"
                             >
                                 ✕
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            padding: '16px',
-                            WebkitOverflowScrolling: 'touch',
-                        }}>
+                        <div className="flex-1 overflow-y-auto p-5 no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
                             {loading ? (
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                                <div className="text-center py-10 text-gray-500 text-sm font-bold animate-pulse">
                                     Loading...
                                 </div>
                             ) : (
                                 <>
                                     {/* Streak counter */}
-                                    <div style={{
-                                        textAlign: 'center',
-                                        marginBottom: '20px',
-                                    }}>
-                                        <div style={{
-                                            fontSize: '40px',
-                                            fontWeight: 800,
-                                            color: '#fbbf24',
-                                        }}>
-                                            {currentDay}
-                                        </div>
-                                        <div style={{
-                                            fontSize: '12px',
-                                            color: '#9ca3af',
-                                            fontWeight: 600,
-                                            letterSpacing: '1px',
-                                        }}>
-                                            DAY STREAK
+                                    <div className="text-center mb-5">
+                                        <motion.div
+                                            animate={isFireStreak ? { scale: [1, 1.05, 1] } : {}}
+                                            transition={{ duration: 2, repeat: Infinity }}
+                                            className={`text-4xl font-black ${isFireStreak ? 'text-orange-500 drop-shadow-[0_0_20px_rgba(249,115,22,0.4)]' : 'text-amber-500'}`}
+                                        >
+                                            {isFireStreak && '🔥 '}{currentDay}{isFireStreak && ' 🔥'}
+                                        </motion.div>
+                                        <div className="text-[10px] text-gray-400 font-black tracking-widest uppercase mt-1">
+                                            Day Streak
                                         </div>
                                     </div>
 
                                     {/* 14-day grid */}
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(7, 1fr)',
-                                        gap: '6px',
-                                        marginBottom: '20px',
-                                    }}>
+                                    <div className="grid grid-cols-7 gap-1.5 mb-5">
                                         {DAILY_CREDITS.map((credits, i) => {
                                             const day = i + 1
                                             const isCollected = day <= currentDay
                                             const isToday = day === currentDay + 1
-                                            const isSpecial = day === 14
+                                            const isMilestone = MILESTONE_DAYS.includes(day)
 
                                             return (
-                                                <div
+                                                <motion.div
                                                     key={day}
-                                                    style={{
-                                                        background: isCollected
-                                                            ? 'rgba(34,197,94,0.15)'
+                                                    animate={isMilestone && isToday ? {
+                                                        borderColor: ['rgba(249,115,22,0.8)', 'rgba(250,204,21,0.8)', 'rgba(249,115,22,0.8)']
+                                                    } : {}}
+                                                    transition={{ duration: 2, repeat: Infinity }}
+                                                    className={`relative rounded-xl py-2.5 px-0.5 text-center border transition-all ${
+                                                        isCollected
+                                                            ? 'bg-emerald-500/15 border-emerald-500/30'
                                                             : isToday
-                                                                ? 'rgba(234,179,8,0.12)'
-                                                                : 'rgba(139,92,246,0.04)',
-                                                        border: isToday
-                                                            ? '2px solid #fbbf24'
-                                                            : isCollected
-                                                                ? '1px solid rgba(34,197,94,0.3)'
-                                                                : '1px solid rgba(139,92,246,0.1)',
-                                                        borderRadius: '10px',
-                                                        padding: '8px 4px',
-                                                        textAlign: 'center',
-                                                        position: 'relative',
-                                                    }}
+                                                                ? isMilestone
+                                                                    ? 'bg-orange-500/15 border-2 border-orange-500'
+                                                                    : 'bg-amber-500/12 border-2 border-amber-500'
+                                                                : isMilestone
+                                                                    ? 'bg-orange-500/5 border border-orange-500/25'
+                                                                    : 'bg-purple-500/5 border border-purple-500/10'
+                                                    }`}
                                                 >
-                                                    <div style={{
-                                                        fontSize: '9px',
-                                                        color: isCollected ? '#22c55e' : '#6b7280',
-                                                        fontWeight: 600,
-                                                        marginBottom: '2px',
-                                                    }}>
+                                                    {isMilestone && !isCollected && (
+                                                        <div className="absolute -top-1.5 -right-1 text-[10px]">
+                                                            {day === 7 ? '🛡️' : '👑'}
+                                                        </div>
+                                                    )}
+                                                    <div className={`text-[9px] font-black mb-0.5 uppercase ${
+                                                        isCollected ? 'text-emerald-400' : isMilestone ? 'text-orange-400' : 'text-gray-500'
+                                                    }`}>
                                                         D{day}
                                                     </div>
-                                                    <div style={{
-                                                        fontSize: isSpecial ? '11px' : '10px',
-                                                        fontWeight: 700,
-                                                        color: isCollected
-                                                            ? '#22c55e'
+                                                    <div className={`text-[10px] font-bold ${
+                                                        isCollected
+                                                            ? 'text-emerald-400'
                                                             : isToday
-                                                                ? '#fbbf24'
-                                                                : isSpecial
-                                                                    ? '#f97316'
-                                                                    : '#9ca3af',
-                                                    }}>
+                                                                ? 'text-amber-400'
+                                                                : isMilestone
+                                                                    ? 'text-orange-400'
+                                                                    : 'text-gray-400'
+                                                    }`}>
                                                         {isCollected ? '✓' : `+${credits}`}
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             )
                                         })}
                                     </div>
 
+                                    {/* Shield info */}
+                                    {hasShield && (
+                                        <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-gray-400 text-center">
+                                            🛡️ <span className="text-emerald-400 font-extrabold">Streak Shield active</span> — miss 1 day without losing your streak
+                                        </div>
+                                    )}
+
                                     {/* Claim button or status */}
                                     {streak?.canClaim && !claimed ? (
-                                        <button
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={handleClaim}
                                             disabled={claiming}
-                                            style={{
-                                                width: '100%',
-                                                padding: '14px',
-                                                borderRadius: '12px',
-                                                border: 'none',
-                                                background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                                                color: '#0a0415',
-                                                fontSize: '14px',
-                                                fontWeight: 800,
-                                                letterSpacing: '1px',
-                                                cursor: claiming ? 'default' : 'pointer',
-                                                opacity: claiming ? 0.6 : 1,
-                                            }}
+                                            className="w-full py-3.5 rounded-xl border-none bg-gradient-to-r from-amber-400 to-orange-500 text-void-dark text-xs font-black tracking-wider uppercase cursor-pointer shadow-[0_4px_15px_rgba(245,158,11,0.25)] disabled:opacity-60"
                                         >
                                             {claiming ? 'CLAIMING...' : `CLAIM +${DAILY_CREDITS[Math.min(currentDay, 13)]} CREDITS`}
-                                        </button>
+                                        </motion.button>
                                     ) : claimed ? (
-                                        <div style={{
-                                            textAlign: 'center',
-                                            padding: '14px',
-                                            borderRadius: '12px',
-                                            background: 'rgba(34,197,94,0.1)',
-                                            border: '1px solid rgba(34,197,94,0.3)',
-                                        }}>
-                                            <div style={{ fontSize: '16px', marginBottom: '4px' }}>✅</div>
-                                            <div style={{ fontSize: '13px', color: '#22c55e', fontWeight: 600 }}>
+                                        <div className="text-center py-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col items-center justify-center gap-1.5">
+                                            <div className="text-xl">✅</div>
+                                            <div className="text-xs font-bold text-emerald-400">
                                                 Claimed! Come back tomorrow.
                                             </div>
                                         </div>
                                     ) : (
-                                        <div style={{
-                                            textAlign: 'center',
-                                            padding: '14px',
-                                            borderRadius: '12px',
-                                            background: 'rgba(139,92,246,0.06)',
-                                            border: '1px solid rgba(139,92,246,0.15)',
-                                        }}>
-                                            <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                                        <div className="text-center py-3.5 rounded-xl bg-purple-500/5 border border-purple-500/15">
+                                            <div className="text-xs font-bold text-gray-500">
                                                 Already claimed today
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Info */}
-                                    <p style={{
-                                        fontSize: '10px',
-                                        color: '#4b5563',
-                                        textAlign: 'center',
-                                        marginTop: '12px',
-                                    }}>
-                                        Miss a day and your streak resets. Cycle resets after 14 days.
+                                    <p className="text-[9px] text-gray-600 text-center mt-4 leading-normal max-w-[280px] mx-auto">
+                                        {hasShield
+                                            ? '🛡️ Shield protects 1 missed day. Resets after use. Earned at Day 7.'
+                                            : 'Miss a day and your streak resets. Cycle resets after 14 days.'
+                                        }
                                     </p>
                                 </>
                             )}

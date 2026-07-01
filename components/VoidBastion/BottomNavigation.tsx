@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldIcon, ChartIcon, PeopleIcon } from '@/components/UI/Icons';
 import { t } from '@/lib/i18n';
+import { motion } from 'framer-motion';
 
 interface BottomNavigationProps {
     activeTab: string;
@@ -14,7 +15,6 @@ interface NavItem {
     icon: React.ReactNode;
 }
 
-// Simple Book icon for Guide
 const BookIcon = ({ size = 22 }: { size?: number }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
@@ -33,84 +33,27 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, o
     ];
 
     return (
-        <nav style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'rgba(10,4,21,0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(139,92,246,0.15)',
-            zIndex: 50,
-            paddingBottom: 'env(safe-area-inset-bottom, 16px)',
-        }}>
-            <div style={{
-                maxWidth: '430px',
-                margin: '0 auto',
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'space-around',
-                padding: '6px 4px 0',
-                position: 'relative',
-            }}>
+        <nav className="fixed bottom-0 left-0 right-0 bg-[#0a0415]/95 backdrop-blur-lg border-t border-purple-500/15 z-50 pb-[env(safe-area-inset-bottom,16px)]">
+            <div className="max-w-[430px] mx-auto flex items-end justify-around px-1 py-1 relative">
                 {/* Left tabs */}
                 <NavButton item={tabs[0]} isActive={activeTab === 'armory'} onClick={() => onTabChange('armory')} />
                 <NavButton item={tabs[1]} isActive={activeTab === 'guide'} onClick={() => onTabChange('guide')} />
 
                 {/* Center Play Button */}
-                <div style={{ position: 'relative', top: '-18px', margin: '0 2px' }}>
-                    <button
+                <div className="relative top-[-14px] mx-1">
+                    <motion.button
                         onClick={onPlay}
-                        style={{
-                            width: '64px',
-                            height: '64px',
-                            borderRadius: '16px',
-                            background: 'linear-gradient(135deg, #5d00ff 0%, #bc13fe 100%)',
-                            border: 'none',
-                            padding: '2px',
-                            cursor: 'pointer',
-                            boxShadow: '0 0 20px rgba(93,0,255,0.4), 0 4px 12px rgba(0,0,0,0.3)',
-                            position: 'relative',
-                            zIndex: 20,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 p-[1px] cursor-pointer shadow-[0_0_20px_rgba(139,92,246,0.3),0_4px_12px_rgba(0,0,0,0.4)] relative z-20 flex items-center justify-center"
                     >
-                        <div style={{
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: '14px',
-                            background: 'rgba(0,0,0,0.45)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255,255,255,0.15)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}>
-                            <span style={{ fontSize: '22px', marginBottom: '1px' }}>⚔️</span>
-                            <span style={{
-                                fontSize: '8px',
-                                fontWeight: 900,
-                                color: 'white',
-                                letterSpacing: '1.5px',
-                                textTransform: 'uppercase',
-                            }}>{t('lobby.play')}</span>
+                        <div className="w-full h-full rounded-[15px] bg-[#0a0415]/80 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center hover:bg-black/40 transition-colors">
+                            <span className="text-xl mb-0.5 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">⚔️</span>
+                            <span className="text-[8px] font-black text-white tracking-[0.15em] uppercase">{t('lobby.play')}</span>
                         </div>
-                    </button>
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '-6px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '40px',
-                        height: '10px',
-                        background: 'rgba(93,0,255,0.35)',
-                        filter: 'blur(10px)',
-                        borderRadius: '50%',
-                    }} />
+                    </motion.button>
+                    {/* Shadow glow under the center play button */}
+                    <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-10 h-2 bg-purple-600/30 blur-[6px] rounded-full" />
                 </div>
 
                 {/* Right tabs */}
@@ -129,40 +72,20 @@ interface NavButtonProps {
 }
 
 const NavButton: React.FC<NavButtonProps> = ({ item, isActive, isDisabled = false, onClick }) => (
-    <button
+    <motion.button
         onClick={onClick}
-        style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '3px',
-            padding: '8px 10px',
-            borderRadius: '12px',
-            border: 'none',
-            background: isActive && !isDisabled ? 'rgba(139,92,246,0.12)' : 'transparent',
-            cursor: isDisabled ? 'default' : 'pointer',
-            minWidth: '54px',
-            transition: 'all 0.2s',
-            color: isDisabled ? '#3b3b4f' : isActive ? '#a78bfa' : '#6b7280',
-            opacity: isDisabled ? 0.45 : 1,
-        }}
+        whileTap={isDisabled ? {} : { scale: 0.92 }}
+        className={`flex flex-col items-center justify-center gap-1 py-2 px-2.5 rounded-xl border-none cursor-pointer min-w-[58px] min-h-[44px] transition-all ${
+            isActive && !isDisabled 
+                ? 'bg-purple-500/10 text-purple-300' 
+                : 'bg-transparent text-gray-500 hover:text-gray-300'
+        } ${isDisabled ? 'opacity-40 cursor-default pointer-events-none' : ''}`}
     >
-        <div style={{
-            filter: isActive && !isDisabled ? 'drop-shadow(0 0 6px rgba(168,85,247,0.6))' : 'none',
-            transform: isActive && !isDisabled ? 'scale(1.1)' : 'scale(1)',
-            transition: 'all 0.2s',
-        }}>
+        <div className={`transition-transform duration-200 ${isActive && !isDisabled ? 'scale-110 filter drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]' : 'scale-100'}`}>
             {item.icon}
         </div>
-        <span style={{
-            fontSize: '9px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            color: isDisabled ? '#3b3b4f' : isActive ? '#c4b5fd' : '#6b7280',
-        }}>
+        <span className={`text-[9px] font-black uppercase tracking-wider ${isActive && !isDisabled ? 'text-purple-300' : 'text-gray-500'}`}>
             {item.label}
         </span>
-    </button>
+    </motion.button>
 );

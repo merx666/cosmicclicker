@@ -1,0 +1,185 @@
+{
+  "id": "XAgentMark16char",
+  "name": "Cosmic Clicker X.com Marketing Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */12 * * *"
+            }
+          ]
+        }
+      },
+      "id": "1e1b4f4c-2834-45aa-a7b2-8c908fdc12a1",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        380,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://void.skyreel.art/api/agent-tools/marketing-data",
+        "options": {}
+      },
+      "id": "2e2b4f4c-2834-45aa-a7b2-8c908fdc12a2",
+      "name": "Pobierz dane gry (Cosmic Clicker)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        600,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a catchy, persuasive marketing post in English promoting our Web3 game \"Cosmic Clicker\" integrated with the World App (World ID) ecosystem, based on the following game data:\n{{ JSON.stringify($json) }}\n\nThe post must be short, tailored for X (Twitter) - max 280 characters, and contain hashtags like #Worldcoin #WLD #Web3 #CosmicClicker #WorldApp, and a direct link to the app: https://void.skyreel.art.",
+        "systemPrompt": "You are a Web3 marketing and social media expert for the Cosmic Clicker game. Your sole goal is to generate engaging social media posts on X.com in English. Be enthusiastic and aligned with the game's cosmic space theme. Reply ONLY with the generated tweet text, without any additional comments, introductions, or quotation marks.",
+        "options": {}
+      },
+      "id": "3e3b4f4c-2834-45aa-a7b2-8c908fdc12a3",
+      "name": "Marketing AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        820,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "model": "mimo-v2.5-pro-free",
+        "options": {
+          "baseURL": "https://router.bynara.id/v1"
+        }
+      },
+      "id": "4e4b4f4c-2834-45aa-a7b2-8c908fdc12a4",
+      "name": "NaraRouter (Mimo Model)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        740,
+        440
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sjJSZwOPzvkacC1k",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "cosmic_clicker_x_marketing",
+        "contextWindowLength": 10
+      },
+      "id": "5e5b4f4c-2834-45aa-a7b2-8c908fdc12a5",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitter.com/2/tweets",
+        "sendBody": true,
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6e6b4f4c-2834-45aa-a7b2-8c908fdc12a6",
+      "name": "Opublikuj na X (Twitter)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1060,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "x_api_credentials_placeholder",
+          "name": "X.com API v2 OAuth 2.0 / Bearer"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Pobierz dane gry (Cosmic Clicker)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pobierz dane gry (Cosmic Clicker)": {
+      "main": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Opublikuj na X (Twitter)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NaraRouter (Mimo Model)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Marketing AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {}
+}

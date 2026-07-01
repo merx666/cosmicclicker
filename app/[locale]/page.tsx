@@ -10,6 +10,7 @@ import VoidWheelScreen from '@/components/VoidWheelScreen'
 import VoidPredictionsScreen from '@/components/VoidPredictionsScreen'
 import VoidBlockScreen from '@/components/VoidBlockScreen'
 import ChangelogModal from '@/components/ChangelogModal'
+import NextWalletAdModal from '@/components/UI/NextWalletAdModal'
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import ApiTinyAd from '@/components/ApiTinyAd'
@@ -463,6 +464,7 @@ export default function Home() {
         </div>
       )}
       <ChangelogModal />
+      <NextWalletAdModal />
     </div>
   )
 }

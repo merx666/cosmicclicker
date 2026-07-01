@@ -151,7 +151,7 @@ export default function SelectionMenuScreen({
                     whileHover={{ scale: 1.03, y: -4 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onSelectGame('collector')}
-                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-br from-[#13072b] via-[#0b041a] to-[#04010a] p-6 shadow-[0_8px_32px_0_rgba(139,92,246,0.08)] transition-all duration-300 hover:border-purple-500/60 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)]"
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-br from-[#13072b] via-[#0b041a] to-[#04010a] p-6 shadow-[0_8px_32px_0_rgba(139,92,246,0.08)] transition-all duration-300 hover:border-purple-500/60 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] mr-6"
                 >
                     {/* Animated gradient border glow */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[linear-gradient(45deg,transparent_25%,rgba(168,85,247,0.15)_50%,transparent_75%)] bg-[length:250%_250%] animate-shimmer pointer-events-none" />
@@ -202,7 +202,7 @@ export default function SelectionMenuScreen({
                     whileHover={{ scale: 1.03, y: -4 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onSelectGame('void_block')}
-                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-br from-[#1b082e] via-[#0e041a] to-[#04010a] p-6 shadow-[0_8px_32px_0_rgba(168,85,247,0.08)] transition-all duration-300 hover:border-purple-500/60 hover:shadow-[0_0_40px_rgba(168,85,247,0.2)]"
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-br from-[#1b082e] via-[#0e041a] to-[#04010a] p-6 shadow-[0_8px_32px_0_rgba(168,85,247,0.08)] transition-all duration-300 hover:border-purple-500/60 hover:shadow-[0_0_40px_rgba(168,85,247,0.2)] ml-6"
                 >
                     {/* Animated gradient border glow */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[linear-gradient(45deg,transparent_25%,rgba(168,85,247,0.15)_50%,transparent_75%)] bg-[length:250%_250%] animate-shimmer pointer-events-none" />
@@ -306,44 +306,58 @@ export default function SelectionMenuScreen({
                     </div>
                 </motion.div>
 
-                {/* GAME CARD 3: Void Wheel */}
-                <div
-                    className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-5 opacity-40 grayscale cursor-not-allowed overflow-hidden"
+                {/* GAME CARD 3: Next Wallet (Ad Card) */}
+                <motion.div
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.03, y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => window.open('https://world.org/mini-app?app_id=app_fc0b450998cdd2fbf6efb90d491f7cce&path=&draft_id=meta_16d33ebc3b71dc5cf29380f6e6306f68', '_blank')}
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-cyan-400/40 bg-cyan-950/15 p-5 hover:border-cyan-400 shadow-[0_0_25px_rgba(6,182,212,0.1)] hover:shadow-[0_0_50px_rgba(6,182,212,0.3)] transition-all duration-500 backdrop-blur-md"
                 >
-                    {/* Floating Icon */}
-                    <div className="absolute top-0 right-0 p-3 text-white/10">
-                        <Gift className="w-12 h-12 opacity-30" />
+                    {/* Animated gradient border glow */}
+                    <div className="absolute inset-0 opacity-20 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-r from-cyan-500/20 via-purple-500/10 to-indigo-500/20" />
+
+                    {/* Hover Glow Grid */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.22),transparent)] opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Floating Ad Image/Icon Background */}
+                    <div className="absolute top-0 right-0 p-3">
+                        <img 
+                            src="/next-wallet-icon.jpg" 
+                            alt="Next Wallet"
+                            className="w-12 h-12 rounded-xl opacity-40 group-hover:opacity-90 group-hover:scale-110 transition-all duration-500 border border-cyan-400/30 shadow-[0_0_15px_rgba(6,182,212,0.3)] object-cover"
+                        />
                     </div>
 
                     <div className="relative z-10 flex flex-col h-full justify-between">
                         <div>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase bg-white/10 text-white/60 border border-white/10">
-                                DAILY SPINS / REWARDS
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 animate-pulse">
+                                RECOMMENDED WALLET
                             </span>
-                            <h3 className="text-xl font-black mt-3 tracking-wide text-white/50">
-                                VOID WHEEL
+                            <h3 className="text-xl font-black mt-3 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-purple-400 group-hover:from-cyan-300 group-hover:to-purple-300 transition-all">
+                                NEXT WALLET
                             </h3>
-                            <p className="text-xs text-white/40 mt-1.5 leading-relaxed">
-                                Spin the cosmic wheel of fortune. Get daily free spins, watch ads for extra rewards, and win Premium VIP status!
+                            <p className="text-xs text-gray-200/90 mt-1.5 leading-relaxed font-medium">
+                                Bezpieczny, połączony i zweryfikowany portfel krypto. Kliknij i odkryj nową oficjalną aplikację w ekosystemie World App!
                             </p>
                         </div>
 
                         {/* Stats / Action Banner */}
-                        <div className="mt-6 flex justify-between items-center border-t border-white/5 pt-4">
+                        <div className="mt-6 flex justify-between items-center border-t border-cyan-500/10 pt-4">
                             <div>
-                                <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold">
-                                    DAILY AIRDROP
+                                <p className="text-[10px] text-cyan-400/60 uppercase tracking-wider font-semibold">
+                                    Status
                                 </p>
-                                <p className="text-sm font-black text-white/40 mt-0.5">
-                                    COMING SOON
+                                <p className="text-sm font-black text-cyan-300 mt-0.5">
+                                    LIVE NOW
                                 </p>
                             </div>
-                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 text-white/30">
-                                <Play className="w-4 h-4 text-white/20" fill="currentColor" />
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:bg-cyan-400 group-hover:text-black group-hover:scale-110 transition-all duration-300 shadow-lg shadow-cyan-500/0 group-hover:shadow-cyan-400/40">
+                                <Play className="w-4 h-4 text-cyan-300 group-hover:text-black group-hover:translate-x-[1px] transition-all" fill="currentColor" />
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* GAME CARD 4: Void Predictions */}
                 <motion.div
