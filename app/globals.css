@@ -66,7 +66,8 @@ body {
 }
 
 /* Global noise overlay */
-.noise-bg {
+.noise-bg::after {
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
