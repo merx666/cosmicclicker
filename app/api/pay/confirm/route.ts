@@ -48,7 +48,14 @@ export async function POST(request: Request) {
         }
 
         if (isPerm) {
-            await query('UPDATE users SET premium_vip = true, hourly_clicks = 0 WHERE world_id_nullifier = $1', [tx.user_nullifier])
+            await query(
+                `UPDATE users 
+                 SET unlocked_premium_upgrades = COALESCE(unlocked_premium_upgrades, '[]'::jsonb) || '["singularity_perm"]'::jsonb, 
+                     hourly_clicks = 0 
+                 WHERE world_id_nullifier = $1 
+                 AND NOT (COALESCE(unlocked_premium_upgrades, '[]'::jsonb) ? 'singularity_perm')`,
+                [tx.user_nullifier]
+            )
         } else if (bypassUntil) {
             await query('UPDATE users SET bypass_until = $1, hourly_clicks = 0 WHERE world_id_nullifier = $2', [bypassUntil.toISOString(), tx.user_nullifier])
         }

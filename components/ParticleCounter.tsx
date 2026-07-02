@@ -9,6 +9,9 @@ export default function ParticleCounter() {
     const particlesPerClick = useGameStore((state) => state.particlesPerClick)
     const particlesPerSecond = useGameStore((state) => state.particlesPerSecond)
     const achievements = useGameStore((state) => state.achievements)
+    const hourlyClicks = useGameStore((state) => state.hourlyClicks || 0)
+    const bypassUntil = useGameStore((state) => state.bypassUntil)
+    const unlockedPremiumUpgrades = useGameStore((state) => state.unlockedPremiumUpgrades)
     
     const boosterExpiry = achievements?.booster_click_multiplier_until
     const [timeLeft, setTimeLeft] = useState<number>(0)
@@ -31,6 +34,16 @@ export default function ParticleCounter() {
 
     const boosterActive = timeLeft > 0
     const activeClickValue = boosterActive ? particlesPerClick * 6 : particlesPerClick
+
+    const [hasBypass, setHasBypass] = useState(false)
+    
+    useEffect(() => {
+        setHasBypass((unlockedPremiumUpgrades && unlockedPremiumUpgrades.includes('singularity_perm')) || (bypassUntil !== null && bypassUntil > Date.now()))
+    }, [unlockedPremiumUpgrades, bypassUntil])
+
+    const energyLimit = 5000
+    const currentEnergy = Math.max(0, energyLimit - hourlyClicks)
+    const energyPercentage = Math.min(100, Math.max(0, (currentEnergy / energyLimit) * 100))
 
     const formatNumber = (num: number) => {
         if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
@@ -57,7 +70,7 @@ export default function ParticleCounter() {
             </div>
 
             {/* Stats */}
-            <div className="flex justify-center gap-6 text-sm text-text-secondary mt-4">
+            <div className="flex justify-center gap-6 text-sm text-text-secondary mt-4 mb-4">
                 <div className="flex flex-col items-center">
                     <span className="text-xs opacity-70">per click</span>
                     <span className="text-particle-glow font-bold">
@@ -70,6 +83,21 @@ export default function ParticleCounter() {
                         <span className="text-void-blue font-bold">+{particlesPerSecond}</span>
                     </div>
                 )}
+            </div>
+
+            {/* Energy Bar */}
+            <div className="max-w-xs mx-auto mt-4 bg-void-purple/10 border border-void-purple/20 rounded-full h-4 relative overflow-hidden">
+                {hasBypass ? (
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 opacity-80 animate-pulse"></div>
+                ) : (
+                    <div
+                        className={`h-full transition-all duration-300 ${energyPercentage > 50 ? 'bg-green-500/80' : energyPercentage > 20 ? 'bg-yellow-500/80' : 'bg-red-500/80'}`}
+                        style={{ width: `${energyPercentage}%` }}
+                    />
+                )}
+                <div className="absolute inset-0 flex justify-center items-center text-[10px] font-bold text-white shadow-black drop-shadow-md z-10">
+                    {hasBypass ? 'ENERGIA: NIESKOŃCZONA ⚡' : `ENERGIA: ${currentEnergy} / ${energyLimit}`}
+                </div>
             </div>
 
             {boosterActive && (

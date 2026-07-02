@@ -125,7 +125,7 @@ export class GameService {
             'bp_level', 'bp_xp', 'hourly_clicks']
 
         // Identify JSON fields to stringify (fix for node-postgres array issue)
-        const JSON_FIELDS = ['unlocked_skins', 'unlocked_themes', 'claimed_missions', 'bp_claimed_free', 'bp_claimed_premium', 'achievements']
+        const JSON_FIELDS = ['unlocked_skins', 'unlocked_themes', 'claimed_missions', 'bp_claimed_free', 'bp_claimed_premium', 'achievements', 'unlocked_premium_upgrades']
 
         // Create a copy to modify
         const sanitizedData: Record<string, any> = { ...gameData }

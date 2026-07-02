@@ -107,7 +107,7 @@ export function EnergyPaywall() {
                     </div>
                     <h2 className="text-2xl font-black text-white mb-2">Brak Energii</h2>
                     <p className="text-slate-400 text-sm px-4">
-                        Wyczerpałeś darmowy limit <span className="text-white font-bold">5000 kliknięć</span> na tę godzinę. Czekaj na reset lub zdejmij limit natychmiast!
+                        Wyczerpałeś darmowy limit <span className="text-white font-bold">1000 kliknięć</span> na tę godzinę. Czekaj na reset lub zdejmij limit natychmiast!
                     </p>
                 </div>
 

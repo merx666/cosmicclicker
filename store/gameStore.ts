@@ -249,12 +249,17 @@ export const useGameStore = create<GameState>()(
                 if (!state.lastClickHourReset || state.lastClickHourReset !== currentHourStart) {
                     currentHourlyClicks = 0
                     set({ hourlyClicks: 0, lastClickHourReset: currentHourStart })
+                    // Immediate save to prevent infinite reset exploit
+                    setTimeout(() => get().saveGameState(), 100)
                 }
 
-                const hasBypass = state.premiumVIP || (state.bypassUntil && state.bypassUntil > now)
+                const hasBypass = state.premiumVIP || (state.bypassUntil && state.bypassUntil > now) || (Array.isArray(state.unlockedPremiumUpgrades) && state.unlockedPremiumUpgrades.includes('singularity_perm'))
 
-                if (currentHourlyClicks >= 5000 && !hasBypass) {
-                    set({ showEnergyPaywall: true })
+                if (currentHourlyClicks >= 1000 && !hasBypass) {
+                    if (!state.showEnergyPaywall) {
+                        set({ showEnergyPaywall: true })
+                        get().saveGameState() // Immediate save when reaching limit
+                    }
                     return
                 }
 

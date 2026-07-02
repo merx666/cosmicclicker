@@ -26,7 +26,7 @@ export default function ApiTinyAd({ userWallet }: ApiTinyAdProps) {
     }, [isTelegram, activeWallet, nullifierHash, userWallet])
 
     return (
-        <div className="flex flex-col items-center gap-4 w-full pb-20">
+        <div className="flex flex-col items-center gap-4 w-full">
             {/* Ani Ads (Only for WorldApp / MiniKit) */}
             {!isTelegram && activeWallet && (
                 <div className="w-full max-w-[400px] flex justify-center">

@@ -19,9 +19,9 @@ import MediaTab from './tabs/MediaTab'
 import { motion, AnimatePresence } from 'framer-motion'
 import BackgroundEffects from './effects/BackgroundEffects'
 import { useTranslations } from 'next-intl'
-import ApiTinyAd from './ApiTinyAd'
 import LanguageSwitcher from './LanguageSwitcher'
 import { trackEvent } from '@/lib/analytics'
+import ApiTinyAd from './ApiTinyAd'
 
 
 interface GameScreenProps {
@@ -180,6 +180,10 @@ export default function GameScreen({ userHash, onBackToMenu }: GameScreenProps) 
                             <ParticleCounter />
                             <VoidParticle />
 
+                            <div className="mt-8 flex justify-center w-full z-10 relative">
+                                <ApiTinyAd userWallet={userHash} />
+                            </div>
+
                             {/* Quick stats */}
                             <div className="mt-8 text-center text-sm text-text-secondary">
                                 <p>{t('clickInstruction')}</p>
@@ -326,11 +330,6 @@ export default function GameScreen({ userHash, onBackToMenu }: GameScreenProps) 
                     )}
                 </AnimatePresence>
             </main>
-
-            {/* Ads */}
-            <div className="pb-4">
-                <ApiTinyAd userWallet={userHash} />
-            </div>
 
             {/* Welcome Back Offline Earnings Modal */}
             <AnimatePresence>

@@ -10,11 +10,12 @@ import VoidWheelScreen from '@/components/VoidWheelScreen'
 import VoidPredictionsScreen from '@/components/VoidPredictionsScreen'
 import VoidBlockScreen from '@/components/VoidBlockScreen'
 import ChangelogModal from '@/components/ChangelogModal'
-import NextWalletAdModal from '@/components/UI/NextWalletAdModal'
-import { EnergyPaywall } from '@/components/UI/EnergyPaywall'
+import dynamic from 'next/dynamic'
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
-import ApiTinyAd from '@/components/ApiTinyAd'
+
+const NextWalletAdModal = dynamic(() => import('@/components/UI/NextWalletAdModal'), { ssr: false })
+const EnergyPaywall = dynamic(() => import('@/components/UI/EnergyPaywall').then(mod => mod.EnergyPaywall), { ssr: false })
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 
@@ -457,13 +458,6 @@ export default function Home() {
           <VoidBlockScreen onBackToMenu={() => setSelectedGame('menu')} />
         )}
       </div>
-
-      {/* Global Ads visible on all screens except the main collector game (since collector has sidebar styling) */}
-      {selectedGame !== 'collector' && (
-        <div className="w-full flex justify-center py-4 bg-void-dark/80 backdrop-blur-md border-t border-void-purple/10 z-40">
-          <ApiTinyAd userWallet={activeAddress!} />
-        </div>
-      )}
       <ChangelogModal />
       <NextWalletAdModal />
       <EnergyPaywall />

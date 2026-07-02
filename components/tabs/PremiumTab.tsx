@@ -13,7 +13,7 @@ interface PremiumUpgrade {
     description: string
     image: string
     price: number // WLD
-    category: 'cosmetic' | 'qol' | 'boost' | 'advanced'
+    category: 'cosmetic' | 'qol' | 'boost' | 'advanced' | 'energy'
     owned: boolean
 }
 
@@ -35,7 +35,8 @@ export default function PremiumTab() {
         lastDailyBonusTime,
         loginStreak,
         nullifierHash,
-        loadGameState
+        loadGameState,
+        unlockedPremiumUpgrades
     } = useGameStore()
 
     const [purchasing, setPurchasing] = useState<string | null>(null)
@@ -150,12 +151,50 @@ export default function PremiumTab() {
         // VIP
         {
             id: 'vip',
-            name: 'VIP Status (PROMO -50%!)',
+            name: 'VIP Status',
             description: 'Unlock ALL premium features at once!',
             image: '/assets/premium/vip.png',
-            price: 5.00,
+            price: 10.00,
             category: 'advanced',
             owned: premiumVIP
+        },
+
+        // Energy Packages
+        {
+            id: 'boost_1h',
+            name: 'Boost Energii (1h)',
+            description: 'Zdejmuje limit kliknięć na 1 godzinę',
+            image: '/assets/premium/boost.png',
+            price: 0.2,
+            category: 'energy',
+            owned: false
+        },
+        {
+            id: 'overdrive_12h',
+            name: 'Overdrive (12h)',
+            description: 'Zdejmuje limit kliknięć na 12 godzin',
+            image: '/assets/premium/overdrive.png',
+            price: 1.0,
+            category: 'energy',
+            owned: false
+        },
+        {
+            id: 'void_master_7d',
+            name: 'Void Master (7 dni)',
+            description: 'Zdejmuje limit kliknięć na 7 dni',
+            image: '/assets/premium/voidmaster.png',
+            price: 5.0,
+            category: 'energy',
+            owned: false
+        },
+        {
+            id: 'singularity_perm',
+            name: 'Singularity (Permanentnie)',
+            description: 'Zdejmuje limit kliknięć NA ZAWSZE',
+            image: '/assets/premium/singularity.png',
+            price: 10.0,
+            category: 'energy',
+            owned: Array.isArray(unlockedPremiumUpgrades) && unlockedPremiumUpgrades.includes('singularity_perm')
         }
     ]
 
@@ -524,7 +563,8 @@ export default function PremiumTab() {
     const categories = {
         cosmetic: { name: '🎨 Cosmetic', upgrades: upgrades.filter(u => u.category === 'cosmetic') },
         boost: { name: '⚡ Boosts', upgrades: upgrades.filter(u => u.category === 'boost') },
-        advanced: { name: '👑 VIP', upgrades: upgrades.filter(u => u.category === 'advanced') }
+        advanced: { name: '👑 VIP', upgrades: upgrades.filter(u => u.category === 'advanced') },
+        energy: { name: '🔋 Energy Limit Bypasses', upgrades: upgrades.filter(u => u.category === 'energy') }
     }
 
     return (
@@ -554,11 +594,11 @@ export default function PremiumTab() {
                 {/* Tier Cards */}
                 <div className="grid grid-cols-2 gap-4">
                     {[
-                        { tier: 1, name: '🥉 Bronze VIP', price: 1.75, originalPrice: 4.00, discount: '56%', benefits: ['Wszystkie ulepszenia', 'Lucky 5% szans na 2x'] },
-                        { tier: 2, name: '🥈 Silver VIP', price: 2.75, originalPrice: 6.00, discount: '54%', benefits: ['Lucky 8% szans na 2x', '+2 na kliknięcie', 'Brak reklam'] },
-                        { tier: 3, name: '🥇 Gold VIP', price: 3.75, originalPrice: 9.00, discount: '58%', benefits: ['Lucky 12% na 3x', 'Mega 1% na 10x', 'Priorytet'], isPopular: true },
-                        { tier: 4, name: '💎 Platinum VIP', price: 5.00, originalPrice: 12.00, discount: '58%', benefits: ['Lucky 15% na 5x', 'Mega 3% na 15x', 'Natychmiastowe'] }
-                    ].map(({ tier, name, price, originalPrice, discount, benefits, isPopular }) => {
+                        { tier: 1, name: '🥉 Bronze VIP', price: 4.00, benefits: ['Wszystkie ulepszenia', 'Lucky 5% szans na 2x'] },
+                        { tier: 2, name: '🥈 Silver VIP', price: 6.00, benefits: ['Lucky 8% szans na 2x', '+2 na kliknięcie', 'Brak reklam'] },
+                        { tier: 3, name: '🥇 Gold VIP', price: 9.00, benefits: ['Lucky 12% na 3x', 'Mega 1% na 10x', 'Priorytet'], isPopular: true },
+                        { tier: 4, name: '💎 Platinum VIP', price: 12.00, benefits: ['Lucky 15% na 5x', 'Mega 3% na 15x', 'Natychmiastowe'] }
+                    ].map(({ tier, name, price, benefits, isPopular }) => {
                         const isCurrent = vipTier === tier
                         const canUpgrade = vipTier < tier
                         const tierColors = ['', 'from-amber-600/10 to-amber-800/10 border-amber-500/20 hover:border-amber-500/40',
@@ -583,15 +623,6 @@ export default function PremiumTab() {
                                 <div>
                                     <div className="text-center mb-2">
                                         <div className="font-extrabold text-sm text-white tracking-wide">{name}</div>
-                                        {/* Slashed pricing & Discount percentages (Price Psychology) */}
-                                        <div className="flex items-center justify-center gap-1.5 mt-1">
-                                            <span className="text-xs line-through text-text-secondary">
-                                                {isTelegram ? `${Math.round(originalPrice * 50)} ⭐️` : `${originalPrice.toFixed(2)} WLD`}
-                                            </span>
-                                            <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-black">
-                                                -{discount}
-                                            </span>
-                                        </div>
                                         <div className="text-sm font-black text-yellow-400 mt-0.5">
                                             {isTelegram ? `${Math.round(price * 50)} ⭐️` : `${price.toFixed(2)} WLD`}
                                         </div>
@@ -616,7 +647,7 @@ export default function PremiumTab() {
                                     {canUpgrade && (
                                         <button
                                             onClick={() => {
-                                                const tierPrices = [0, 1.75, 2.75, 3.75, 5.00]
+                                                const tierPrices = [0, 4.00, 6.00, 9.00, 12.00]
                                                 const upgradeCost = tierPrices[tier] - tierPrices[vipTier]
 
                                                 console.log('[Premium] Tier purchase:', { tier, vipTier, price, upgradeCost })
