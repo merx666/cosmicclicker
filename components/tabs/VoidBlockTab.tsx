@@ -9,6 +9,7 @@ import { trackEvent } from '@/lib/analytics'
 
 import { Zap, Trophy, Clock, Share2, Copy, Check } from 'lucide-react'
 import { ADMIN_WALLET_ADDRESS } from '@/lib/constants'
+import { useShallow } from 'zustand/react/shallow'
 
 const RECEIVER_ADDRESS = ADMIN_WALLET_ADDRESS
 
@@ -281,7 +282,13 @@ interface HistoryItem {
 // ─── MAIN COMPONENT ─────────────
 // ─────────────────────────────────
 export default function VoidBlockTab() {
-    const { nullifierHash, referralCode } = useGameStore()
+    const {
+        nullifierHash,
+        referralCode
+    } = useGameStore(useShallow(state => ({
+        nullifierHash: state.nullifierHash,
+        referralCode: state.referralCode
+    })))
 
     // UI state
     const [round, setRound] = useState<Round | null>(null)

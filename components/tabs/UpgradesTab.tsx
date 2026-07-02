@@ -9,6 +9,7 @@ import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js
 import { trackEvent } from '@/lib/analytics'
 
 import { ADMIN_WALLET_ADDRESS } from '@/lib/constants'
+import { useShallow } from 'zustand/react/shallow'
 
 const RECEIVER_ADDRESS = ADMIN_WALLET_ADDRESS
 
@@ -47,7 +48,21 @@ export default function UpgradesTab() {
         equipTheme,
         premiumParticleSkin,
         premiumBackgroundTheme
-    } = useGameStore()
+    } = useGameStore(useShallow(state => ({
+        particles: state.particles,
+        upgradeClickPower: state.upgradeClickPower,
+        upgradeAutoCollector: state.upgradeAutoCollector,
+        purchaseUpgrade: state.purchaseUpgrade,
+        unlockedPremiumUpgrades: state.unlockedPremiumUpgrades,
+        nullifierHash: state.nullifierHash,
+        unlockedSkins: state.unlockedSkins,
+        unlockedThemes: state.unlockedThemes,
+        purchaseCosmicItem: state.purchaseCosmicItem,
+        equipSkin: state.equipSkin,
+        equipTheme: state.equipTheme,
+        premiumParticleSkin: state.premiumParticleSkin,
+        premiumBackgroundTheme: state.premiumBackgroundTheme
+    })))
 
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 

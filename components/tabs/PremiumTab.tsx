@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
 import Image from 'next/image'
+import { useShallow } from 'zustand/react/shallow'
 
 interface PremiumUpgrade {
     id: string
@@ -37,7 +38,26 @@ export default function PremiumTab() {
         nullifierHash,
         loadGameState,
         unlockedPremiumUpgrades
-    } = useGameStore()
+    } = useGameStore(useShallow(state => ({
+        premiumParticleSkin: state.premiumParticleSkin,
+        premiumBackgroundTheme: state.premiumBackgroundTheme,
+        premiumLuckyParticle: state.premiumLuckyParticle,
+        premiumOfflineEarnings: state.premiumOfflineEarnings,
+        premiumDailyBonus: state.premiumDailyBonus,
+        premiumVIP: state.premiumVIP,
+        vipTier: state.vipTier,
+        purchasePremiumUpgrade: state.purchasePremiumUpgrade,
+        equipSkin: state.equipSkin,
+        equipTheme: state.equipTheme,
+        unlockedSkins: state.unlockedSkins,
+        unlockedThemes: state.unlockedThemes,
+        claimDailyBonus: state.claimDailyBonus,
+        lastDailyBonusTime: state.lastDailyBonusTime,
+        loginStreak: state.loginStreak,
+        nullifierHash: state.nullifierHash,
+        loadGameState: state.loadGameState,
+        unlockedPremiumUpgrades: state.unlockedPremiumUpgrades
+    })))
 
     const [purchasing, setPurchasing] = useState<string | null>(null)
 
