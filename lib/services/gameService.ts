@@ -105,7 +105,8 @@ export class GameService {
             'daily_passive_particles', 'daily_particles_collected', 'last_daily_reset', 'claimed_missions',
             'total_wld_claimed', 'login_streak', 'vip_tier', 'unlocked_premium_upgrades',
             'bp_level', 'bp_xp', 'bp_premium', 'bp_claimed_free', 'bp_claimed_premium', 'achievements',
-            'referral_code', 'referred_by', 'referral_reward_claimed'
+            'referral_code', 'referred_by', 'referral_reward_claimed',
+            'hourly_clicks', 'last_click_hour_reset', 'bypass_until'
         ]
 
         const allowedKeys = Object.keys(gameData).filter(k => ALLOWED_FIELDS.includes(k))
@@ -121,7 +122,7 @@ export class GameService {
         const NUMERIC_FIELDS = ['particles', 'particles_per_click', 'particles_per_second', 'total_clicks',
             'total_particles_collected', 'total_passive_particles', 'daily_clicks',
             'daily_passive_particles', 'daily_particles_collected', 'total_wld_claimed', 'login_streak',
-            'bp_level', 'bp_xp']
+            'bp_level', 'bp_xp', 'hourly_clicks']
 
         // Identify JSON fields to stringify (fix for node-postgres array issue)
         const JSON_FIELDS = ['unlocked_skins', 'unlocked_themes', 'claimed_missions', 'bp_claimed_free', 'bp_claimed_premium', 'achievements']

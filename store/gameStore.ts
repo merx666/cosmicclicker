@@ -19,6 +19,13 @@ export interface GameState {
     lastDailyReset: number | null
     claimedMissions: string[]
 
+    // Hourly limits & Paywall
+    hourlyClicks: number
+    lastClickHourReset: number | null
+    bypassUntil: number | null
+    showEnergyPaywall: boolean
+    setShowEnergyPaywall: (show: boolean) => void
+
     // Season 2: Battle Pass
     bpLevel: number
     bpXp: number
@@ -116,6 +123,13 @@ export const useGameStore = create<GameState>()(
             dailyParticlesCollected: 0,
             lastDailyReset: null,
             claimedMissions: [],
+
+            // Hourly limits & Paywall
+            hourlyClicks: 0,
+            lastClickHourReset: null,
+            bypassUntil: null,
+            showEnergyPaywall: false,
+            setShowEnergyPaywall: (show) => set({ showEnergyPaywall: show }),
 
             // Season 2: Battle Pass
             bpLevel: 1,
@@ -224,6 +238,26 @@ export const useGameStore = create<GameState>()(
             handleClick: () => {
                 const state = get()
 
+                // Check Hourly Limit
+                const now = Date.now()
+                const d = new Date(now)
+                d.setMinutes(0, 0, 0)
+                const currentHourStart = d.getTime()
+
+                let currentHourlyClicks = state.hourlyClicks || 0
+
+                if (!state.lastClickHourReset || state.lastClickHourReset !== currentHourStart) {
+                    currentHourlyClicks = 0
+                    set({ hourlyClicks: 0, lastClickHourReset: currentHourStart })
+                }
+
+                const hasBypass = state.premiumVIP || (state.bypassUntil && state.bypassUntil > now)
+
+                if (currentHourlyClicks >= 5000 && !hasBypass) {
+                    set({ showEnergyPaywall: true })
+                    return
+                }
+
                 // Calculate tier bonus: Bronze=0, Silver=+2, Gold=+5, Platinum=+10
                 const tierBonus = [0, 0, 2, 5, 10][state.vipTier] || 0
                 let earned = state.particlesPerClick + tierBonus
@@ -235,7 +269,6 @@ export const useGameStore = create<GameState>()(
 
                 // Apply active click booster (Void Surge: +500% / multiplied by 6)
                 const boosterExpiry = state.achievements?.booster_click_multiplier_until
-                const now = Date.now()
                 if (boosterExpiry && Number(boosterExpiry) > now) {
                     earned *= 6
                 }
@@ -247,7 +280,8 @@ export const useGameStore = create<GameState>()(
                     dailyClicks: state.dailyClicks + 1,
                     dailyParticlesCollected: state.dailyParticlesCollected + earned,
                     weeklyClicks: state.weeklyClicks + 1,
-                    weeklyParticlesCollected: state.weeklyParticlesCollected + earned
+                    weeklyParticlesCollected: state.weeklyParticlesCollected + earned,
+                    hourlyClicks: currentHourlyClicks + 1
                 })
 
                 // Add BP XP for clicking (e.g. 1 click = 1 XP)
@@ -658,6 +692,10 @@ export const useGameStore = create<GameState>()(
                             lastDailyReset: data.last_daily_reset ? new Date(data.last_daily_reset).getTime() : null,
                             claimedMissions: data.claimed_missions || [],
 
+                            hourlyClicks: Number(data.hourly_clicks || 0),
+                            lastClickHourReset: data.last_click_hour_reset ? new Date(data.last_click_hour_reset).getTime() : null,
+                            bypassUntil: data.bypass_until ? new Date(data.bypass_until).getTime() : null,
+
                             bpLevel: Number(data.bp_level || 1),
                             bpXp: Number(data.bp_xp || 0),
                             bpPremium: data.bp_premium || false,
@@ -745,6 +783,10 @@ export const useGameStore = create<GameState>()(
                             last_daily_reset: state.lastDailyReset ? new Date(state.lastDailyReset).toISOString() : null,
                             claimed_missions: state.claimedMissions,
 
+                            hourly_clicks: state.hourlyClicks,
+                            last_click_hour_reset: state.lastClickHourReset ? new Date(state.lastClickHourReset).toISOString() : null,
+                            bypass_until: state.bypassUntil ? new Date(state.bypassUntil).toISOString() : null,
+
                             bp_level: state.bpLevel,
                             bp_xp: state.bpXp,
                             bp_premium: state.bpPremium,
@@ -816,6 +858,10 @@ export const useGameStore = create<GameState>()(
                 dailyParticlesCollected: state.dailyParticlesCollected,
                 lastDailyReset: state.lastDailyReset,
                 claimedMissions: state.claimedMissions,
+
+                hourlyClicks: state.hourlyClicks,
+                lastClickHourReset: state.lastClickHourReset,
+                bypassUntil: state.bypassUntil,
 
                 bpLevel: state.bpLevel,
                 bpXp: state.bpXp,

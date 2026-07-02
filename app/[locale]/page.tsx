@@ -11,6 +11,7 @@ import VoidPredictionsScreen from '@/components/VoidPredictionsScreen'
 import VoidBlockScreen from '@/components/VoidBlockScreen'
 import ChangelogModal from '@/components/ChangelogModal'
 import NextWalletAdModal from '@/components/UI/NextWalletAdModal'
+import { EnergyPaywall } from '@/components/UI/EnergyPaywall'
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import ApiTinyAd from '@/components/ApiTinyAd'
@@ -465,6 +466,7 @@ export default function Home() {
       )}
       <ChangelogModal />
       <NextWalletAdModal />
+      <EnergyPaywall />
     </div>
   )
 }
