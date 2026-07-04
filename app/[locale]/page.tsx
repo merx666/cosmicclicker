@@ -229,6 +229,7 @@ export default function Home() {
   const [isTelegram, setIsTelegram] = useState(false)
   const [tgUser, setTgUser] = useState<any>(null)
   const [tgLoading, setTgLoading] = useState(true)
+  const [isCheckingTelegram, setIsCheckingTelegram] = useState(true)
 
   // Register Service Worker for validation/monetization
   useEffect(() => {
@@ -255,6 +256,7 @@ export default function Home() {
 
         if (initData) {
           setIsTelegram(true)
+          setIsCheckingTelegram(false)
           try {
             const res = await fetch('/api/auth/telegram', {
               method: 'POST',
@@ -286,12 +288,21 @@ export default function Home() {
         } else {
           console.warn('[Telegram Auth] WebApp detected, but initData is empty')
           setTgLoading(false)
+          setIsCheckingTelegram(false)
         }
       } else {
-        retries++
-        if (retries > 30) { // Clear check after 3 seconds
+        const hasScript = typeof document !== 'undefined' && document.querySelector('script[src*="telegram-web-app.js"]')
+        if (!hasScript) {
           if (checkInterval) clearInterval(checkInterval)
-          console.warn('[Telegram Auth] WebApp not found after 30 retries')
+          setIsCheckingTelegram(false)
+          setTgLoading(false)
+          return
+        }
+
+        retries++
+        if (retries >= 30) {
+          clearInterval(checkInterval)
+          setIsCheckingTelegram(false)
           setTgLoading(false)
         }
       }
@@ -355,7 +366,7 @@ export default function Home() {
 
   // Hybrid authentication verification logic
   const isAuthenticated = isTelegramBuild ? !!tgUser : (isTelegram ? !!tgUser : isVerified)
-  const isAuthLoading = isTelegramBuild ? tgLoading : (isTelegram ? tgLoading : false)
+  const isAuthLoading = isCheckingTelegram || (isTelegramBuild ? tgLoading : (isTelegram ? tgLoading : false))
 
   if (isAuthLoading) {
     return (

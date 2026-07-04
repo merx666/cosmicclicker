@@ -47,7 +47,8 @@ export default async function RootLayout({
   // side is the easiest way to get started
   const messages = await getMessages();
 
-  const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true';
+  const userAgent = (await import('next/headers')).headers().then(h => h.get('user-agent') || '').catch(() => '');
+  const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true' || (await userAgent).includes('Telegram');
 
   return (
     <html lang={locale}>
