@@ -12,7 +12,7 @@ interface ApiTinyAdProps {
 
 export default function ApiTinyAd({ userWallet }: ApiTinyAdProps) {
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
-    const { nullifierHash } = useGameStore()
+    const nullifierHash = useGameStore((state) => state.nullifierHash)
     const activeWallet = userWallet || nullifierHash
 
     // Log parameters for debugging in WebView/Console
