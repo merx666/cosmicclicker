@@ -17,7 +17,7 @@ const CREATOR_WALLET = '0xc7d0ef606a313bfd69e6cc1c44065df8d99b8dfc'
 const BET_COST_WLD = 0.15
 
 export default function VoidPredictionsScreen({ onBackToMenu }: VoidPredictionsScreenProps) {
-    const { nullifierHash } = useGameStore()
+    const nullifierHash = useGameStore((state) => state.nullifierHash)
     const { userAddress } = useWorldID()
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 

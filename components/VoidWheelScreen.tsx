@@ -29,7 +29,7 @@ const SECTORS = [
 ]
 
 export default function VoidWheelScreen({ onBackToMenu }: VoidWheelScreenProps) {
-    const { nullifierHash } = useGameStore()
+    const nullifierHash = useGameStore((state) => state.nullifierHash)
     const { userAddress } = useWorldID()
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 
