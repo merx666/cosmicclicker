@@ -29,7 +29,8 @@ const SECTORS = [
 ]
 
 export default function VoidWheelScreen({ onBackToMenu }: VoidWheelScreenProps) {
-    const { nullifierHash } = useGameStore()
+    // ⚡ Bolt: Optimize Zustand selector to prevent re-renders when other state (like particles) changes
+    const nullifierHash = useGameStore(state => state.nullifierHash)
     const { userAddress } = useWorldID()
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 
