@@ -10,7 +10,8 @@
     "machine": "Maszyna",
     "survey": "Vote",
     "media": "Media",
-    "void_block": "Void Block"
+    "void_block": "Void Block",
+    "ads": "Reklamy"
   },
   "Game": {
     "title": "VOID COLLECTOR",

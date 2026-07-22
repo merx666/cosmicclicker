@@ -203,7 +203,11 @@ export default function VoidParticle() {
         cooldownUntilRef.current = now + randomCooldown
 
         // 1. Click calculation & core game logic
-        handleClick()
+        const clickSuccess = handleClick()
+        if (!clickSuccess) {
+            return
+        }
+
         setClickEffect(true)
 
         let currentMultiplier = 1

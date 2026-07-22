@@ -28,7 +28,7 @@ export default function ConvertTab() {
         maxDaily: 3
     })
     const [conversionRate, setConversionRate] = useState({
-        particles_per_wld: 150000,
+        particles_per_wld: 1000000,
         wld_price_usd: 0.465,
         last_update: new Date().toISOString()
     })

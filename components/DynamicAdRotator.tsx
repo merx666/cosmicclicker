@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 // KONFIGURACJA BANNERÓW REKLAMOWYCH
 // ==========================================
 
-const CONST_MONETAG_WEIGHT = 0.5;
+const CONST_MONETAG_WEIGHT = 0.7;
 const CONST_REFRESH_INTERVAL_MS = 45000;
 
 const MONETAG_CONFIG = {

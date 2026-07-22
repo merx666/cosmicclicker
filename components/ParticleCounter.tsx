@@ -41,7 +41,7 @@ export default function ParticleCounter() {
         setHasBypass((unlockedPremiumUpgrades && unlockedPremiumUpgrades.includes('singularity_perm')) || (bypassUntil !== null && bypassUntil > Date.now()))
     }, [unlockedPremiumUpgrades, bypassUntil])
 
-    const energyLimit = 5000
+    const energyLimit = 1000
     const currentEnergy = Math.max(0, energyLimit - hourlyClicks)
     const energyPercentage = Math.min(100, Math.max(0, (currentEnergy / energyLimit) * 100))
 
@@ -85,18 +85,47 @@ export default function ParticleCounter() {
                 )}
             </div>
 
-            {/* Energy Bar */}
-            <div className="max-w-xs mx-auto mt-4 bg-void-purple/10 border border-void-purple/20 rounded-full h-4 relative overflow-hidden">
-                {hasBypass ? (
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 opacity-80 animate-pulse"></div>
-                ) : (
-                    <div
-                        className={`h-full transition-all duration-300 ${energyPercentage > 50 ? 'bg-green-500/80' : energyPercentage > 20 ? 'bg-yellow-500/80' : 'bg-red-500/80'}`}
-                        style={{ width: `${energyPercentage}%` }}
-                    />
-                )}
-                <div className="absolute inset-0 flex justify-center items-center text-[10px] font-bold text-white shadow-black drop-shadow-md z-10">
-                    {hasBypass ? 'ENERGIA: NIESKOŃCZONA ⚡' : `ENERGIA: ${currentEnergy} / ${energyLimit}`}
+            {/* Premium Energy Bar */}
+            <div className="max-w-xs mx-auto mt-6 relative group">
+                {/* Glow effect around the bar */}
+                <div className={`absolute -inset-1 rounded-full blur opacity-30 transition duration-500 ${hasBypass ? 'bg-gradient-to-r from-red-500 to-yellow-500' : energyPercentage > 50 ? 'bg-green-400' : energyPercentage > 20 ? 'bg-yellow-400' : 'bg-red-500'}`}></div>
+                
+                {/* Glassmorphism container */}
+                <div className="relative h-6 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full overflow-hidden shadow-inner">
+                    {hasBypass ? (
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 opacity-90 animate-pulse">
+                            {/* Inner shine */}
+                            <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent"></div>
+                        </div>
+                    ) : (
+                        <motion.div
+                            className={`absolute top-0 left-0 h-full transition-colors duration-500 ${energyPercentage > 50 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : energyPercentage > 20 ? 'bg-gradient-to-r from-yellow-500 to-amber-400' : 'bg-gradient-to-r from-red-600 to-rose-500'}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${energyPercentage}%` }}
+                            transition={{ type: 'spring', bounce: 0, duration: 0.8 }}
+                        >
+                            {/* Inner shine */}
+                            <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/40 to-transparent"></div>
+                            {/* Striped overlay */}
+                            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)', backgroundSize: '20px 20px' }}></div>
+                        </motion.div>
+                    )}
+                    
+                    {/* Text Overlay */}
+                    <div className="absolute inset-0 flex justify-center items-center">
+                        <span className="text-[11px] font-black tracking-widest text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] uppercase">
+                            {hasBypass ? (
+                                <span className="flex items-center gap-1">
+                                    <span className="text-yellow-300">⚡</span> Nieskończona <span className="text-yellow-300">⚡</span>
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1">
+                                    <span className={energyPercentage > 50 ? 'text-green-300' : energyPercentage > 20 ? 'text-yellow-300' : 'text-red-300 animate-pulse'}>⚡</span>
+                                    {currentEnergy} / {energyLimit}
+                                </span>
+                            )}
+                        </span>
+                    </div>
                 </div>
             </div>
 

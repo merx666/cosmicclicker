@@ -87,7 +87,7 @@ export interface GameState {
     addBpXp: (amount: number) => void // NEW: for battle pass
     claimBpReward: (level: number, type: 'free' | 'premium', rewardParticles: number, rewardPremiumType?: string, rewardPremiumId?: string) => boolean
     checkAchievements: (key: string, amount: number) => void // NEW: Achievements check
-    handleClick: () => void
+    handleClick: () => boolean
     purchaseUpgrade: (upgradeType: string, cost: number, level: number) => boolean
     purchasePremiumUpgrade: (upgradeType: string) => boolean
     purchaseCosmicItem: (type: 'skin' | 'theme', value: string, cost: number) => boolean
@@ -255,14 +255,6 @@ export const useGameStore = create<GameState>()(
 
                 const hasBypass = state.premiumVIP || (state.bypassUntil && state.bypassUntil > now) || (Array.isArray(state.unlockedPremiumUpgrades) && state.unlockedPremiumUpgrades.includes('singularity_perm'))
 
-                if (currentHourlyClicks >= 1000 && !hasBypass) {
-                    if (!state.showEnergyPaywall) {
-                        set({ showEnergyPaywall: true })
-                        get().saveGameState() // Immediate save when reaching limit
-                    }
-                    return
-                }
-
                 // Calculate tier bonus: Bronze=0, Silver=+2, Gold=+5, Platinum=+10
                 const tierBonus = [0, 0, 2, 5, 10][state.vipTier] || 0
                 let earned = state.particlesPerClick + tierBonus
@@ -278,6 +270,15 @@ export const useGameStore = create<GameState>()(
                     earned *= 6
                 }
 
+                // Energy check: each click costs as much energy as the particles earned
+                if ((currentHourlyClicks + earned) > 1000 && !hasBypass) {
+                    if (!state.showEnergyPaywall) {
+                        set({ showEnergyPaywall: true })
+                        get().saveGameState() // Immediate save when reaching limit
+                    }
+                    return false
+                }
+
                 set({
                     particles: state.particles + earned,
                     totalClicks: state.totalClicks + 1,
@@ -286,7 +287,7 @@ export const useGameStore = create<GameState>()(
                     dailyParticlesCollected: state.dailyParticlesCollected + earned,
                     weeklyClicks: state.weeklyClicks + 1,
                     weeklyParticlesCollected: state.weeklyParticlesCollected + earned,
-                    hourlyClicks: currentHourlyClicks + 1
+                    hourlyClicks: currentHourlyClicks + earned
                 })
 
                 // Add BP XP for clicking (e.g. 1 click = 1 XP)
@@ -295,6 +296,7 @@ export const useGameStore = create<GameState>()(
 
                 // Trigger debounced save
                 get().debouncedSave()
+                return true
             },
 
             // Purchase upgrade
