@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #06030c;
-  --foreground: #f8f8fb;
-  --void-dark: #06030c;
-  --void-purple: #7839cf;
-  --void-blue: #4060ff;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --void-dark: #0a0a0a;
+  --void-purple: #7b2cbf;
+  --void-blue: #4cc9f0;
   --particle-glow: #b865ff;
-  --text-primary: #f8f8fb;
-  --text-secondary: #a8a8bb;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
@@ -29,7 +29,8 @@
 }
 
 body {
-  background: var(--background);
+  background: radial-gradient(circle at top, #160f29 0%, var(--background) 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;

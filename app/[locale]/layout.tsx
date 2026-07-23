@@ -9,6 +9,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import Script from 'next/script';
+import NotificationPrompt from '@/components/UI/NotificationPrompt';
 
 const outfit = Outfit({ subsets: ['latin'] })
 
@@ -197,6 +198,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <MiniKitProvider>
             {children}
+            <NotificationPrompt />
             <Toaster
               position="top-center"
               toastOptions={{

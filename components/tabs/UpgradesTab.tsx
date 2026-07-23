@@ -7,6 +7,8 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
 import { trackEvent } from '@/lib/analytics'
+import { useTranslations } from 'next-intl'
+import { Zap, Cpu, Sparkles, Star, Palette, Image as ImageIcon, Rocket, Coins, Check, Gem } from 'lucide-react'
 
 import { ADMIN_WALLET_ADDRESS } from '@/lib/constants'
 
@@ -14,9 +16,9 @@ const RECEIVER_ADDRESS = ADMIN_WALLET_ADDRESS
 
 interface Upgrade {
     id: string
-    name: string
-    description: string
-    image: string
+    nameKey: string
+    descKey: string
+    icon: any
     baseCost: number
     currentLevel: number
     maxLevel: number
@@ -25,14 +27,25 @@ interface Upgrade {
 
 interface WldUpgrade {
     id: string
-    name: string
-    description: string
-    icon: string
+    nameKey: string
+    descKey: string
+    icon: any
     costWld: number
     effect: string
 }
 
+interface CosmicItem {
+    id: string
+    nameKey: string
+    descKey: string
+    icon: any
+    costParticles: number
+    type: 'skin' | 'theme'
+    value: string
+}
+
 export default function UpgradesTab() {
+    const t = useTranslations('Upgrades')
     const {
         particles,
         upgradeClickPower,
@@ -56,9 +69,9 @@ export default function UpgradesTab() {
     const upgrades: Upgrade[] = [
         {
             id: 'click_power',
-            name: 'Click Power',
-            description: 'Increase particles per click',
-            image: '/assets/nav/upgrades.png',
+            nameKey: 'clickPower',
+            descKey: 'clickPowerDesc',
+            icon: Zap,
             baseCost: 127,
             currentLevel: upgradeClickPower,
             maxLevel: 50,
@@ -66,32 +79,80 @@ export default function UpgradesTab() {
         },
         {
             id: 'auto_collector',
-            name: 'Void Drone',
-            description: 'Automatic particle collection',
-            image: '/assets/premium/statistics.png',
+            nameKey: 'voidDrone',
+            descKey: 'voidDroneDesc',
+            icon: Cpu,
             baseCost: 1270,
             currentLevel: upgradeAutoCollector,
             maxLevel: 30,
             effect: (level) => `+${level} per second`
-        },
+        }
     ]
 
     const wldUpgrades: WldUpgrade[] = [
         {
             id: 'void_core_multiplier',
-            name: 'Void Core Multiplier (PROMO 50% OFF!)',
-            description: 'Permanently doubles your Click Power.',
-            icon: '💎',
+            nameKey: 'voidCore',
+            descKey: 'voidCoreDesc',
+            icon: Gem,
             costWld: 5,
             effect: 'x2 Particles/Click'
         },
         {
             id: 'overclocked_drone',
-            name: 'Overclocked Drone (PROMO 33% OFF!)',
-            description: 'Permanently doubles your Auto Collector speed.',
-            icon: '🤖',
+            nameKey: 'overclockedDrone',
+            descKey: 'overclockedDroneDesc',
+            icon: Star,
             costWld: 10,
             effect: 'x2 Particles/Second'
+        }
+    ]
+
+    const cosmicItems: CosmicItem[] = [
+        {
+            id: 'crystal_skin',
+            nameKey: 'crystalSkin',
+            descKey: 'crystalSkinDesc',
+            icon: Palette,
+            costParticles: 5000000,
+            type: 'skin',
+            value: 'crystal'
+        },
+        {
+            id: 'dark_matter_skin',
+            nameKey: 'darkMatterSkin',
+            descKey: 'darkMatterSkinDesc',
+            icon: Palette,
+            costParticles: 15000000,
+            type: 'skin',
+            value: 'dark_matter'
+        },
+        {
+            id: 'supernova_skin',
+            nameKey: 'supernovaSkin',
+            descKey: 'supernovaSkinDesc',
+            icon: Palette,
+            costParticles: 50000000,
+            type: 'skin',
+            value: 'supernova'
+        },
+        {
+            id: 'deep_space_theme',
+            nameKey: 'deepSpaceTheme',
+            descKey: 'deepSpaceThemeDesc',
+            icon: ImageIcon,
+            costParticles: 10000000,
+            type: 'theme',
+            value: 'deep_space'
+        },
+        {
+            id: 'supernova_theme',
+            nameKey: 'supernovaTheme',
+            descKey: 'supernovaThemeDesc',
+            icon: ImageIcon,
+            costParticles: 25000000,
+            type: 'theme',
+            value: 'supernova'
         }
     ]
 
@@ -107,22 +168,22 @@ export default function UpgradesTab() {
         if (isUnlocked) {
             if (item.type === 'skin') {
                 equipSkin(item.value)
-                toast.success('Wyposażono nową skórkę portalu!')
+                toast.success(t('equipSkinToast'))
             } else {
                 equipTheme(item.value)
-                toast.success('Wyposażono nowy motyw tła!')
+                toast.success(t('equipThemeToast'))
             }
             return
         }
 
         if (particles < item.costParticles) {
-            toast.error('Masz za mało cząsteczek!')
+            toast.error(t('notEnoughParticles'))
             return
         }
 
         const success = purchaseCosmicItem(item.type, item.value, item.costParticles)
         if (success) {
-            toast.success(`Odblokowano: ${item.name}! 🎉`)
+            toast.success(`${t('unlockedToast')} ${t(item.nameKey as any)}! 🎉`)
         } else {
             toast.error('Błąd podczas zakupu.')
         }
@@ -137,7 +198,7 @@ export default function UpgradesTab() {
 
     const handlePurchase = (upgrade: Upgrade) => {
         if (upgrade.currentLevel >= upgrade.maxLevel) {
-            toast.error('Maximum level reached!')
+            toast.error(t('maxLevel'))
             return
         }
 
@@ -147,10 +208,10 @@ export default function UpgradesTab() {
         const success = purchaseUpgrade(upgrade.id, cost, newLevel)
 
         if (success) {
-            toast.success(`${upgrade.name} upgraded to level ${newLevel}! 🎉`)
+            toast.success(`${t(upgrade.nameKey as any)} upgraded to level ${newLevel}! 🎉`)
             trackEvent('purchase_upgrade', 'gameplay', upgrade.id, newLevel)
         } else {
-            toast.error('Not enough particles!')
+            toast.error(t('notEnoughParticles'))
         }
     }
 
@@ -182,8 +243,8 @@ export default function UpgradesTab() {
                     body: JSON.stringify({
                         itemId: upgrade.id,
                         priceStars,
-                        title: upgrade.name,
-                        description: upgrade.description,
+                        title: t(upgrade.nameKey as any),
+                        description: t(upgrade.descKey as any),
                         reference
                     })
                 })
@@ -212,7 +273,7 @@ export default function UpgradesTab() {
                             })
 
                             if (response.ok) {
-                                toast.success(`${upgrade.name} unlocked successfully! 🎉`)
+                                toast.success(`${t(upgrade.nameKey as any)} unlocked successfully! 🎉`)
                                 trackEvent('purchase_premium_upgrade', 'gameplay', upgrade.id)
                                 useGameStore.setState(state => ({
                                     unlockedPremiumUpgrades: [...(state.unlockedPremiumUpgrades || []), upgrade.id]
@@ -242,7 +303,7 @@ export default function UpgradesTab() {
                         symbol: Tokens.WLD,
                         token_amount: amountInWei
                     }],
-                    description: `Void Collector - ${upgrade.name}`,
+                    description: `Void Collector - ${t(upgrade.nameKey as any)}`,
                     network: Network.WorldChain
                 }
 
@@ -261,7 +322,7 @@ export default function UpgradesTab() {
                     })
 
                     if (response.ok) {
-                        toast.success(`${upgrade.name} unlocked successfully!`)
+                        toast.success(`${t(upgrade.nameKey as any)} unlocked successfully!`)
                         trackEvent('purchase_premium_upgrade', 'gameplay', upgrade.id)
                         useGameStore.setState(state => ({
                             unlockedPremiumUpgrades: [...(state.unlockedPremiumUpgrades || []), upgrade.id]
@@ -285,69 +346,67 @@ export default function UpgradesTab() {
     }
 
     return (
-        <div className="py-8 space-y-8">
+        <div className="py-8 space-y-8 max-w-2xl mx-auto">
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-2">🚀 Upgrades</h2>
-                <p className="text-text-secondary">Enhance your particle collecting operations</p>
+                <div className="inline-flex items-center justify-center p-4 bg-white/5 rounded-full mb-4">
+                    <Rocket className="w-8 h-8 text-white/80" />
+                </div>
+                <h2 className="text-3xl font-black mb-2 text-white">{t('title')}</h2>
+                <p className="text-white/50 font-medium">{t('subtitle')}</p>
             </div>
 
             {/* Premium WLD Upgrades */}
             <div>
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-particle-glow">
-                    <span>💎</span> {isTelegram ? 'Premium Stars Upgrades' : 'Premium WLD Upgrades'}
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white/90">
+                    <Gem className="w-5 h-5 text-fuchsia-400" /> {isTelegram ? t('premiumTitle') : t('premiumTitle')}
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {wldUpgrades.map((upgrade, idx) => {
                         const isUnlocked = unlockedPremiumUpgrades?.includes(upgrade.id)
 
                         return (
                             <motion.div
                                 key={upgrade.id}
-                                className={`bg-void-dark/80 border ${isUnlocked ? 'border-success/50' : 'border-[#00ffcc]/30'} rounded-xl p-6 relative overflow-hidden`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                className={`bg-white/5 border ${isUnlocked ? 'border-success/30' : 'border-white/10'} rounded-2xl p-4 relative overflow-hidden`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
                             >
-                                {isUnlocked && (
-                                    <div className="absolute top-0 right-0 bg-success/20 text-success text-xs font-bold px-3 py-1 pb-2 rounded-bl-xl">
-                                        ✓ UNLOCKED
-                                    </div>
-                                )}
                                 <div className="flex items-start gap-4">
-                                    <div className={`relative w-12 h-12 shrink-0 rounded-lg flex items-center justify-center text-2xl border ${isUnlocked ? 'bg-success/10 border-success/30' : 'bg-[#00ffcc]/10 border-[#00ffcc]/20'}`}>
-                                        <span>{upgrade.icon}</span>
+                                    <div className={`relative w-12 h-12 shrink-0 rounded-xl flex items-center justify-center border ${isUnlocked ? 'bg-success/10 border-success/30 text-success' : 'bg-white/5 border-white/10 text-white/80'}`}>
+                                        <upgrade.icon className="w-6 h-6" />
                                     </div>
 
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="mb-2">
-                                            <h3 className="text-xl font-bold text-white">{upgrade.name}</h3>
-                                            <p className="text-sm text-text-secondary">{upgrade.description}</p>
+                                            <h3 className="font-bold text-white tracking-tight flex items-center justify-between">
+                                                {t(upgrade.nameKey as any)}
+                                                {isUnlocked && <Check className="w-4 h-4 text-success shrink-0" />}
+                                            </h3>
+                                            <p className="text-xs text-white/50">{t(upgrade.descKey as any)}</p>
                                         </div>
 
-                                        <div className="mb-4">
-                                            <div className="text-sm text-text-secondary mb-1">Effect:</div>
-                                            <div className="text-[#00ffcc] font-black tracking-wide">
-                                                {upgrade.effect}
-                                            </div>
+                                        <div className="mb-4 text-xs font-medium text-white/80 bg-white/5 rounded-lg px-3 py-2 inline-block">
+                                            {upgrade.effect}
                                         </div>
 
                                         <button
                                             onClick={() => handleWldPurchase(upgrade)}
                                             disabled={isUnlocked || isPurchasing === upgrade.id}
                                             className={`
-                                                w-full py-3 px-6 rounded-lg font-bold transition-all relative
+                                                w-full py-3 px-4 rounded-xl font-bold text-sm transition-all active:scale-95
                                                 ${isUnlocked
-                                                    ? 'bg-success/20 text-success border border-success/50 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-[rgba(0,255,204,0.1)] to-[rgba(59,130,246,0.1)] hover:from-[#00ffcc]/30 hover:to-[#3b82f6]/30 border border-[#00ffcc]/50 text-white'
+                                                    ? 'bg-success/10 text-success cursor-not-allowed border border-success/20'
+                                                    : 'bg-white text-black hover:bg-gray-200'
                                                 }
                                             `}
                                         >
                                             {isUnlocked ? (
-                                                '✓ ALREADY OWNED'
+                                                t('alreadyOwned')
                                             ) : isPurchasing === upgrade.id ? (
-                                                'PROCESSING...'
+                                                t('processing')
                                             ) : (
-                                                <>{isTelegram ? `UNLOCK FOR ${upgrade.costWld * 60} STARS` : `UNLOCK FOR ${upgrade.costWld} WLD`}</>
+                                                <>{t('unlockFor')} {isTelegram ? `${upgrade.costWld * 60} ${t('stars')}` : `${upgrade.costWld} ${t('wld')}`}</>
                                             )}
                                         </button>
                                     </div>
@@ -360,10 +419,10 @@ export default function UpgradesTab() {
 
             {/* Standard Upgrades */}
             <div>
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span>⚡</span> Standard Upgrades
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white/90">
+                    <Zap className="w-5 h-5 text-yellow-400" /> {t('standardTitle')}
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {upgrades.map((upgrade, idx) => {
                         const cost = calculateCost(upgrade.baseCost, upgrade.currentLevel)
                         const canAfford = particles >= cost
@@ -372,65 +431,58 @@ export default function UpgradesTab() {
                         return (
                             <motion.div
                                 key={upgrade.id}
-                                className="bg-void-purple/10 border border-void-purple/30 rounded-xl p-6"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 + (idx * 0.1) }}
+                                className="bg-white/5 border border-white/10 rounded-2xl p-4"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + (idx * 0.1) }}
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className="relative w-12 h-12 shrink-0 bg-void-dark/30 rounded-lg p-2 border border-void-purple/20">
-                                        <Image
-                                            src={upgrade.image}
-                                            alt={upgrade.name}
-                                            fill
-                                            className="object-contain p-1"
-                                        />
+                                    <div className="relative w-12 h-12 shrink-0 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-white/80">
+                                        <upgrade.icon className="w-6 h-6" />
                                     </div>
 
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between mb-2">
                                             <div>
-                                                <h3 className="text-xl font-bold">{upgrade.name}</h3>
-                                                <p className="text-sm text-text-secondary">{upgrade.description}</p>
+                                                <h3 className="font-bold text-white tracking-tight">{t(upgrade.nameKey as any)}</h3>
+                                                <p className="text-xs text-white/50">{t(upgrade.descKey as any)}</p>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-xs text-text-secondary">Level</div>
-                                                <div className="text-lg font-bold text-particle-glow">
+                                            <div className="text-right ml-2 shrink-0">
+                                                <div className="text-[10px] uppercase text-white/50 font-bold">{t('level')}</div>
+                                                <div className="text-sm font-black text-white">
                                                     {upgrade.currentLevel}
-                                                    <span className="text-sm text-text-secondary">/{upgrade.maxLevel}</span>
+                                                    <span className="text-xs text-white/40 font-medium ml-1">/{upgrade.maxLevel}</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="mb-4">
-                                            <div className="text-sm text-text-secondary mb-1">Effect:</div>
-                                            <div className="text-void-blue font-bold">
-                                                {upgrade.effect(upgrade.currentLevel)}
-                                                {!isMaxLevel && (
-                                                    <span className="text-text-secondary"> → {upgrade.effect(upgrade.currentLevel + 1)}</span>
-                                                )}
-                                            </div>
+                                        <div className="mb-4 text-xs font-medium text-white/80 bg-white/5 rounded-lg px-3 py-2 inline-flex gap-2">
+                                            <span className="text-white/40">{t('effect')}:</span> 
+                                            {upgrade.effect(upgrade.currentLevel)}
+                                            {!isMaxLevel && (
+                                                <span className="text-white/40">→ <span className="text-white">{upgrade.effect(upgrade.currentLevel + 1)}</span></span>
+                                            )}
                                         </div>
 
                                         <button
                                             onClick={() => handlePurchase(upgrade)}
                                             disabled={!canAfford || isMaxLevel}
                                             className={`
-                                                w-full py-3 px-6 rounded-lg font-bold transition-all
+                                                w-full py-3 px-4 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2
                                                 ${isMaxLevel
-                                                    ? 'bg-success/20 text-success border border-success/50 cursor-not-allowed'
+                                                    ? 'bg-success/10 text-success border border-success/20 cursor-not-allowed'
                                                     : canAfford
-                                                        ? 'bg-gradient-to-r from-void-purple to-void-blue hover:from-void-purple/80 hover:to-void-blue/80'
-                                                        : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                                                        ? 'bg-white text-black hover:bg-gray-200'
+                                                        : 'bg-white/5 text-white/40 cursor-not-allowed border border-white/10'
                                                 }
                                             `}
                                         >
                                             {isMaxLevel ? (
-                                                '✓ MAX LEVEL'
+                                                t('maxLevel')
                                             ) : (
                                                 <>
-                                                    <Image src="/assets/nav/collect.png" alt="p" width={14} height={14} className="inline mr-1" />
-                                                    {cost.toLocaleString()} particles
+                                                    <Coins className="w-4 h-4" />
+                                                    {cost.toLocaleString()}
                                                 </>
                                             )}
                                         </button>
@@ -444,10 +496,10 @@ export default function UpgradesTab() {
 
             {/* Cosmic Store */}
             <div>
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-particle-glow">
-                    <span>✨</span> Cosmic Store (Sinks)
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white/90">
+                    <Sparkles className="w-5 h-5 text-purple-400" /> {t('cosmicStore')}
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {cosmicItems.map((item, idx) => {
                         const isUnlocked = item.type === 'skin'
                             ? unlockedSkins?.includes(item.value)
@@ -458,25 +510,27 @@ export default function UpgradesTab() {
                         return (
                             <motion.div
                                 key={item.id}
-                                className={`bg-void-purple/10 border ${isUnlocked ? 'border-success/30' : 'border-void-purple/30'} rounded-xl p-6`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.4 + (idx * 0.1) }}
+                                className={`bg-white/5 border ${isUnlocked ? 'border-success/30' : 'border-white/10'} rounded-2xl p-4`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 + (idx * 0.1) }}
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className="relative w-12 h-12 shrink-0 bg-void-dark/30 rounded-lg flex items-center justify-center text-2xl border border-void-purple/20">
-                                        <span>{item.icon}</span>
+                                    <div className="relative w-12 h-12 shrink-0 bg-white/5 rounded-xl flex items-center justify-center text-white/80 border border-white/10">
+                                        <item.icon className="w-6 h-6" />
                                     </div>
 
-                                    <div className="flex-1">
-                                        <div className="flex items-start justify-between mb-2">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between mb-4">
                                             <div>
-                                                <h3 className="text-xl font-bold">{item.name}</h3>
-                                                <p className="text-sm text-text-secondary">{item.description}</p>
+                                                <h3 className="font-bold text-white tracking-tight flex items-center gap-2">
+                                                    {t(item.nameKey as any)}
+                                                </h3>
+                                                <p className="text-xs text-white/50 mt-1">{t(item.descKey as any)}</p>
                                             </div>
-                                            {isUnlocked && (
-                                                <span className="text-xs bg-success/20 text-success px-2 py-1 rounded">
-                                                    Odblokowane
+                                            {isUnlocked && !equipped && (
+                                                <span className="text-[10px] uppercase bg-success/20 text-success px-2 py-1 rounded font-bold shrink-0 ml-2">
+                                                    {t('unlocked')}
                                                 </span>
                                             )}
                                         </div>
@@ -485,25 +539,25 @@ export default function UpgradesTab() {
                                             onClick={() => handleCosmicPurchase(item)}
                                             disabled={!isUnlocked && !canAfford}
                                             className={`
-                                                w-full py-3 px-6 rounded-lg font-bold transition-all
+                                                w-full py-3 px-4 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2
                                                 ${equipped
-                                                    ? 'bg-success/20 text-success border border-success/50 cursor-default'
+                                                    ? 'bg-success/10 text-success border border-success/20 cursor-default'
                                                     : isUnlocked
-                                                        ? 'bg-gradient-to-r from-void-purple to-void-blue hover:from-void-purple/80 hover:to-void-blue/80'
+                                                        ? 'bg-white text-black hover:bg-gray-200'
                                                         : canAfford
-                                                            ? 'bg-[#00ffcc]/20 hover:bg-[#00ffcc]/30 border border-[#00ffcc]/50 text-white'
-                                                            : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                                                            ? 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'
+                                                            : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
                                                 }
                                             `}
                                         >
                                             {equipped ? (
-                                                '✓ WYPOSAŻONE'
+                                                <><Check className="w-4 h-4" /> {t('equipped')}</>
                                             ) : isUnlocked ? (
-                                                'WYPOSAŻ'
+                                                t('equip')
                                             ) : (
                                                 <>
-                                                    <Image src="/assets/nav/collect.png" alt="p" width={14} height={14} className="inline mr-1" />
-                                                    Odblokuj za {item.costParticles.toLocaleString()} cząsteczek
+                                                    <Coins className="w-4 h-4" />
+                                                    {t('unlockForCosmic')} {item.costParticles.toLocaleString()}
                                                 </>
                                             )}
                                         </button>
@@ -517,61 +571,3 @@ export default function UpgradesTab() {
         </div>
     )
 }
-
-interface CosmicItem {
-    id: string
-    name: string
-    description: string
-    icon: string
-    costParticles: number
-    type: 'skin' | 'theme'
-    value: string
-}
-
-const cosmicItems: CosmicItem[] = [
-    {
-        id: 'crystal_skin',
-        name: '🔮 Kryształowy Portal',
-        description: 'Krystaliczne fasetki odbijające energię próżni.',
-        icon: '🔮',
-        costParticles: 5000000,
-        type: 'skin',
-        value: 'crystal'
-    },
-    {
-        id: 'dark_matter_skin',
-        name: '🌌 Portal Ciemnej Materii',
-        description: 'Tajemniczy wir, pozostawiający za sobą cienie.',
-        icon: '🌌',
-        costParticles: 15000000,
-        type: 'skin',
-        value: 'dark_matter'
-    },
-    {
-        id: 'supernova_skin',
-        name: '🔥 Portal Supernowej',
-        description: 'Ogniste rozbłyski krążące wokół jądra.',
-        icon: '🔥',
-        costParticles: 50000000,
-        type: 'skin',
-        value: 'supernova'
-    },
-    {
-        id: 'deep_space_theme',
-        name: '🌠 Motyw Głębokiego Kosmosu',
-        description: 'Ciemnogranatowe tło galaktyki z jasnymi błyskami.',
-        icon: '🌠',
-        costParticles: 10000000,
-        type: 'theme',
-        value: 'deep_space'
-    },
-    {
-        id: 'supernova_theme',
-        name: '☀️ Motyw Supernowej',
-        description: 'Intensywna eksplozja kosmiczna z rozbłyskami słońca.',
-        icon: '☀️',
-        costParticles: 25000000,
-        type: 'theme',
-        value: 'supernova'
-    }
-]

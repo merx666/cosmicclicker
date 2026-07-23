@@ -8,6 +8,8 @@ import toast from 'react-hot-toast'
 import ParticleEffects from './effects/ParticleEffects'
 import VoidCaptchaModal from './UI/VoidCaptchaModal'
 import DynamicAdRotator from './DynamicAdRotator'
+import { useTranslations } from 'next-intl'
+import { Bot, ShieldCheck, TriangleAlert } from 'lucide-react'
 
 export default function VoidParticle() {
     const handleClick = useGameStore((state) => state.handleClick)
@@ -17,6 +19,8 @@ export default function VoidParticle() {
     const particlesPerClick = useGameStore((state) => state.particlesPerClick)
     const [clickEffect, setClickEffect] = useState(false)
     const [luckyEffect, setLuckyEffect] = useState(false)
+    const tToast = useTranslations('Toasts')
+    const tAntiBot = useTranslations('AntiBot')
 
     // Captcha and Anomaly Detector States
     const [isCaptchaOpen, setIsCaptchaOpen] = useState(false)
@@ -64,7 +68,7 @@ export default function VoidParticle() {
                     setFormattedDeadline('')
                     const penaltyDuration = 15000
                     cooldownUntilRef.current = now + penaltyDuration
-                    toast.error('🤖 Czas minął! Wykryto zbyt szybkie klikanie. Blokada na 15 sekund.')
+                    toast.error(tToast('adTimeout'))
                 } else {
                     const secondsLeft = Math.ceil(diff / 1000)
                     const date = new Date(adVerificationDeadline)
@@ -84,7 +88,7 @@ export default function VoidParticle() {
         setAdPenaltyActive(false)
         setHasAdClicked(true)
         cooldownUntilRef.current = 0
-        toast.success('🛡️ Zweryfikowano! Blokada usunięta, możesz klikać dalej.')
+        toast.success(tToast('adVerified'))
     }
 
     const applyPenalty = () => {
@@ -94,7 +98,7 @@ export default function VoidParticle() {
         cooldownUntilRef.current = now + penaltyDuration
         lastPenaltyTimeRef.current = now
 
-        toast.error(`🤖 Przekroczono limit kliknięć! Czas: ${penaltyDuration / 1000}s`, {
+        toast.error(tToast('adClickLimit', { time: penaltyDuration / 1000 }), {
             duration: penaltyDuration
         })
     }
@@ -120,7 +124,7 @@ export default function VoidParticle() {
         }
 
         if (adPenaltyActive) {
-            toast.error('🤖 Klikanie zablokowane! Kliknij reklamę poniżej, aby odblokować.')
+            toast.error(tToast('adBlocked'))
             return false
         }
 
@@ -138,9 +142,7 @@ export default function VoidParticle() {
         // Activate ad verification if clicking fast (CPS >= 11) and not yet immune/challenged
         if (currentCps >= 11 && adVerificationDeadline === null && !hasAdClicked) {
             setAdVerificationDeadline(now + 10000)
-            toast('Szybkie klikanie! Kliknij reklamę poniżej w ciągu 10 sekund, aby uniknąć blokady.', {
-                icon: '⚠️'
-            })
+            toast(tToast('adWarning'))
         }
 
         if (recentClicks.length >= 22) {
@@ -203,57 +205,24 @@ export default function VoidParticle() {
         cooldownUntilRef.current = now + randomCooldown
 
         // 1. Click calculation & core game logic
-        const clickSuccess = handleClick()
-        if (!clickSuccess) {
+        const result = handleClick()
+        if (!result.success) {
             return
         }
 
         setClickEffect(true)
 
-        let currentMultiplier = 1
-        let isLuckyClick = false
-        let isMegaLucky = false
+        const totalEarned = result.earned
+        const currentMultiplier = result.multiplier
+        const isLuckyClick = result.isLucky
+        const isMegaLucky = result.isMegaLucky
 
-        if (premiumLuckyParticle) {
-            const state = useGameStore.getState()
-            const vipTier = state.vipTier || 1
-
-            const tierStats = [
-                { chance: 0, multiplier: 1 },     // No tier
-                { chance: 0.05, multiplier: 2 },  // Bronze
-                { chance: 0.08, multiplier: 2 },  // Silver
-                { chance: 0.12, multiplier: 3 },  // Gold
-                { chance: 0.15, multiplier: 5 }   // Platinum
-            ]
-
-            const { chance, multiplier } = tierStats[vipTier] || tierStats[1]
-
-            if (Math.random() < chance) {
-                currentMultiplier = multiplier
-                isLuckyClick = true
-            }
-
-            // Mega Lucky for Gold/Platinum tiers
-            if (vipTier >= 3) {
-                const megaChance = vipTier === 3 ? 0.01 : 0.03
-                const megaMulti = vipTier === 3 ? 10 : 15
-
-                if (Math.random() < megaChance) {
-                    currentMultiplier = megaMulti
-                    isMegaLucky = true
-                    isLuckyClick = true
-                }
-            }
-        }
-
-        const totalEarned = particlesPerClick * currentMultiplier
         if (currentMultiplier > 1) {
-            addParticles(particlesPerClick * (currentMultiplier - 1))
             setLuckyEffect(true)
             if (isMegaLucky) {
-                toast.success(`💎 MEGA LUCKY! +${currentMultiplier}x particles!`, { duration: 2000 })
+                toast.success(tToast('megaLucky', { multiplier: currentMultiplier }), { duration: 2000 })
             } else {
-                toast.success(`🍀 Lucky! +${currentMultiplier}x particles!`)
+                toast.success(tToast('lucky', { multiplier: currentMultiplier }))
             }
             setTimeout(() => setLuckyEffect(false), 1000)
         }
@@ -296,8 +265,8 @@ export default function VoidParticle() {
         // Spawn floating text
         const textId = Date.now() + Math.random()
         let textString = `+${totalEarned}`
-        if (isMegaLucky) textString = `💎 +${totalEarned} MEGA!`
-        else if (isLuckyClick) textString = `🍀 +${totalEarned} LUCKY!`
+        if (isMegaLucky) textString = `+${totalEarned} MEGA!`
+        else if (isLuckyClick) textString = `+${totalEarned} LUCKY!`
 
         const randomAngle = (Math.random() - 0.5) * 50 // -25px to 25px drift
         setFloatingTexts(prev => [...prev, { id: textId, x, y, text: textString, color, size, angle: randomAngle }])
@@ -322,7 +291,7 @@ export default function VoidParticle() {
         clickCoordinatesRef.current = []
         clickIntervalsRef.current = []
         lastClickTimeRef.current = 0
-        toast.success('🛡️ Kalibracja pomyślna. Blokada zdjęta!')
+        toast.success(tToast('captchaSuccess'))
     }
 
     const handleCaptchaFailure = () => {
@@ -334,7 +303,7 @@ export default function VoidParticle() {
         // Zastosuj ciężką karę (np. 15 sekund cooldownu)
         const now = Date.now()
         cooldownUntilRef.current = now + 15000
-        toast.error('🤖 Wykryto aktywność botów! Blokada klikania na 15 sekund.')
+        toast.error(tToast('captchaFailed'))
     }
 
     return (
@@ -397,12 +366,14 @@ export default function VoidParticle() {
             {/* Main clickable particle */}
             <motion.div
                 className="relative w-64 h-64 cursor-pointer select-none tap-target z-20"
-                whileTap={{ scale: 0.9, transition: { type: "spring", stiffness: 400, damping: 10 } }}
+                whileTap={{ scale: 0.88, rotate: -2, transition: { type: "spring", stiffness: 350, damping: 15 } }}
+                whileHover={{ scale: 1.02 }}
                 onClick={onClick}
                 animate={{
-                    scale: clickEffect ? 1.05 : 1,
+                    scale: clickEffect ? 1.08 : 1,
+                    rotate: clickEffect ? 2 : 0,
                 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                transition={{ type: "spring", stiffness: 350, damping: 15 }}
             >
                 {/* Outer glow */}
                 <div className="absolute inset-0 bg-gradient-radial from-particle-glow/40 to-transparent rounded-full blur-3xl" />
@@ -519,21 +490,21 @@ export default function VoidParticle() {
                 }`}
             >
                 <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-xl">🤖</span>
+                    <Bot className="w-6 h-6 text-red-500" />
                     <h4 className="text-sm font-extrabold tracking-wider uppercase text-red-400">
-                        {adPenaltyActive ? 'Blokada Antybotowa' : `Weryfikacja Klikania (CPS: ${cps})`}
+                        {adPenaltyActive ? tAntiBot('titleBlocked') : tAntiBot('titleVerify', { cps: cps.toString() })}
                     </h4>
                 </div>
 
                 <p className="text-xs text-gray-300 font-medium mb-3">
                     {adPenaltyActive ? (
                         <span>
-                            Klikanie zablokowane na 15s. <br />
-                            <span className="text-white font-bold">Kliknij reklamę poniżej, aby natychmiast odblokować!</span>
+                            {tAntiBot('blockedDesc')} <br />
+                            <span className="text-white font-bold">{tAntiBot('blockedAction')}</span>
                         </span>
                     ) : (
                         <span>
-                            Kliknij reklamę przed: <span className="text-white font-mono font-bold bg-white/10 px-2 py-0.5 rounded">{formattedDeadline}</span>, aby kontynuować grę.
+                            {tAntiBot('verifyDesc')} <span className="text-white font-mono font-bold bg-white/10 px-2 py-0.5 rounded">{formattedDeadline}</span> {tAntiBot('verifyAction')}
                         </span>
                     )}
                 </p>

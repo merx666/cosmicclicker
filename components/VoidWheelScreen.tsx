@@ -259,7 +259,7 @@ export default function VoidWheelScreen({ onBackToMenu }: VoidWheelScreenProps) 
         const lastSpinDate = achievements.last_void_wheel_spin_date
         const todayStr = new Date().toISOString().split('T')[0]
         
-        let spinsCount = achievements.void_wheel_spins_bought_today || 0
+        let spinsCount = Number(achievements.void_wheel_spins_bought_today) || 0
         if (lastSpinDate !== todayStr) {
             spinsCount = 0
         }

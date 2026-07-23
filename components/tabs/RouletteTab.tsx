@@ -5,8 +5,9 @@ import { useGameStore } from '@/store/gameStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { MiniKit, Tokens, Network, tokenToDecimals } from '@worldcoin/minikit-js'
-import Image from 'next/image'
 import { trackEvent } from '@/lib/analytics'
+import { useTranslations } from 'next-intl'
+import { Trash2, Sparkles, Star, Award, Gem, Gift, Flame } from 'lucide-react'
 
 // Fake winners data for the marquee
 const FAKE_WINNERS = [
@@ -26,6 +27,7 @@ const FAKE_WINNERS = [
 const FREE_SPIN_COOLDOWN = 24 * 60 * 60 * 1000
 
 export default function RouletteTab() {
+    const t = useTranslations('Roulette')
     const { nullifierHash, particles, addParticles } = useGameStore()
     const [isSpinning, setIsSpinning] = useState(false)
     const [variant, setVariant] = useState<'small' | 'big'>('small')
@@ -42,13 +44,13 @@ export default function RouletteTab() {
     const COST_BIG = 1.5
 
     const SYMBOLS = [
-        { id: 0, icon: '🗑️', color: 'text-gray-500', name: 'Trash' },
-        { id: 1, icon: '✨', color: 'text-blue-400', name: 'Particles' },
-        { id: 2, icon: '🌟', color: 'text-purple-400', name: 'Mega Particles' },
-        { id: 3, icon: '🥉', color: 'text-amber-700', name: 'Bronze' },
-        { id: 4, icon: '🥈', color: 'text-gray-300', name: 'Silver' },
-        { id: 5, icon: '🥇', color: 'text-yellow-400', name: 'Gold' },
-        { id: 6, icon: '💎', color: 'text-cyan-400', name: 'Platinum' },
+        { id: 0, icon: Trash2, color: 'text-white/40', nameKey: 'trash' },
+        { id: 1, icon: Sparkles, color: 'text-blue-400', nameKey: 'particles' },
+        { id: 2, icon: Star, color: 'text-purple-400', nameKey: 'megaParticles' },
+        { id: 3, icon: Award, color: 'text-amber-700', nameKey: 'bronze' },
+        { id: 4, icon: Award, color: 'text-gray-300', nameKey: 'silver' },
+        { id: 5, icon: Award, color: 'text-yellow-400', nameKey: 'gold' },
+        { id: 6, icon: Gem, color: 'text-cyan-400', nameKey: 'platinum' },
     ]
 
     // Check free spin availability
@@ -223,7 +225,7 @@ export default function RouletteTab() {
             ref={machineRef}
             animate={screenShake ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {}}
             transition={{ duration: 0.6 }}
-            className="flex flex-col items-center min-h-[70vh] py-4 bg-gradient-to-b from-[#1a1b4b] to-[#0f1035] relative overflow-hidden"
+            className="flex flex-col items-center min-h-[70vh] py-4 bg-black relative overflow-hidden"
         >
             {/* Confetti Effect */}
             <AnimatePresence>
@@ -248,7 +250,7 @@ export default function RouletteTab() {
                                     delay: Math.random() * 0.5,
                                     ease: 'easeIn',
                                 }}
-                                className="absolute w-3 h-3 rounded-sm"
+                                className="absolute w-2 h-2 rounded-sm"
                                 style={{
                                     backgroundColor: ['#a855f7', '#f59e0b', '#06b6d4', '#ef4444', '#22c55e', '#ec4899'][i % 6],
                                 }}
@@ -259,17 +261,17 @@ export default function RouletteTab() {
             </AnimatePresence>
 
             {/* Fake Winners Ticker */}
-            <div className="w-full bg-black/40 border-y border-white/5 py-2 mb-4 overflow-hidden relative">
+            <div className="w-full bg-white/5 border-y border-white/5 py-3 mb-6 overflow-hidden relative">
                 <motion.div
                     className="flex gap-8 whitespace-nowrap"
                     animate={{ x: [0, -1500] }}
                     transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
                 >
                     {[...FAKE_WINNERS, ...FAKE_WINNERS].map((win, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-blue-200">
-                            <span>🎉</span>
+                        <div key={i} className="flex items-center gap-2 text-xs text-white/70">
+                            <Gift className="w-3 h-3 text-white/40" />
                             <span className="font-mono">{win.addr}</span>
-                            <span className="text-yellow-400 font-bold">won {win.prize}</span>
+                            <span className="text-white font-bold">won {win.prize}</span>
                         </div>
                     ))}
                 </motion.div>
@@ -280,10 +282,11 @@ export default function RouletteTab() {
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="mb-2 px-4 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full"
+                    className="mb-4 px-4 py-1.5 bg-white/10 border border-white/20 rounded-full flex items-center gap-2"
                 >
-                    <span className="text-xs font-bold text-yellow-400">
-                        🔥 Win Streak: {winStreak}x
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    <span className="text-xs font-bold text-white">
+                        {t('winStreak')}: {winStreak}x
                     </span>
                 </motion.div>
             )}
@@ -293,37 +296,36 @@ export default function RouletteTab() {
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 w-full max-w-sm"
+                    className="mb-6 w-full max-w-sm px-4"
                 >
                     <button
                         onClick={() => handleSpin(true)}
-                        className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl font-bold text-black bg-white hover:bg-gray-100 active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
-                        <motion.span
+                        <motion.div
                             animate={{ rotate: [0, 360] }}
                             transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-                            className="text-xl"
                         >
-                            🎁
-                        </motion.span>
-                        FREE DAILY SPIN!
+                            <Gift className="w-5 h-5 text-black" />
+                        </motion.div>
+                        {t('freeSpin')}
                     </button>
                 </motion.div>
             )}
             {!freeSpinAvailable && freeSpinTimer && (
-                <div className="mb-4 text-xs text-gray-500">
-                    Next free spin in: <span className="text-green-400 font-bold">{freeSpinTimer}</span>
+                <div className="mb-6 text-xs text-white/40 bg-white/5 px-4 py-2 rounded-lg">
+                    {t('nextFreeSpin')} <span className="text-white font-bold">{freeSpinTimer}</span>
                 </div>
             )}
 
-            <h2 className="text-2xl font-bold text-white mb-4 uppercase tracking-widest drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-                Void Machine
+            <h2 className="text-2xl font-black text-white mb-6 tracking-tight">
+                {t('title')}
             </h2>
 
             {/* Toggle */}
-            <div className="flex bg-black/30 p-1 rounded-full border border-white/10 mb-6 relative">
+            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10 mb-8 relative">
                 <motion.div
-                    className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600"
+                    className="absolute top-1 bottom-1 rounded-xl bg-white/10"
                     initial={false}
                     animate={{
                         left: variant === 'small' ? '4px' : '50%',
@@ -332,122 +334,125 @@ export default function RouletteTab() {
                 />
                 <button
                     onClick={() => setVariant('small')}
-                    className={`px-8 py-2 rounded-full relative z-10 text-sm font-bold transition-colors ${variant === 'small' ? 'text-white' : 'text-gray-400'}`}
+                    className={`px-8 py-2.5 rounded-xl relative z-10 text-sm font-bold transition-colors ${variant === 'small' ? 'text-white' : 'text-white/40'}`}
                 >
-                    SMALL
+                    {t('small')}
                 </button>
                 <button
                     onClick={() => setVariant('big')}
-                    className={`px-8 py-2 rounded-full relative z-10 text-sm font-bold transition-colors ${variant === 'big' ? 'text-white' : 'text-gray-400'}`}
+                    className={`px-8 py-2.5 rounded-xl relative z-10 text-sm font-bold transition-colors ${variant === 'big' ? 'text-white' : 'text-white/40'}`}
                 >
-                    BIG
+                    {t('big')}
                 </button>
             </div>
 
             {/* Slot Machine Display */}
-            <div className="relative p-4 rounded-t-[40px] rounded-b-[20px] bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_0_30px_rgba(59,130,246,0.3)] border-4 border-blue-300">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-600 px-6 py-1 rounded-full border-2 border-purple-300 shadow-lg z-20">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Provably Fair</span>
+            <div className="relative p-6 rounded-3xl bg-white/5 border border-white/10 mx-4 w-[calc(100%-2rem)] max-w-sm">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4 py-1 rounded-full border border-white/10 z-20">
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{t('provablyFair')}</span>
                 </div>
 
-                <div className="bg-[#0a0a20] p-4 rounded-[20px] shadow-inner border-2 border-black/20">
-                    <div className="flex gap-2">
-                        {reels.map((symbolIdx, i) => (
-                            <div key={i} className="w-20 h-24 bg-gradient-to-b from-[#151530] to-[#202040] rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden shadow-inner">
-                                <AnimatePresence mode="popLayout">
-                                    <motion.div
-                                        key={`${i}-${symbolIdx}-${isSpinning}`}
-                                        initial={{ y: isSpinning ? -50 : 0, opacity: isSpinning ? 0.5 : 1, filter: isSpinning ? 'blur(4px)' : 'none' }}
-                                        animate={{ y: 0, opacity: 1, filter: 'none' }}
-                                        exit={{ y: 50, opacity: 0 }}
-                                        className="text-4xl"
-                                    >
-                                        {SYMBOLS[symbolIdx].icon}
-                                    </motion.div>
-                                </AnimatePresence>
-                                {/* Scanline effect */}
-                                <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none opacity-50" />
-                            </div>
-                        ))}
+                <div className="bg-black/50 p-4 rounded-2xl border border-white/5 mt-2">
+                    <div className="flex gap-3 justify-center">
+                        {reels.map((symbolIdx, i) => {
+                            const SymbolIcon = SYMBOLS[symbolIdx].icon;
+                            return (
+                                <div key={i} className="w-20 h-24 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center relative overflow-hidden">
+                                    <AnimatePresence mode="popLayout">
+                                        <motion.div
+                                            key={`${i}-${symbolIdx}-${isSpinning}`}
+                                            initial={{ y: isSpinning ? -50 : 0, opacity: isSpinning ? 0.5 : 1, filter: isSpinning ? 'blur(4px)' : 'none' }}
+                                            animate={{ y: 0, opacity: 1, filter: 'none' }}
+                                            exit={{ y: 50, opacity: 0 }}
+                                            className={`${SYMBOLS[symbolIdx].color}`}
+                                        >
+                                            <SymbolIcon className="w-10 h-10" />
+                                        </motion.div>
+                                    </AnimatePresence>
+                                    {/* Scanline effect */}
+                                    <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20" />
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             </div>
-
-            {/* Base */}
-            <div className="w-[80%] h-4 bg-blue-800 rounded-b-xl opacity-50 mb-6" />
 
             {/* Last Win Display */}
             <AnimatePresence>
                 {lastWin && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
-                        className={`mb-4 px-6 py-3 rounded-xl text-center font-bold ${lastWin.type === 'vip'
-                            ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 text-yellow-400'
-                            : 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-400'
+                        className={`mt-6 mb-2 px-6 py-3 rounded-2xl text-center font-bold ${lastWin.type === 'vip'
+                            ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
+                            : 'bg-white/5 border border-white/10 text-white'
                             }`}
                     >
                         <p className="text-sm">{lastWin.message}</p>
                         {winStreak > 1 && (
-                            <p className="text-xs text-yellow-400 mt-1">🔥 {winStreak}x streak!</p>
+                            <p className="text-xs text-orange-400 mt-1 flex items-center justify-center gap-1">
+                                <Flame className="w-3 h-3" /> {winStreak}x streak!
+                            </p>
                         )}
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* Spin Button */}
-            <button
+            <motion.button
                 onClick={() => handleSpin(false)}
                 disabled={isSpinning}
+                whileTap={!isSpinning ? { scale: 0.95 } : {}}
                 className={`
-                    w-48 h-16 rounded-2xl font-bold text-xl shadow-[0_5px_0_rgb(162,28,175)] active:shadow-none active:translate-y-[5px]
+                    w-48 h-16 rounded-2xl font-black text-lg mt-8
                     ${isSpinning
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-none translate-y-[5px]'
-                        : 'bg-gradient-to-b from-purple-500 to-purple-700 text-white hover:brightness-110'
+                        ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                        : 'bg-white text-black hover:bg-gray-200'
                     }
-                    transition-all flex flex-col items-center justify-center border-t border-white/20
+                    transition-all flex flex-col items-center justify-center
                 `}
             >
-                <span>{isSpinning ? '...' : 'SPIN'}</span>
-                <span className="text-xs font-normal opacity-80">
+                <span>{isSpinning ? '...' : t('spin')}</span>
+                <span className="text-xs font-medium opacity-60">
                     {variant === 'small' ? COST_SMALL : COST_BIG} WLD
                 </span>
-            </button>
+            </motion.button>
 
             {/* Improved Prize Table */}
-            <div className="mt-8 mx-4 p-4 bg-white/5 rounded-xl border border-white/5 backdrop-blur-sm w-full max-w-sm">
-                <h3 className="text-xs font-bold text-gray-400 uppercase mb-3 text-center">Prize Table ({variant.toUpperCase()})</h3>
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between p-2 bg-cyan-500/10 rounded border border-cyan-500/10">
-                        <span className="flex gap-1 text-sm">💎💎💎</span>
-                        <span className="text-cyan-300 text-xs font-bold">Platinum VIP</span>
-                        <span className="text-[10px] text-gray-500">{variant === 'big' ? '0.05%' : '—'}</span>
+            <div className="mt-12 mx-4 p-5 bg-white/5 rounded-2xl border border-white/5 w-[calc(100%-2rem)] max-w-sm mb-12">
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4 text-center">{t('prizeTable')} ({t(variant)})</h3>
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="flex gap-2 text-cyan-400"><Gem className="w-4 h-4"/><Gem className="w-4 h-4"/><Gem className="w-4 h-4"/></span>
+                        <span className="text-white text-xs font-bold">{t('platinum')}</span>
+                        <span className="text-xs text-white/40">{variant === 'big' ? '0.05%' : '—'}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-yellow-500/10 rounded border border-yellow-500/10">
-                        <span className="flex gap-1 text-sm">🥇🥇🥇</span>
-                        <span className="text-yellow-400 text-xs font-bold">Gold VIP</span>
-                        <span className="text-[10px] text-gray-500">{variant === 'big' ? '0.2%' : '0.01%'}</span>
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="flex gap-2 text-yellow-400"><Award className="w-4 h-4"/><Award className="w-4 h-4"/><Award className="w-4 h-4"/></span>
+                        <span className="text-white text-xs font-bold">{t('gold')}</span>
+                        <span className="text-xs text-white/40">{variant === 'big' ? '0.2%' : '0.01%'}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-300/5 rounded border border-gray-300/10">
-                        <span className="flex gap-1 text-sm">🥈🥈🥈</span>
-                        <span className="text-gray-300 text-xs font-bold">Silver VIP</span>
-                        <span className="text-[10px] text-gray-500">{variant === 'big' ? '0.5%' : '0.1%'}</span>
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="flex gap-2 text-gray-300"><Award className="w-4 h-4"/><Award className="w-4 h-4"/><Award className="w-4 h-4"/></span>
+                        <span className="text-white text-xs font-bold">{t('silver')}</span>
+                        <span className="text-xs text-white/40">{variant === 'big' ? '0.5%' : '0.1%'}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-amber-500/5 rounded border border-amber-500/10">
-                        <span className="flex gap-1 text-sm">🥉🥉🥉</span>
-                        <span className="text-amber-600 text-xs font-bold">Bronze VIP</span>
-                        <span className="text-[10px] text-gray-500">{variant === 'big' ? '1%' : '0.5%'}</span>
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="flex gap-2 text-amber-600"><Award className="w-4 h-4"/><Award className="w-4 h-4"/><Award className="w-4 h-4"/></span>
+                        <span className="text-white text-xs font-bold">{t('bronze')}</span>
+                        <span className="text-xs text-white/40">{variant === 'big' ? '1%' : '0.5%'}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-purple-500/5 rounded border border-purple-500/10">
-                        <span className="flex gap-1 text-sm">🌟🌟🌟</span>
-                        <span className="text-purple-400 text-xs font-bold">Mega Particles</span>
-                        <span className="text-[10px] text-gray-500">{variant === 'big' ? '30%' : '10%'}</span>
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="flex gap-2 text-purple-400"><Star className="w-4 h-4"/><Star className="w-4 h-4"/><Star className="w-4 h-4"/></span>
+                        <span className="text-white text-xs font-bold">{t('megaParticles')}</span>
+                        <span className="text-xs text-white/40">{variant === 'big' ? '30%' : '10%'}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-blue-500/5 rounded border border-blue-500/10">
-                        <span className="flex gap-1 text-sm">✨✨✨</span>
-                        <span className="text-blue-400 text-xs font-bold">Particles</span>
-                        <span className="text-[10px] text-gray-500">{variant === 'big' ? '69%' : '89%'}</span>
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="flex gap-2 text-blue-400"><Sparkles className="w-4 h-4"/><Sparkles className="w-4 h-4"/><Sparkles className="w-4 h-4"/></span>
+                        <span className="text-white text-xs font-bold">{t('particles')}</span>
+                        <span className="text-xs text-white/40">{variant === 'big' ? '69%' : '89%'}</span>
                     </div>
                 </div>
             </div>

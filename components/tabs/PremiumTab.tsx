@@ -570,8 +570,8 @@ export default function PremiumTab() {
     return (
         <div className="py-8">
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-2">💎 Premium Shop</h2>
-                <p className="text-text-secondary">
+                <h2 className="text-4xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 tracking-tight">💎 Premium Shop</h2>
+                <p className="text-white/50 font-medium">
                     {isTelegram ? 'Exclusive upgrades powered by Stars, TON & VOID' : 'Exclusive upgrades powered by WLD & VOID'}
                 </p>
             </div>
@@ -609,9 +609,9 @@ export default function PremiumTab() {
                         return (
                             <div
                                 key={tier}
-                                className={`relative p-4 bg-gradient-to-br ${tierColors[tier]} border rounded-2xl flex flex-col justify-between transition-all duration-300 ${
-                                    isCurrent ? 'ring-2 ring-particle-glow border-transparent' : ''
-                                } ${isPopular ? 'ring-2 ring-yellow-400 border-transparent scale-[1.02]' : ''}`}
+                                className={`relative p-5 bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-3xl flex flex-col justify-between transition-all duration-300 ${
+                                    isCurrent ? 'ring-2 ring-particle-glow border-transparent shadow-[0_0_30px_rgba(139,92,246,0.3)]' : ''
+                                } ${isPopular ? 'ring-2 ring-yellow-400 border-transparent scale-[1.02] shadow-[0_0_30px_rgba(250,204,21,0.3)]' : ''}`}
                             >
                                 {/* Popular/Decoy Badge */}
                                 {isPopular && (
@@ -633,7 +633,7 @@ export default function PremiumTab() {
                                         )}
                                     </div>
 
-                                    <div className="text-[11px] text-text-secondary space-y-1.5 my-3 border-t border-white/5 pt-3">
+                                    <div className="text-[11px] text-white/50 space-y-1.5 my-3 border-t border-white/10 pt-3">
                                         {benefits.map((b, i) => <div key={i} className="flex items-start gap-1"><span>•</span> <span>{b}</span></div>)}
                                     </div>
                                 </div>
@@ -657,10 +657,10 @@ export default function PremiumTab() {
                                                     toast.error("Nie możesz przejść na niższy lub ten sam poziom")
                                                 }
                                             }}
-                                            className={`mt-2 w-full py-2 hover:scale-105 rounded-xl text-xs font-bold transition-all duration-200 ${
+                                            className={`mt-2 w-full py-3 hover:scale-105 rounded-2xl text-sm font-bold transition-all duration-200 ${
                                                 isPopular 
-                                                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-extrabold shadow-lg shadow-yellow-500/20' 
-                                                    : 'bg-void-purple hover:bg-void-purple/80 text-white'
+                                                    ? 'bg-yellow-400 text-black font-extrabold shadow-lg shadow-yellow-500/20' 
+                                                    : 'bg-white/10 hover:bg-white/20 text-white'
                                             }`}
                                         >
                                             {vipTier === 0 ? 'Kupuję' : 'Ulepszam'}
@@ -676,7 +676,7 @@ export default function PremiumTab() {
             {/* Daily Bonus & Interactive Streak Track Section */}
             {premiumDailyBonus && (
                 <motion.div
-                    className="mb-8 p-6 bg-gradient-to-br from-void-purple/20 via-void-blue/15 to-transparent border-2 border-particle-glow/30 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
+                    className="mb-8 p-6 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
@@ -691,16 +691,16 @@ export default function PremiumTab() {
                             </p>
                         </div>
                         <div className="text-right">
-                            <div className="text-xs font-semibold text-text-secondary mb-2">
+                            <div className="text-xs font-semibold text-white/50 mb-2">
                                 Następny za: <span className="text-particle-glow font-bold">{getCooldownStatus()}</span>
                             </div>
                             <button
                                 onClick={handleClaimDaily}
                                 disabled={getCooldownStatus() !== 'Ready!'}
                                 className={`
-                                    px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300
+                                    px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300
                                     ${getCooldownStatus() === 'Ready!'
-                                        ? 'bg-gradient-to-r from-void-purple to-void-blue hover:scale-105 shadow-[0_0_15px_rgba(139,92,246,0.4)] text-white'
+                                        ? 'bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.2)]'
                                         : 'bg-white/5 text-white/30 border border-white/5 opacity-50 cursor-not-allowed'
                                     }
                                 `}
@@ -723,11 +723,11 @@ export default function PremiumTab() {
                                 return (
                                     <div
                                         key={day}
-                                        className={`relative flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-300 ${
+                                        className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 ${
                                             isClaimed
-                                                ? 'bg-green-500/10 border-green-500/30 text-green-400 shadow-[inset_0_0_10px_rgba(74,222,128,0.05)]'
+                                                ? 'bg-success/10 border-success/30 text-success shadow-[0_0_15px_rgba(34,197,94,0.1)]'
                                                 : isCurrent
-                                                    ? 'bg-particle-glow/20 border-particle-glow text-white shadow-[0_0_10px_rgba(192,132,252,0.4)] animate-pulse'
+                                                    ? 'bg-white/10 border-white text-white shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-pulse'
                                                     : 'bg-white/5 border-white/5 text-white/30'
                                         }`}
                                     >
@@ -767,33 +767,33 @@ export default function PremiumTab() {
                                 <motion.div
                                     key={upgrade.id}
                                     className={`
-                                p-6 rounded-xl border-2
-                                ${isOwned
-                                            ? 'bg-particle-glow/10 border-particle-glow/50'
-                                            : 'bg-void-purple/5 border-void-purple/30'
+                                        p-6 rounded-3xl border bg-black/40 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]
+                                        ${isOwned
+                                            ? 'border-success/30 shadow-[0_0_30px_rgba(34,197,94,0.1)]'
+                                            : 'border-white/10'
                                         }
-                            `}
+                                    `}
                                     whileHover={{ scale: isOwned ? 1 : 1.02 }}
                                 >
                                     <div className="flex items-start gap-4">
-                                        <div className="relative w-16 h-16 shrink-0">
+                                        <div className="relative w-16 h-16 shrink-0 bg-white/5 backdrop-blur-md rounded-2xl p-2 border border-white/10 shadow-inner">
                                             <Image
                                                 src={upgrade.image}
                                                 alt={upgrade.name}
                                                 fill
-                                                className="rounded-xl object-cover"
+                                                className="rounded-xl object-contain p-1"
                                             />
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h4 className="font-bold">{upgrade.name}</h4>
+                                                <h4 className="text-xl font-bold text-white tracking-tight">{upgrade.name}</h4>
                                                 {isOwned && (
-                                                    <span className="text-xs bg-particle-glow/20 text-particle-glow px-2 py-1 rounded">
+                                                    <span className="text-xs bg-success/20 text-success px-2 py-1 rounded">
                                                         Owned
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-text-secondary mb-4">
+                                            <p className="text-sm text-white/50 mb-4">
                                                 {upgrade.description}
                                             </p>
 
@@ -802,10 +802,10 @@ export default function PremiumTab() {
                                                     onClick={() => handleEquip(upgrade.id)}
                                                     disabled={act}
                                                     className={`
-                                                w-full py-2 px-4 rounded-lg font-bold text-sm
+                                                w-full py-3 px-6 rounded-2xl font-bold text-sm
                                                 ${act
-                                                            ? 'bg-white/10 text-white cursor-default'
-                                                            : 'bg-particle-glow text-black hover:scale-105'
+                                                            ? 'bg-success/20 text-success border border-success/50 cursor-default'
+                                                            : 'bg-white text-black hover:bg-gray-200'
                                                         }
                                                 transition-all
                                             `}
@@ -817,10 +817,10 @@ export default function PremiumTab() {
                                                     onClick={() => handlePurchase(upgrade.id, upgrade.price)}
                                                     disabled={isOwned || purchasing === upgrade.id}
                                                     className={`
-                                                w-full py-2 px-4 rounded-lg font-bold text-sm
+                                                w-full py-3 px-6 rounded-2xl font-bold text-sm
                                                 ${isOwned
-                                                            ? 'bg-gray-600 opacity-50 cursor-not-allowed'
-                                                            : 'bg-gradient-to-r from-void-purple to-void-blue hover:scale-105'
+                                                            ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/5'
+                                                            : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white hover:scale-[1.02]'
                                                         }
                                                 transition-all flex items-center justify-center gap-2
                                             `}

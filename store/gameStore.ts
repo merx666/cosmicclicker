@@ -87,7 +87,7 @@ export interface GameState {
     addBpXp: (amount: number) => void // NEW: for battle pass
     claimBpReward: (level: number, type: 'free' | 'premium', rewardParticles: number, rewardPremiumType?: string, rewardPremiumId?: string) => boolean
     checkAchievements: (key: string, amount: number) => void // NEW: Achievements check
-    handleClick: () => boolean
+    handleClick: () => { success: boolean; earned: number; isLucky: boolean; isMegaLucky: boolean; multiplier: number }
     purchaseUpgrade: (upgradeType: string, cost: number, level: number) => boolean
     purchasePremiumUpgrade: (upgradeType: string) => boolean
     purchaseCosmicItem: (type: 'skin' | 'theme', value: string, cost: number) => boolean
@@ -253,7 +253,7 @@ export const useGameStore = create<GameState>()(
                     setTimeout(() => get().saveGameState(), 100)
                 }
 
-                const hasBypass = state.premiumVIP || (state.bypassUntil && state.bypassUntil > now) || (Array.isArray(state.unlockedPremiumUpgrades) && state.unlockedPremiumUpgrades.includes('singularity_perm'))
+                const hasBypass = (state.bypassUntil && state.bypassUntil > now) || (Array.isArray(state.unlockedPremiumUpgrades) && state.unlockedPremiumUpgrades.includes('singularity_perm'))
 
                 // Calculate tier bonus: Bronze=0, Silver=+2, Gold=+5, Platinum=+10
                 const tierBonus = [0, 0, 2, 5, 10][state.vipTier] || 0
@@ -270,24 +270,65 @@ export const useGameStore = create<GameState>()(
                     earned *= 6
                 }
 
-                // Energy check: each click costs as much energy as the particles earned
-                if ((currentHourlyClicks + earned) > 1000 && !hasBypass) {
-                    if (!state.showEnergyPaywall) {
-                        set({ showEnergyPaywall: true })
-                        get().saveGameState() // Immediate save when reaching limit
+                let currentMultiplier = 1
+                let isLucky = false
+                let isMegaLucky = false
+
+                if (state.premiumLuckyParticle) {
+                    const vipTier = state.vipTier || 1
+                    const tierStats = [
+                        { chance: 0, multiplier: 1 },     // No tier
+                        { chance: 0.05, multiplier: 2 },  // Bronze
+                        { chance: 0.08, multiplier: 2 },  // Silver
+                        { chance: 0.12, multiplier: 3 },  // Gold
+                        { chance: 0.15, multiplier: 5 }   // Platinum
+                    ]
+                    const { chance, multiplier } = tierStats[vipTier] || tierStats[1]
+
+                    if (Math.random() < chance) {
+                        currentMultiplier = multiplier
+                        isLucky = true
                     }
-                    return false
+
+                    if (vipTier >= 3) {
+                        const megaChance = vipTier === 3 ? 0.01 : 0.03
+                        const megaMulti = vipTier === 3 ? 10 : 15
+                        if (Math.random() < megaChance) {
+                            currentMultiplier = megaMulti
+                            isMegaLucky = true
+                            isLucky = true
+                        }
+                    }
+                }
+
+                let actualEarned = earned * currentMultiplier
+                
+                // Energy check: each click costs as much energy as the TOTAL particles earned
+                if (!hasBypass) {
+                    const energyLimit = 1000 * state.particlesPerClick
+                    const energyRemaining = energyLimit - currentHourlyClicks
+                    if (energyRemaining <= 0) {
+                        if (!state.showEnergyPaywall) {
+                            set({ showEnergyPaywall: true })
+                            get().saveGameState() // Immediate save when reaching limit
+                        }
+                        return { success: false, earned: 0, isLucky: false, isMegaLucky: false, multiplier: 1 }
+                    }
+                    if (actualEarned > energyRemaining) {
+                        actualEarned = energyRemaining
+                        // If it got capped, technically it wasn't fully lucky
+                    }
                 }
 
                 set({
-                    particles: state.particles + earned,
+                    particles: state.particles + actualEarned,
+                    totalParticlesCollected: state.totalParticlesCollected + actualEarned,
+                    dailyParticlesCollected: state.dailyParticlesCollected + actualEarned,
+                    weeklyParticlesCollected: state.weeklyParticlesCollected + actualEarned,
                     totalClicks: state.totalClicks + 1,
-                    totalParticlesCollected: state.totalParticlesCollected + earned,
                     dailyClicks: state.dailyClicks + 1,
-                    dailyParticlesCollected: state.dailyParticlesCollected + earned,
                     weeklyClicks: state.weeklyClicks + 1,
-                    weeklyParticlesCollected: state.weeklyParticlesCollected + earned,
-                    hourlyClicks: currentHourlyClicks + earned
+                    hourlyClicks: currentHourlyClicks + actualEarned
                 })
 
                 // Add BP XP for clicking (e.g. 1 click = 1 XP)
@@ -296,7 +337,7 @@ export const useGameStore = create<GameState>()(
 
                 // Trigger debounced save
                 get().debouncedSave()
-                return true
+                return { success: true, earned: actualEarned, isLucky, isMegaLucky, multiplier: currentMultiplier }
             },
 
             // Purchase upgrade

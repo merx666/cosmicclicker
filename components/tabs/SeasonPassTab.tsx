@@ -3,7 +3,8 @@
 import { useGameStore } from '@/store/gameStore'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import Image from 'next/image'
+import { Ticket, Sparkles, Palette, Moon, Lock } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 // Definitions for the battle pass rewards
 const PASS_LEVELS = 20
@@ -53,6 +54,7 @@ interface SeasonPassTabProps {
 }
 
 export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
+    const t = useTranslations('SeasonPass')
     const {
         bpLevel,
         bpXp,
@@ -87,58 +89,55 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
     const renderRewardIcon = (reward: RewardType) => {
         if (reward.type === 'particles') {
             return (
-                <div className="flex flex-col items-center justify-center h-full">
-                    <span className="text-2xl mb-1">✨</span>
-                    <span className="font-bold text-sm">+{reward.amount.toLocaleString()}</span>
+                <div className="flex flex-col items-center justify-center h-full text-white">
+                    <Sparkles className="w-5 h-5 mb-1 text-white/80" />
+                    <span className="font-bold text-xs">+{reward.amount.toLocaleString()}</span>
                 </div>
             )
         } else if (reward.type === 'skin') {
             return (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                    <span className="text-xl mb-1">🎨</span>
-                    <span className="font-bold text-xs leading-tight">{reward.name}</span>
+                <div className="flex flex-col items-center justify-center h-full text-center text-white px-2">
+                    <Palette className="w-4 h-4 mb-1 text-white/80" />
+                    <span className="font-bold text-[10px] leading-tight uppercase">{reward.name}</span>
                 </div>
             )
         } else {
             return (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                    <span className="text-xl mb-1">🌌</span>
-                    <span className="font-bold text-xs leading-tight">{reward.name}</span>
+                <div className="flex flex-col items-center justify-center h-full text-center text-white px-2">
+                    <Moon className="w-4 h-4 mb-1 text-white/80" />
+                    <span className="font-bold text-[10px] leading-tight uppercase">{reward.name}</span>
                 </div>
             )
         }
     }
 
     return (
-        <div className="py-6 px-2 max-w-4xl mx-auto">
+        <div className="py-6 px-4 max-w-2xl mx-auto">
             {/* Header / Hero */}
-            <div className="mb-8 p-6 bg-gradient-to-r from-void-purple/30 to-void-blue/30 rounded-2xl border border-particle-glow/30 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-50">
-                    <div className="w-32 h-32 bg-particle-glow/20 rounded-full blur-3xl mix-blend-screen" />
-                </div>
-
-                <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
-                    🎟️ VOID PASS
-                    <span className="px-2 py-1 text-xs font-bold bg-white text-black rounded uppercase tracking-wider">Season 2</span>
+            <div className="mb-8 p-6 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden">
+                <h2 className="text-3xl font-black mb-2 flex items-center gap-3 text-white">
+                    <Ticket className="w-8 h-8 text-white/80" />
+                    {t('title')}
+                    <span className="px-2 py-1 text-[10px] font-bold bg-white text-black rounded uppercase tracking-widest">{t('season')}</span>
                 </h2>
-                <p className="text-text-secondary mb-6">Earn XP by collecting particles to unlock cosmic rewards.</p>
+                <p className="text-white/50 text-sm mb-6">{t('description')}</p>
 
                 {/* Progress Bar */}
-                <div className="bg-black/50 p-4 rounded-xl backdrop-blur-sm border border-white/5">
-                    <div className="flex justify-between items-end mb-2">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <div className="flex justify-between items-end mb-3">
                         <div>
-                            <span className="text-sm text-text-secondary uppercase font-bold tracking-wider">Current Tier</span>
-                            <div className="text-3xl font-black text-particle-glow">{bpLevel}</div>
+                            <span className="text-[10px] text-white/50 uppercase font-bold tracking-widest">{t('currentTier')}</span>
+                            <div className="text-2xl font-black text-white">{bpLevel}</div>
                         </div>
                         <div className="text-right">
-                            <div className="text-sm font-bold">{bpXp} / {currentLevelReq} XP</div>
-                            <div className="text-xs text-text-secondary">to next tier</div>
+                            <div className="text-sm font-bold text-white">{bpXp} / {currentLevelReq} XP</div>
+                            <div className="text-[10px] text-white/50 uppercase tracking-widest">{t('toNextTier')}</div>
                         </div>
                     </div>
 
-                    <div className="h-4 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
                         <motion.div
-                            className="h-full bg-gradient-to-r from-void-purple via-void-blue to-particle-glow"
+                            className="h-full bg-white"
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
                             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -147,28 +146,28 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
                 </div>
 
                 {!hasPremium && (
-                    <div className="mt-4 text-center">
+                    <div className="mt-6 text-center">
                         <button 
                             onClick={onUnlockPremium}
-                            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-bold rounded-full transition-transform hover:scale-105 shadow-[0_0_15px_rgba(251,191,36,0.5)]"
+                            className="w-full py-4 bg-white text-black font-bold rounded-2xl transition-transform active:scale-95 text-sm"
                         >
-                            Unlock Premium Pass
+                            {t('unlockPremium')}
                         </button>
-                        <p className="text-xs text-white/50 mt-2">Get access to exclusive skins, themes, and massive particle drops!</p>
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mt-3">{t('premiumDesc')}</p>
                     </div>
                 )}
             </div>
 
             {/* Battle Pass Track */}
-            <div className="space-y-4 relative">
+            <div className="space-y-3 relative">
                 {/* Center divider line */}
-                <div className="absolute left-[50%] top-0 bottom-0 w-1 bg-white/5 -translate-x-1/2 z-0" />
+                <div className="absolute left-[50%] top-12 bottom-0 w-[1px] bg-white/10 -translate-x-1/2 z-0" />
 
                 {/* Track Headers */}
-                <div className="flex justify-between text-center sticky top-0 z-10 bg-black/80 backdrop-blur-md py-4 rounded-xl border border-white/10 mb-6">
-                    <div className="w-5/12 font-bold text-gray-300 uppercase letter-spacing tracking-widest">Free Track</div>
-                    <div className="w-2/12 font-black text-void-blue">TIER</div>
-                    <div className={`w-5/12 font-bold uppercase letter-spacing tracking-widest ${hasPremium ? 'text-yellow-400' : 'text-gray-500'}`}>Premium Track</div>
+                <div className="flex justify-between text-center sticky top-0 z-10 bg-[#0f1035] py-4 mb-4">
+                    <div className="w-5/12 font-bold text-white/50 text-[10px] uppercase tracking-widest">{t('freeTrack')}</div>
+                    <div className="w-2/12 font-black text-white/80 text-[10px] uppercase tracking-widest">{t('tier')}</div>
+                    <div className={`w-5/12 font-bold text-[10px] uppercase tracking-widest ${hasPremium ? 'text-white/80' : 'text-white/40'}`}>{t('premiumTrack')}</div>
                 </div>
 
                 {/* Tiers List */}
@@ -189,10 +188,10 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
                             <div className="w-[42%]">
                                 <motion.div
                                     className={`
-                                        h-24 rounded-2xl border-2 flex items-center justify-center relative overflow-hidden cursor-pointer
-                                        ${freeClaimed ? 'bg-green-500/10 border-green-500/30 opacity-60' :
-                                            canClaimFree ? 'bg-void-blue/20 border-void-blue hover:bg-void-blue/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]' :
-                                                'bg-white/5 border-white/10 opacity-50 grayscale'}
+                                        h-20 rounded-2xl border flex items-center justify-center relative overflow-hidden cursor-pointer transition-colors
+                                        ${freeClaimed ? 'bg-white/5 border-white/10 opacity-50' :
+                                            canClaimFree ? 'bg-white/10 border-white/30 hover:bg-white/20' :
+                                                'bg-white/5 border-white/5 opacity-50'}
                                     `}
                                     onClick={() => canClaimFree && handleClaim(tier.level, 'free', tier.freeReward)}
                                     whileTap={canClaimFree ? { scale: 0.95 } : {}}
@@ -200,12 +199,12 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
                                     {renderRewardIcon(tier.freeReward)}
 
                                     {freeClaimed && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
-                                            <span className="text-green-400 font-bold text-xl uppercase tracking-widest rotate-[-15deg]">Claimed</span>
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                                            <span className="text-white/80 font-bold text-[10px] uppercase tracking-widest">{t('claimed')}</span>
                                         </div>
                                     )}
                                     {canClaimFree && (
-                                        <div className="absolute top-2 right-2 w-3 h-3 bg-void-blue rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,1)]" />
+                                        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                     )}
                                 </motion.div>
                             </div>
@@ -213,9 +212,9 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
                             {/* Level Indicator */}
                             <div className="w-[12%] flex justify-center">
                                 <div className={`
-                                    w-10 h-10 rounded-full flex items-center justify-center font-black z-20 shadow-lg border-2
-                                    ${isUnlocked ? 'bg-particle-glow text-black border-particle-glow shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'bg-gray-800 text-gray-500 border-gray-700'}
-                                    ${isCurrent ? 'ring-4 ring-particle-glow/30' : ''}
+                                    w-8 h-8 rounded-full flex items-center justify-center font-black z-20 border text-xs
+                                    ${isUnlocked ? 'bg-white text-black border-white' : 'bg-black text-white/30 border-white/10'}
+                                    ${isCurrent ? 'ring-4 ring-white/10' : ''}
                                 `}>
                                     {tier.level}
                                 </div>
@@ -225,11 +224,11 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
                             <div className="w-[42%]">
                                 <motion.div
                                     className={`
-                                        h-24 rounded-2xl border-2 flex items-center justify-center relative overflow-hidden cursor-pointer
-                                        ${!hasPremium ? 'bg-gray-900 border-gray-800 opacity-40 grayscale' :
-                                            premiumClaimed ? 'bg-amber-500/10 border-amber-500/30 opacity-60' :
-                                                canClaimPremium ? 'bg-gradient-to-br from-amber-500/30 to-yellow-600/30 border-amber-400 hover:brightness-110 shadow-[0_0_15px_rgba(251,191,36,0.3)]' :
-                                                    'bg-amber-900/20 border-amber-800/50 opacity-50 grayscale'}
+                                        h-20 rounded-2xl border flex items-center justify-center relative overflow-hidden cursor-pointer transition-colors
+                                        ${!hasPremium ? 'bg-black/50 border-white/5 opacity-40' :
+                                            premiumClaimed ? 'bg-white/5 border-white/10 opacity-50' :
+                                                canClaimPremium ? 'bg-white/10 border-white/30 hover:bg-white/20' :
+                                                    'bg-white/5 border-white/10 opacity-50'}
                                     `}
                                     onClick={() => canClaimPremium && handleClaim(tier.level, 'premium', tier.premiumReward)}
                                     whileTap={canClaimPremium ? { scale: 0.95 } : {}}
@@ -237,17 +236,17 @@ export default function SeasonPassTab({ onUnlockPremium }: SeasonPassTabProps) {
                                     {renderRewardIcon(tier.premiumReward)}
 
                                     {premiumClaimed && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
-                                            <span className="text-amber-400 font-bold text-xl uppercase tracking-widest rotate-[-15deg]">Claimed</span>
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                                            <span className="text-white/80 font-bold text-[10px] uppercase tracking-widest">{t('claimed')}</span>
                                         </div>
                                     )}
                                     {!hasPremium && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                            <span className="text-gray-400 text-2xl">🔒</span>
+                                            <Lock className="w-4 h-4 text-white/40" />
                                         </div>
                                     )}
                                     {canClaimPremium && (
-                                        <div className="absolute top-2 right-2 w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(251,191,36,1)]" />
+                                        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                     )}
                                 </motion.div>
                             </div>

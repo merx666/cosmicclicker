@@ -133,29 +133,35 @@ export default function GameScreen({ userHash, onBackToMenu }: GameScreenProps) 
     const isTelegram = process.env.NEXT_PUBLIC_IS_TELEGRAM === 'true'
 
     return (
-        <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col noise-bg pb-[72px]">
+        <div className="min-h-[100dvh] bg-transparent relative overflow-hidden flex flex-col pb-[100px]">
             <BackgroundEffects theme={premiumBackgroundTheme as any} />
             {/* Header */}
-            <header className="sticky top-0 z-40 bg-void-dark/80 backdrop-blur-lg border-b border-void-purple/20">
-                <div className="max-w-2xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+            <header className="fixed top-0 left-0 right-0 z-40 safe-area-top pointer-events-none">
+                <div className="max-w-2xl mx-auto px-4 pt-4">
+                    <div className="flex items-center justify-between gap-4 pointer-events-auto">
+                        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
                             {onBackToMenu && (
                                 <button
                                     onClick={onBackToMenu}
-                                    className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
-                                    title="Wróć do menu"
+                                    className="text-white/60 hover:text-white transition-colors cursor-pointer mr-1"
                                 >
-                                    <span>←</span> Menu
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                                 </button>
                             )}
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-white to-particle-glow bg-clip-text text-transparent drop-shadow-md">
-                                {t('title')}
+                            <h1 className="text-lg font-extrabold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent tracking-tight">
+                                VOID
                             </h1>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="px-3 py-1 rounded-full bg-void-purple/20 border border-void-purple/30 text-sm">
-                                {isTelegram ? `💎 ${particles.toLocaleString()}` : `💎 ${particles >= 1000000 ? `${(Math.floor(particles / 1000000) * 0.01).toFixed(2)} WLD` : '0 WLD'}`}
+                        
+                        {/* The Bank Module */}
+                        <div className="flex-1 flex justify-end">
+                            <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] flex flex-col items-end">
+                                <span className="text-[9px] uppercase tracking-widest text-text-secondary font-bold mb-0.5">Bank</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-white text-sm font-semibold tracking-wide flex items-center justify-center min-w-[70px]">
+                                        {isTelegram ? `💎 ${particles.toLocaleString()}` : (particles > 0 ? `${(Math.floor(particles / 1000000) * 0.01).toFixed(2)} WLD` : '0.00 WLD')}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -165,7 +171,11 @@ export default function GameScreen({ userHash, onBackToMenu }: GameScreenProps) 
             {/* Main content */}
             <main className="max-w-2xl mx-auto px-4">
                 {/* Show ads on all tabs EXCEPT 'collect' */}
-                {/* Ads are now handled globally in layout.tsx */}
+                {activeTab !== 'collect' && (
+                    <div className="mb-6 flex justify-center w-full z-10 relative">
+                        <ApiTinyAd userWallet={userHash} />
+                    </div>
+                )}
 
                 <AnimatePresence mode="wait">
                     {activeTab === 'collect' && (

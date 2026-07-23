@@ -186,48 +186,48 @@ export default function ConvertTab() {
 
 
             <motion.div
-                className="bg-gradient-to-br from-void-purple/20 to-void-blue/20 border-2 border-particle-glow/30 rounded-2xl p-8"
+                className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)] rounded-2xl p-8"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
             >
                 {/* Your particles */}
                 <div className="mb-6">
                     <div className="text-sm text-text-secondary mb-2">Your Particles:</div>
-                    <div className="text-4xl font-bold text-particle-glow">
+                    <div className="text-4xl font-bold text-white tracking-tight tabular-nums">
                         {particles.toLocaleString()}
                     </div>
                 </div>
 
                 {/* Exchange rate */}
-                <div className="mb-6 p-4 bg-void-dark/50 rounded-xl border border-particle-glow/20">
+                <div className="mb-6 p-4 bg-black/20 rounded-xl border border-white/5">
                     <div className="text-sm text-text-secondary mb-2">Exchange rate:</div>
-                    <div className="text-xl font-bold mb-2">
+                    <div className="text-xl font-bold mb-2 tracking-tight">
                         1,000,000 particles ≈ {((1000000 / PARTICLES_PER_WLD) * WLD_AMOUNT).toFixed(4)} WLD
                     </div>
                     <div className="text-xs text-emerald-400 font-semibold mb-2">
                         (Minimum claim: 1,000,000 particles = {(Math.floor(1000000 / PARTICLES_PER_WLD) * WLD_AMOUNT).toFixed(2)} WLD)
                     </div>
-                    <div className="text-xs text-particle-glow/60 leading-relaxed">
+                    <div className="text-xs text-white/40 leading-relaxed">
                         💡 Rate adjusts automatically based on current WLD price (${conversionRate.wld_price_usd.toFixed(3)}).
                         Updates 3x daily to ensure fair conversion.
                     </div>
                 </div>
 
                 {/* Daily Global Limit Progress */}
-                <div className="mb-6 p-4 bg-void-dark/50 rounded-xl">
+                <div className="mb-6 p-4 bg-black/20 rounded-xl border border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-text-secondary">Global Daily Pool:</span>
-                        <span className={`font-bold text-sm ${dailyStats.limitReached ? 'text-error' : 'text-success'}`}>
+                        <span className={`font-bold text-sm tabular-nums ${dailyStats.limitReached ? 'text-red-400' : 'text-emerald-400'}`}>
                             {dailyStats.remaining.toFixed(2)} / {dailyStats.maxDaily} WLD
                         </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
                         <motion.div
                             className={`h-3 rounded-full ${dailyStats.limitReached
-                                ? 'bg-error'
+                                ? 'bg-red-500'
                                 : dailyStats.totalClaimed / dailyStats.maxDaily > 0.8
-                                    ? 'bg-warning'
-                                    : 'bg-success'
+                                    ? 'bg-orange-500'
+                                    : 'bg-emerald-500'
                                 }`}
                             initial={{ width: 0 }}
                             animate={{ width: `${(dailyStats.totalClaimed / dailyStats.maxDaily) * 100}%` }}
@@ -243,24 +243,22 @@ export default function ConvertTab() {
                 {/* Claimable amount */}
                 <div className="mb-6">
                     <div className="text-sm text-text-secondary mb-2">You can claim:</div>
-                    <div className="text-5xl font-bold bg-gradient-to-r from-warning to-success bg-clip-text text-transparent">
+                    <div className="text-5xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent tracking-tight tabular-nums">
                         {claimableWLD} WLD
                     </div>
                 </div>
 
                 {/* Cooldown status */}
-                <div className="mb-6 p-4 bg-void-dark/50 rounded-xl">
+                <div className="mb-6 p-4 bg-black/20 rounded-xl border border-white/5">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-text-secondary">Dzienny limit:</span>
-                        <span className={`font-bold ${cooldown.ready ? 'text-success' : 'text-warning'}`}>
+                        <span className={`font-bold ${cooldown.ready ? 'text-emerald-400' : 'text-orange-400'}`}>
                             {cooldown.ready ? (
-                                <span className="flex items-center gap-2 text-success">
-                                    <Image src="/assets/ui/checkbox_checked.png" alt="Ready" width={16} height={16} />
+                                <span className="flex items-center gap-2">
                                     Dostępny
                                 </span>
                             ) : (
-                                <span className="flex items-center gap-2 text-warning">
-                                    <Image src="/assets/ui/clock.png" alt="Wait" width={16} height={16} />
+                                <span className="flex items-center gap-2 text-orange-400">
                                     {cooldown.timeLeft}
                                 </span>
                             )}
@@ -269,18 +267,19 @@ export default function ConvertTab() {
                 </div>
 
                 {/* Convert button */}
-                <button
+                <motion.button
                     onClick={handleConvert}
                     disabled={isWLDDisabled || isConverting || !canConvert || !cooldown.ready}
-                    className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2
+                    whileTap={!(isWLDDisabled || isConverting || !canConvert || !cooldown.ready) ? { scale: 0.95 } : {}}
+                    className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2
                         ${isWLDDisabled || isConverting || !canConvert || !cooldown.ready
-                            ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-void-purple to-void-blue text-white shadow-lg shadow-void-purple/20 hover:scale-[1.02] active:scale-[0.98]'
+                            ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/5'
+                            : 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:bg-gray-100'
                         }`}
                 >
                     {isConverting ? (
                         <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
                             Processing...
                         </>
                     ) : (
@@ -291,7 +290,7 @@ export default function ConvertTab() {
                             Convert to 0.01 WLD
                         </>
                     )}
-                </button>
+                </motion.button>
 
                 {/* Info */}
                 <div className="mt-6 text-xs text-text-secondary text-center space-y-1">
