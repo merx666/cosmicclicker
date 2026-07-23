@@ -57,8 +57,8 @@ function getHotWalletAccount() {
 function createClients() {
     const account = getHotWalletAccount()
 
-    // Use custom RPC to avoid Alchemy public rate limits
-    const rpcUrl = process.env.WORLD_CHAIN_RPC_URL || 'https://worldchain-mainnet.g.alchemy.com/v2/demo' || 'https://worldchain-mainnet.rpc.com'
+    // Use custom RPC to avoid Alchemy demo rate limits
+    const rpcUrl = process.env.WORLD_CHAIN_RPC_URL || 'https://worldchain-mainnet.g.alchemy.com/public'
 
     const walletClient = createWalletClient({
         account,
